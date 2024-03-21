@@ -19,14 +19,14 @@ import org.neo.servaweb.model.*;
 /**
  * Unit test 
  */
-public class ChatForUITest 
+public class BotChatBotTest 
     extends TestCase {
     /**
      * Create the test case
      *
      * @param testName name of the test case
      */
-    public ChatForUITest( String testName ) {
+    public BotChatBotTest( String testName ) {
         super( testName );
     }
 
@@ -46,7 +46,7 @@ public class ChatForUITest
      * @return the suite of tests being tested
      */
     public static Test suite() {
-        return new TestSuite( ChatForUITest.class );
+        return new TestSuite( BotChatBotTest.class );
     }
 
     private String[] getSupportModels() {
@@ -55,12 +55,30 @@ public class ChatForUITest
     }
 
     public void testChat() throws Exception {
-        ChatForUIIFC chatForUIIFC = ChatForUIImpl.newInstance();
+        ChatIFC role1 = Role1ChatImpl.newInstance();
+        ChatIFC role2 = Role2ChatImpl.newInstance();
+
+        String input = "Hello！";
+
+        int index = 20;
+        while(index > 0) {
+            input = role1ToRole2(input, role2);
+            input = role2ToRole1(input, role1);
+            index--;
+            System.out.println("index = " + index);
+        }
+    }
+
+    private String role1ToRole2(String input, ChatIFC role2) {
         String session = "role1ToRole2En";
-        // String userInput = "sorry, I forgot my own name, can you tell me?";
-        String result = chatForUIIFC.refresh(session);
-        String filePath = "/tmp/botwithbotEn.html";
-        IOUtil.stringToFile(result, filePath);
+        String response = role2.fetchResponse(session, input);
+        return response;
+    }
+
+    private String role2ToRole1(String input, ChatIFC role1) {
+        String session = "role2ToRole1En";
+        String response = role1.fetchResponse(session, input); 
+        return response;
     }
 }
 

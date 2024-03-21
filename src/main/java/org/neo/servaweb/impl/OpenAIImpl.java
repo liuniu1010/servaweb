@@ -45,4 +45,9 @@ public class OpenAIImpl extends AbsOpenAIImpl {
     protected int getPermitedTokenNumber(String model) {
         return 4096;
     }
+
+    @Override
+    protected String getSystemHint() {
+        return "You are a helpful assistant.";
+    }
 }

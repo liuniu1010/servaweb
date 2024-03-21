@@ -37,6 +37,7 @@ public class CommonUtil {
         String rendered = "<!DOCTYPE html>";
         rendered += "\n<html>";
         rendered += "\n<head>";
+        rendered += "\n<meta charset=\"UTF-8\">";
         rendered += "\n<title></title>";
         rendered += "\n<style>";
         rendered += "\n.chat-container {";

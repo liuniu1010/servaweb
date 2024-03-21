@@ -27,6 +27,7 @@ abstract public class AbsOpenAIImpl implements SuperAIIFC {
     abstract protected String getApiKey();
     abstract protected String getUrl(String model);
     abstract protected int getPermitedTokenNumber(String model);
+    abstract protected String getSystemHint();
 
     public AIModel.ChatResponse fetchChatResponse(String model, AIModel.PromptStruct promptStruct) {
         try {
@@ -102,7 +103,7 @@ abstract public class AbsOpenAIImpl implements SuperAIIFC {
 
         JsonObject systemMessage = new JsonObject();
         systemMessage.addProperty("role", "system");
-        systemMessage.addProperty("content", "You are a helpful assistant.");
+        systemMessage.addProperty("content", getSystemHint());
         messages.add(systemMessage);
 
         List<AIModel.ChatRecord> chatRecords = promptStruct.getChatRecords();
