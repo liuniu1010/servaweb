@@ -26,7 +26,8 @@ abstract public class AbsOpenAIImpl implements SuperAIIFC {
 
     abstract protected String getApiKey();
     abstract protected String getUrl(String model);
-    abstract protected int getPermitedTokenNumber(String model);
+    abstract protected int getMaxOutputTokenNumber(String model);
+    abstract protected int getContextWindow(String model);
     abstract protected String getSystemHint();
 
     public AIModel.ChatResponse fetchChatResponse(String model, AIModel.PromptStruct promptStruct) {
@@ -35,9 +36,11 @@ abstract public class AbsOpenAIImpl implements SuperAIIFC {
             return chatResponse;
         }
         catch(RuntimeException rex) {
+            logger.error(rex.getMessage(), rex);
             throw rex;
         }
         catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
             throw new RuntimeException(ex);
         }
     }
@@ -54,7 +57,7 @@ abstract public class AbsOpenAIImpl implements SuperAIIFC {
             throw new RuntimeException("some error occurred for promptTokenNumber < 0");
         }
 
-        return getPermitedTokenNumber(model) - promptTokenNumber;
+        return Math.min(getMaxOutputTokenNumber(model), (getContextWindow(model) - promptTokenNumber));
     }
 
     private AIModel.ChatResponse fetchChatResponse(String model, AIModel.PromptStruct promptStruct, int maxTokens) throws Exception {

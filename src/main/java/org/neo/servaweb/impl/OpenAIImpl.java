@@ -5,8 +5,8 @@ import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
 
 public class OpenAIImpl extends AbsOpenAIImpl {
+    private static String gpt_4_turbo_preview = "gpt-4-turbo-preview";
     private static String gpt_35_turbo = "gpt-3.5-turbo";
-    private static String gpt_35_turbo_instruct = "gpt-3.5-turbo-instruct";
 
     private DBConnectionIFC dbConnection;
 
@@ -14,6 +14,7 @@ public class OpenAIImpl extends AbsOpenAIImpl {
         dbConnection = inputDBConnection;
     }
 
+    @Override
     protected String getApiKey() {
         try {
             return CommonUtil.getConfigValue(dbConnection, "OpenAiApiKey");
@@ -26,24 +27,42 @@ public class OpenAIImpl extends AbsOpenAIImpl {
         }
     }
 
+    @Override
     public String[] getSupportModels() {
-        return new String[]{gpt_35_turbo, gpt_35_turbo_instruct};
+        return new String[]{gpt_4_turbo_preview, gpt_35_turbo};
     }
 
+    @Override
     protected String getUrl(String model) {
-        if(model.equals(gpt_35_turbo)) {
+        if(model.equals(gpt_4_turbo_preview)
+           || model.equals(gpt_35_turbo)) {
             return "https://api.openai.com/v1/chat/completions";
-        }
-        else if(model.equals(gpt_35_turbo_instruct)) {
-            return "https://api.openai.com/v1/completions";
         }
         else {
             throw new RuntimeException("model " + model + " not supported!");
         }
     }
 
-    protected int getPermitedTokenNumber(String model) {
-        return 4096;
+    @Override
+    protected int getContextWindow(String model) {
+        if(model.equals(gpt_4_turbo_preview)) {
+            return 128000;
+        }
+        else if(model.equals(gpt_35_turbo)) {
+            return 16385;
+        }
+        return -1;
+    }
+
+    @Override
+    protected int getMaxOutputTokenNumber(String model) {
+        if(model.equals(gpt_4_turbo_preview)) {
+            return 4096;
+        }
+        else if(model.equals(gpt_35_turbo)) {
+            return 4096;
+        }
+        return -1;
     }
 
     @Override
