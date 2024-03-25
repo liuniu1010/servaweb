@@ -67,6 +67,6 @@ public class OpenAIImpl extends AbsOpenAIImpl {
 
     @Override
     protected String getSystemHint() {
-        return "You are a helpful assistant.";
+        return "You are a helpful assistant. You always response result in plain text.";
     }
 }

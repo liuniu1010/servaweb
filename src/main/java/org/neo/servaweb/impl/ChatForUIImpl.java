@@ -208,9 +208,9 @@ public class ChatForUIImpl implements ChatForUIIFC {
 
 abstract class AbsChatForUITask implements DBQueryTaskIFC, DBSaveTaskIFC {
     protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
-        OpenAIImpl openAIImpl = new OpenAIImpl();
-        openAIImpl.setDBConnection(dbConnection);
-        SuperAIIFC superAI = openAIImpl;
+        OpenAIForUIImpl openAIForUIImpl = new OpenAIForUIImpl();
+        openAIForUIImpl.setDBConnection(dbConnection);
+        SuperAIIFC superAI = openAIForUIImpl;
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
 
