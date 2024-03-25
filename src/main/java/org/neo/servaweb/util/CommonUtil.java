@@ -4,9 +4,12 @@ import java.util.List;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.model.SQLStruct;
+import org.neo.servaframe.util.IOUtil;
 import org.neo.servaweb.model.AIModel;
 
 public class CommonUtil {
@@ -156,5 +159,38 @@ public class CommonUtil {
     private static String RenderToShowAsHtml(String content) {
         String renderFormat = content.replace("\n", "<br>");
         return renderFormat;
+    }
+
+    private static String[] parseCommand(String input) {
+        List<String> commandParts = new ArrayList<>();
+        Matcher matcher = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(input);
+        while (matcher.find()) {
+            commandParts.add(matcher.group(1).replace("\"", ""));
+        }
+        return commandParts.toArray(new String[0]);
+    }
+
+    public static String executeCommand(String command) {
+        try {
+            String[] parsedCommand = parseCommand(command);
+            ProcessBuilder processBuilder = new ProcessBuilder(parsedCommand);
+            Process process = processBuilder.start();
+
+            String stdResult = IOUtil.inputStreamToString(process.getInputStream());
+            String errResult = IOUtil.inputStreamToString(process.getErrorStream());
+            int exitCode = process.waitFor();
+            if(exitCode == 0) {
+                return stdResult;
+            }
+            else {
+                throw new RuntimeException(errResult);
+            }
+        }
+        catch(RuntimeException rex) {
+            throw rex;
+        }
+        catch(Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }
