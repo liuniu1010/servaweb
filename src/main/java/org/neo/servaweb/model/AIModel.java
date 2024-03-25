@@ -100,4 +100,97 @@ public class AIModel {
             return message;
         }
     }
+
+    public static class FunctionParam {
+        private String name;    // basically, only string type are supported, so no need to define type
+        private String description;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String inputName) {
+            name = inputName;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String inputDescription) {
+            description = inputDescription;
+        }
+    }
+
+    public static class Function {
+        private String methodName;
+        private List<FunctionParam> params;
+ 
+        public String getMethodName() {
+            return methodName;
+        }
+
+        public void setMethodName(String inputMethodName) {
+            methodName = inputMethodName;
+        }
+
+        public List<FunctionParam> getParams() {
+            return params;
+        }
+
+        public void setParams(List<FunctionParam> inputParams) {
+            params = inputParams;
+        }
+    }
+
+    public static class CallParam {
+        private String name;
+        private String value;
+        private String description;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String inputName) {
+            name = inputName;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String inputValue) {
+            value = inputValue;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String inputDescription) {
+            description = inputDescription;
+        }
+    }
+
+    public static class Call {
+        private String methodName;
+        private List<CallParam> params;
+ 
+        public String getMethodName() {
+            return methodName;
+        }
+
+        public void setMethodName(String inputMethodName) {
+            methodName = inputMethodName;
+        }
+
+        public List<CallParam> getParams() {
+            return params;
+        }
+
+        public void setParams(List<CallParam> inputParams) {
+            params = inputParams;
+        }
+    }
 }
