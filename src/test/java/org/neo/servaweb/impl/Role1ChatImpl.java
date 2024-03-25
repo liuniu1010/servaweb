@@ -44,7 +44,7 @@ public class Role1ChatImpl implements ChatIFC {
     private Role1ChatImpl() {
     }
 
-    public static Role1ChatImpl newInstance() {
+    public static Role1ChatImpl getInstance() {
         return new Role1ChatImpl();
     }
 
@@ -145,7 +145,7 @@ abstract class AbsRole1ChatTask implements DBQueryTaskIFC, DBSaveTaskIFC {
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
 
-        Role1ChatImpl chatImpl = Role1ChatImpl.newInstance();
+        Role1ChatImpl chatImpl = Role1ChatImpl.getInstance();
         chatImpl.setSuperAI(superAI);
         chatImpl.setStorage(storage);
         chatImpl.setDBConnection(dbConnection);

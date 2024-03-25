@@ -44,7 +44,7 @@ public class ChatImpl implements ChatIFC {
     private ChatImpl() {
     }
 
-    public static ChatImpl newInstance() {
+    public static ChatImpl getInstance() {
         return new ChatImpl();
     }
 
@@ -145,7 +145,7 @@ abstract class AbsChatTask implements DBQueryTaskIFC, DBSaveTaskIFC {
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
 
-        ChatImpl chatImpl = ChatImpl.newInstance();
+        ChatImpl chatImpl = ChatImpl.getInstance();
         chatImpl.setSuperAI(superAI);
         chatImpl.setStorage(storage);
         chatImpl.setDBConnection(dbConnection);

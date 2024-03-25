@@ -20,7 +20,7 @@ public class AIChatResource {
     final static Logger logger = Logger.getLogger(AIChatResource.class);
 
     private ChatForUIIFC getChatForUIInstance() {
-        return ChatForUIImpl.newInstance();
+        return ChatForUIImpl.getInstance();
     }
 
     @POST

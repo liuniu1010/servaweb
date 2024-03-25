@@ -55,7 +55,7 @@ public class ChatTest
     }
 
     public void testChat() throws Exception {
-        ChatIFC chatIFC = ChatImpl.newInstance();
+        ChatIFC chatIFC = ChatImpl.getInstance();
         String session = "abc";
         String userInput = "Hello, I'm Neo, nice to meet you!";
         String response = chatIFC.fetchResponse(session, userInput);

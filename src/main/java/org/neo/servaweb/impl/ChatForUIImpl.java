@@ -46,7 +46,7 @@ public class ChatForUIImpl implements ChatForUIIFC {
     private ChatForUIImpl() {
     }
 
-    public static ChatForUIImpl newInstance() {
+    public static ChatForUIImpl getInstance() {
         return new ChatForUIImpl();
     }
 
@@ -214,7 +214,7 @@ abstract class AbsChatForUITask implements DBQueryTaskIFC, DBSaveTaskIFC {
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
 
-        ChatForUIImpl chatForUIImpl = ChatForUIImpl.newInstance();
+        ChatForUIImpl chatForUIImpl = ChatForUIImpl.getInstance();
         chatForUIImpl.setSuperAI(superAI);
         chatForUIImpl.setStorage(storage);
         chatForUIImpl.setDBConnection(dbConnection);

@@ -55,8 +55,8 @@ public class BotChatBotTest
     }
 
     public void testChat() throws Exception {
-        ChatIFC role1 = Role1ChatImpl.newInstance();
-        ChatIFC role2 = Role2ChatImpl.newInstance();
+        ChatIFC role1 = Role1ChatImpl.getInstance();
+        ChatIFC role2 = Role2ChatImpl.getInstance();
 
         String input = "Hello！";
 
