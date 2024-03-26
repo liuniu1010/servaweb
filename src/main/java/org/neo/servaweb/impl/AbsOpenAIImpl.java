@@ -18,10 +18,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 import org.neo.servaframe.util.IOUtil;
-import org.neo.servaweb.ifc.SuperAIIFC;
+import org.neo.servaweb.ifc.OpenAIIFC;
+import org.neo.servaweb.ifc.FunctionCallIFC;
 import org.neo.servaweb.model.AIModel;
 
-abstract public class AbsOpenAIImpl implements SuperAIIFC {
+abstract public class AbsOpenAIImpl implements OpenAIIFC {
     final static Logger logger = Logger.getLogger(AbsOpenAIImpl.class);
 
     abstract protected String getApiKey();
@@ -30,9 +31,10 @@ abstract public class AbsOpenAIImpl implements SuperAIIFC {
     abstract protected int getContextWindow(String model);
     abstract protected String getSystemHint();
 
+    @Override
     public AIModel.ChatResponse fetchChatResponse(String model, AIModel.PromptStruct promptStruct) {
         try {
-            AIModel.ChatResponse chatResponse = fetchJsonResponseWithChatCompletion(model, promptStruct);
+            AIModel.ChatResponse chatResponse = innerFetchChatResponse(model, promptStruct);
             return chatResponse;
         }
         catch(RuntimeException rex) {
@@ -45,22 +47,33 @@ abstract public class AbsOpenAIImpl implements SuperAIIFC {
         }
     }
 
-    private AIModel.ChatResponse fetchJsonResponseWithChatCompletion(String model, AIModel.PromptStruct promptStruct) throws Exception {
+    @Override
+    public AIModel.ChatResponse fetchChatResponseWithFunctionCall(String inputModel, AIModel.PromptStruct inputPromptStruct, FunctionCallIFC functionCallIFC) {
+        return null;
+    }
+
+    private AIModel.ChatResponse innerFetchChatResponse(String model, AIModel.PromptStruct promptStruct) throws Exception {
         int maxTokens = determineMaxTokens(model, promptStruct);
-        AIModel.ChatResponse chatResponse = fetchChatResponse(model, promptStruct, maxTokens);
+        AIModel.ChatResponse chatResponse = innerFetchChatResponse(model, promptStruct, maxTokens);
         return chatResponse;
     }
 
     private int determineMaxTokens(String model, AIModel.PromptStruct promptStruct) throws Exception {
-        int promptTokenNumber = fetchPromptTokenNumber(model, promptStruct);
-        if(promptTokenNumber < 0) {
-            throw new RuntimeException("some error occurred for promptTokenNumber < 0");
-        }
+        boolean needCalculate = false; // calculate prompt token number or not
+        if(needCalculate) { // in this way, calculate prompt token number first
+            int promptTokenNumber = fetchPromptTokenNumber(model, promptStruct);
+            if(promptTokenNumber < 0) {
+                throw new RuntimeException("some error occurred for promptTokenNumber < 0");
+            }
 
-        return Math.min(getMaxOutputTokenNumber(model), (getContextWindow(model) - promptTokenNumber));
+            return Math.min(getMaxOutputTokenNumber(model), (getContextWindow(model) - promptTokenNumber));
+        }
+        else {
+            return getMaxOutputTokenNumber(model); // in this way, don't calcuate prompt token number
+        }
     }
 
-    private AIModel.ChatResponse fetchChatResponse(String model, AIModel.PromptStruct promptStruct, int maxTokens) throws Exception {
+    private AIModel.ChatResponse innerFetchChatResponse(String model, AIModel.PromptStruct promptStruct, int maxTokens) throws Exception {
         String jsonInput = generateJsonBodyToFetchResponse(model, promptStruct, maxTokens);
         String jsonResponse = send(model, jsonInput);
         AIModel.ChatResponse chatResponse = extractChatResponseFromJson(jsonResponse);
