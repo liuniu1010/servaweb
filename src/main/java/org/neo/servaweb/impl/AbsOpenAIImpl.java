@@ -34,7 +34,7 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
     @Override
     public AIModel.ChatResponse fetchChatResponse(String model, AIModel.PromptStruct promptStruct) {
         try {
-            AIModel.ChatResponse chatResponse = innerFetchChatResponse(model, promptStruct);
+            AIModel.ChatResponse chatResponse = innerFetchChatResponse(model, promptStruct, null);
             return chatResponse;
         }
         catch(RuntimeException rex) {
@@ -48,20 +48,31 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
     }
 
     @Override
-    public AIModel.ChatResponse fetchChatResponseWithFunctionCall(String inputModel, AIModel.PromptStruct inputPromptStruct, FunctionCallIFC functionCallIFC) {
-        return null;
+    public AIModel.ChatResponse fetchChatResponseWithFunctionCall(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) {
+        try {
+            AIModel.ChatResponse chatResponse = innerFetchChatResponse(model, promptStruct, functionCallIFC);
+            return chatResponse;
+        }
+        catch(RuntimeException rex) {
+            logger.error(rex.getMessage(), rex);
+            throw rex;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+            throw new RuntimeException(ex);
+        }
     }
 
-    private AIModel.ChatResponse innerFetchChatResponse(String model, AIModel.PromptStruct promptStruct) throws Exception {
-        int maxTokens = determineMaxTokens(model, promptStruct);
+    private AIModel.ChatResponse innerFetchChatResponse(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) throws Exception {
+        int maxTokens = determineMaxTokens(model, promptStruct, functionCallIFC);
         AIModel.ChatResponse chatResponse = innerFetchChatResponse(model, promptStruct, maxTokens);
         return chatResponse;
     }
 
-    private int determineMaxTokens(String model, AIModel.PromptStruct promptStruct) throws Exception {
+    private int determineMaxTokens(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) throws Exception {
         boolean needCalculate = false; // calculate prompt token number or not
         if(needCalculate) { // in this way, calculate prompt token number first
-            int promptTokenNumber = fetchPromptTokenNumber(model, promptStruct);
+            int promptTokenNumber = fetchPromptTokenNumber(model, promptStruct, functionCallIFC);
             if(promptTokenNumber < 0) {
                 throw new RuntimeException("some error occurred for promptTokenNumber < 0");
             }
@@ -80,8 +91,8 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         return chatResponse;
     }
 
-    private int fetchPromptTokenNumber(String model, AIModel.PromptStruct promptStruct) throws Exception {
-        String jsonInput = generateJsonBodyForGetTokenNumber(model, promptStruct);
+    private int fetchPromptTokenNumber(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) throws Exception {
+        String jsonInput = generateJsonBodyForGetTokenNumber(model, promptStruct, functionCallIFC);
         String jsonTokenNumber = send(model, jsonInput);
         int tokenNumber = extractTokenNumberFromJson(jsonTokenNumber);
         return tokenNumber;
@@ -114,6 +125,43 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         return chatResponse; 
     }
 
+    private JsonArray generateJsonArrayTools(FunctionCallIFC functionCallIFC) {
+        JsonArray tools = new JsonArray();
+
+        List<AIModel.Function> functions = functionCallIFC.getFunctions();
+        for(AIModel.Function function: functions) {
+            JsonObject jsonFunction = new JsonObject();
+            jsonFunction.addProperty("name", function.getMethodName());
+            jsonFunction.addProperty("description", function.getDescription());
+
+            JsonObject jsonParameters = new JsonObject();
+            jsonParameters.addProperty("type", "object");
+            jsonParameters.addProperty("", "");
+            List<AIModel.FunctionParam> functionParams = function.getParams();
+            JsonArray jsonProperties = new JsonArray();
+            for(AIModel.FunctionParam functionParam: functionParams) {
+                JsonObject jsonType = new JsonObject();
+                jsonType.addProperty("type", "string");
+                jsonType.addProperty("description", functionParam.getDescription());
+
+                JsonObject jsonProperty = new JsonObject();
+                jsonProperty.add(functionParam.getName(), jsonType);
+
+                jsonProperties.add(jsonProperty);
+            }
+            jsonParameters.add("properties", jsonProperties);
+
+            jsonFunction.add("parameters", jsonParameters);
+
+            JsonObject jsonTool = new JsonObject();
+            jsonTool.addProperty("type", "function");
+            jsonTool.add("function", jsonFunction);
+
+            tools.add(jsonTool);
+        }
+        return tools;
+    }
+
     private JsonArray generateJsonArrayMessages(AIModel.PromptStruct promptStruct) {
         JsonArray messages = new JsonArray();
 
@@ -138,7 +186,7 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         return messages;
     }
 
-    private String generateJsonBodyForGetTokenNumber(String model, AIModel.PromptStruct promptStruct) {
+    private String generateJsonBodyForGetTokenNumber(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) {
         Gson gson = new Gson();
         JsonObject jsonBody = new JsonObject();
 
@@ -149,8 +197,12 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         jsonBody.addProperty("stop", "");
 
         JsonArray messages = generateJsonArrayMessages(promptStruct);
-
         jsonBody.add("messages", messages);
+
+        if(functionCallIFC != null) {
+            JsonArray tools = generateJsonArrayTools(functionCallIFC);
+            jsonBody.add("tools", tools);
+        }
         return gson.toJson(jsonBody);
     }
 

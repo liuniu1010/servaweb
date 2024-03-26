@@ -124,6 +124,7 @@ public class AIModel {
 
     public static class Function {
         private String methodName;
+        private String description;
         private List<FunctionParam> params;
  
         public String getMethodName() {
@@ -132,6 +133,14 @@ public class AIModel {
 
         public void setMethodName(String inputMethodName) {
             methodName = inputMethodName;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String inputDescription) {
+            description = inputDescription;
         }
 
         public List<FunctionParam> getParams() {
