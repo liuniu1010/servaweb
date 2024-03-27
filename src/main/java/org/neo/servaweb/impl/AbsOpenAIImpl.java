@@ -65,7 +65,7 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
 
     private AIModel.ChatResponse innerFetchChatResponse(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) throws Exception {
         int maxTokens = determineMaxTokens(model, promptStruct, functionCallIFC);
-        AIModel.ChatResponse chatResponse = innerFetchChatResponse(model, promptStruct, maxTokens);
+        AIModel.ChatResponse chatResponse = innerFetchChatResponse(model, promptStruct, maxTokens, functionCallIFC);
         return chatResponse;
     }
 
@@ -84,8 +84,8 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         }
     }
 
-    private AIModel.ChatResponse innerFetchChatResponse(String model, AIModel.PromptStruct promptStruct, int maxTokens) throws Exception {
-        String jsonInput = generateJsonBodyToFetchResponse(model, promptStruct, maxTokens);
+    private AIModel.ChatResponse innerFetchChatResponse(String model, AIModel.PromptStruct promptStruct, int maxTokens, FunctionCallIFC functionCallIFC) throws Exception {
+        String jsonInput = generateJsonBodyToFetchResponse(model, promptStruct, maxTokens, functionCallIFC);
         String jsonResponse = send(model, jsonInput);
         AIModel.ChatResponse chatResponse = extractChatResponseFromJson(jsonResponse);
         return chatResponse;
@@ -136,21 +136,19 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
 
             JsonObject jsonParameters = new JsonObject();
             jsonParameters.addProperty("type", "object");
-            jsonParameters.addProperty("", "");
             List<AIModel.FunctionParam> functionParams = function.getParams();
-            JsonArray jsonProperties = new JsonArray();
+            JsonObject jsonProperties = new JsonObject();
+            JsonArray jsonRequiredParams = new JsonArray();
             for(AIModel.FunctionParam functionParam: functionParams) {
-                JsonObject jsonType = new JsonObject();
-                jsonType.addProperty("type", "string");
-                jsonType.addProperty("description", functionParam.getDescription());
+                JsonObject jsonParam = new JsonObject();
+                jsonParam.addProperty("type", "string");
+                jsonParam.addProperty("description", functionParam.getDescription());
 
-                JsonObject jsonProperty = new JsonObject();
-                jsonProperty.add(functionParam.getName(), jsonType);
-
-                jsonProperties.add(jsonProperty);
+                jsonProperties.add(functionParam.getName(), jsonParam);
+                jsonRequiredParams.add(functionParam.getName()); 
             }
             jsonParameters.add("properties", jsonProperties);
-
+            jsonParameters.add("required", jsonRequiredParams);
             jsonFunction.add("parameters", jsonParameters);
 
             JsonObject jsonTool = new JsonObject();
@@ -206,7 +204,7 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         return gson.toJson(jsonBody);
     }
 
-    private String generateJsonBodyToFetchResponse(String model, AIModel.PromptStruct promptStruct, int maxTokens) {
+    private String generateJsonBodyToFetchResponse(String model, AIModel.PromptStruct promptStruct, int maxTokens, FunctionCallIFC functionCallIFC) {
         Gson gson = new Gson();
         JsonObject jsonBody = new JsonObject();
 
@@ -215,8 +213,12 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         jsonBody.addProperty("temperature", 0.5);
 
         JsonArray messages = generateJsonArrayMessages(promptStruct);
-
         jsonBody.add("messages", messages);
+
+        if(functionCallIFC != null) {
+            JsonArray tools = generateJsonArrayTools(functionCallIFC);
+            jsonBody.add("tools", tools);
+        }
         return gson.toJson(jsonBody);
     }
 
