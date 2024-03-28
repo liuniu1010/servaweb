@@ -155,7 +155,6 @@ public class AIModel {
     public static class CallParam {
         private String name;
         private String value;
-        private String description;
 
         public String getName() {
             return name;
@@ -173,12 +172,11 @@ public class AIModel {
             value = inputValue;
         }
 
-        public String getDescription() {
-            return description;
-        }
-
-        public void setDescription(String inputDescription) {
-            description = inputDescription;
+        @Override
+        public String toString() {
+            String str = "\nparamName = " + name;
+            str += "\nparamValue = " + value;
+            return str;
         }
     }
 
@@ -200,6 +198,17 @@ public class AIModel {
 
         public void setParams(List<CallParam> inputParams) {
             params = inputParams;
+        }
+
+        @Override
+        public String toString() {
+            String str = "\nmethodName = " + methodName;
+            if(params != null) {
+                for(CallParam param: params) {
+                    str += "\n" + param.toString();
+                }
+            }
+            return str;
         }
     }
 }

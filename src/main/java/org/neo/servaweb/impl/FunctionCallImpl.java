@@ -1,4 +1,4 @@
-package org.neo.servaweb.ifc;
+package org.neo.servaweb.impl;
 
 import java.util.List;
 import java.util.ArrayList;

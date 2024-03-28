@@ -1,6 +1,8 @@
 package org.neo.servaweb.impl;
 
 import java.util.List;
+import java.util.Set;
+import java.util.ArrayList;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -87,8 +89,17 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
     private AIModel.ChatResponse innerFetchChatResponse(String model, AIModel.PromptStruct promptStruct, int maxTokens, FunctionCallIFC functionCallIFC) throws Exception {
         String jsonInput = generateJsonBodyToFetchResponse(model, promptStruct, maxTokens, functionCallIFC);
         String jsonResponse = send(model, jsonInput);
-        AIModel.ChatResponse chatResponse = extractChatResponseFromJson(jsonResponse);
-        return chatResponse;
+        List<AIModel.Call> calls = extractCallsFromJson(jsonResponse);
+        if(calls != null
+            && calls.size() > 0) {
+            AIModel.Call call = calls.get(0);
+            String callString = call.toString();
+            return new AIModel.ChatResponse(true, callString);
+        }
+        else { 
+            AIModel.ChatResponse chatResponse = extractChatResponseFromJson(jsonResponse);
+            return chatResponse;
+        }
     }
 
     private int fetchPromptTokenNumber(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) throws Exception {
@@ -105,6 +116,55 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         return tokenNumber;
     }
 
+    private List<AIModel.Call> extractCallsFromJson(String jsonResponse) throws Exception {
+        List<AIModel.Call> calls = null;
+        JsonElement element = JsonParser.parseString(jsonResponse);
+        JsonObject jsonObject = element.getAsJsonObject();
+        if(jsonObject.has("choices")) {
+            JsonArray choicesArray = jsonObject.getAsJsonArray("choices");
+            JsonObject firstChoice = choicesArray.get(0).getAsJsonObject();
+            JsonObject messageObject = firstChoice.getAsJsonObject("message");
+
+            if(!messageObject.has("tool_calls")) {
+                return null;
+            }
+            JsonArray toolCallsArray = messageObject.getAsJsonArray("tool_calls");
+            if(toolCallsArray != null
+                && !toolCallsArray.isJsonNull()
+                && toolCallsArray.size() > 0) {
+                calls = new ArrayList<AIModel.Call>();
+                for(int i = 0;i < toolCallsArray.size();i++) {
+                    JsonObject tool = toolCallsArray.get(i).getAsJsonObject();
+                    if(!tool.get("type").getAsString().equals("function")) {
+                        continue;
+                    }
+
+                    JsonObject functionObject = tool.getAsJsonObject("function");
+                    AIModel.Call call = new AIModel.Call();
+                    call.setMethodName(functionObject.get("name").getAsString());
+
+                    String argumentsString = functionObject.get("arguments").getAsString();
+                    JsonElement elementArguments = JsonParser.parseString(argumentsString);
+                    JsonObject argumentsObject = elementArguments.getAsJsonObject();
+                    if(argumentsObject != null
+                        && !argumentsObject.isJsonNull()) {
+                        Set<String> paramNames = argumentsObject.keySet();
+                        List<AIModel.CallParam> callParams = new ArrayList<AIModel.CallParam>();
+                        for(String paramName: paramNames) {
+                            AIModel.CallParam callParam = new AIModel.CallParam();
+                            callParam.setName(paramName);
+                            callParam.setValue(argumentsObject.get(paramName).getAsString());
+                            callParams.add(callParam);
+                        }
+                        call.setParams(callParams);
+                    }
+                    calls.add(call);
+                }
+            }
+        }
+        return calls; 
+    }
+
     private AIModel.ChatResponse extractChatResponseFromJson(String jsonResponse) throws Exception {
         AIModel.ChatResponse chatResponse = null;
         JsonElement element = JsonParser.parseString(jsonResponse);
@@ -113,7 +173,11 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
             JsonArray choicesArray = jsonObject.getAsJsonArray("choices");
             JsonObject firstChoice = choicesArray.get(0).getAsJsonObject();
             JsonObject messageObject = firstChoice.getAsJsonObject("message");
-            String content = messageObject.get("content").getAsString();
+            String content = "";
+            if(messageObject.get("content") != null 
+                && !messageObject.get("content").isJsonNull()) {
+                content = messageObject.get("content").getAsString();
+            }
 
             chatResponse = new AIModel.ChatResponse(true, content);
         }
