@@ -86,6 +86,7 @@ public class AIModel {
     public static class ChatResponse {
         private boolean isSuccess;
         private String message;   // in case isSuccess is false, message is exception info
+        private List<AIModel.Call> calls;
 
         public ChatResponse(boolean inputIsSuccess, String inputMessage) {
             isSuccess = inputIsSuccess;
@@ -98,6 +99,14 @@ public class AIModel {
 
         public String getMessage() {
             return message;
+        }
+
+        public List<AIModel.Call> getCalls() {
+            return calls;
+        }
+
+        public void setCalls(List<AIModel.Call> inputCalls) {
+            calls = inputCalls;
         }
     }
 
@@ -174,7 +183,7 @@ public class AIModel {
 
         @Override
         public String toString() {
-            String str = "\nparamName = " + name;
+            String str = "paramName = " + name;
             str += "\nparamValue = " + value;
             return str;
         }
@@ -202,7 +211,7 @@ public class AIModel {
 
         @Override
         public String toString() {
-            String str = "\nmethodName = " + methodName;
+            String str = "methodName = " + methodName;
             if(params != null) {
                 for(CallParam param: params) {
                     str += "\n" + param.toString();

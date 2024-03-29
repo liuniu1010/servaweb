@@ -50,7 +50,7 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
     }
 
     @Override
-    public AIModel.ChatResponse fetchChatResponseWithFunctionCall(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) {
+    public AIModel.ChatResponse fetchChatResponse(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) {
         try {
             AIModel.ChatResponse chatResponse = innerFetchChatResponse(model, promptStruct, functionCallIFC);
             return chatResponse;
@@ -90,16 +90,9 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         String jsonInput = generateJsonBodyToFetchResponse(model, promptStruct, maxTokens, functionCallIFC);
         String jsonResponse = send(model, jsonInput);
         List<AIModel.Call> calls = extractCallsFromJson(jsonResponse);
-        if(calls != null
-            && calls.size() > 0) {
-            AIModel.Call call = calls.get(0);
-            String callString = call.toString();
-            return new AIModel.ChatResponse(true, callString);
-        }
-        else { 
-            AIModel.ChatResponse chatResponse = extractChatResponseFromJson(jsonResponse);
-            return chatResponse;
-        }
+        AIModel.ChatResponse chatResponse = extractChatResponseFromJson(jsonResponse);
+        chatResponse.setCalls(calls);
+        return chatResponse;
     }
 
     private int fetchPromptTokenNumber(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) throws Exception {

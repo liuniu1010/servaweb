@@ -8,7 +8,7 @@ import org.neo.servaframe.interfaces.DBServiceIFC;
 import org.neo.servaframe.interfaces.DBSaveTaskIFC;
 import org.neo.servaframe.interfaces.DBQueryTaskIFC;
 import org.neo.servaframe.ServiceFactory;
-import org.neo.servaweb.ifc.OpenAIIFC;
+import org.neo.servaweb.ifc.SuperAIIFC;
 import org.neo.servaweb.ifc.ChatForUIIFC;
 import org.neo.servaweb.ifc.StorageIFC;
 import org.neo.servaweb.ifc.FunctionCallIFC;
@@ -17,7 +17,7 @@ import org.neo.servaweb.util.CommonUtil;
 
 public class ChatForUIImpl implements ChatForUIIFC {
     private StorageIFC storage = null;
-    private OpenAIIFC openAI = null;
+    private SuperAIIFC superAI = null;
     private DBConnectionIFC dbConnection = null;
     private FunctionCallIFC functionCallIFC = null;
 
@@ -31,8 +31,8 @@ public class ChatForUIImpl implements ChatForUIIFC {
 
     // this method should be called by Task
     // to set the environment IFC
-    public void setOpenAI(OpenAIIFC envOpenAI) {
-        openAI = envOpenAI;
+    public void setSuperAI(SuperAIIFC envSuperAI) {
+        superAI = envSuperAI;
     }
 
     // this method should be called by Task
@@ -80,18 +80,30 @@ public class ChatForUIImpl implements ChatForUIIFC {
         }
     }
 
+    private String fetchResultFromChatResponse(AIModel.ChatResponse chatResponse) {
+        List<AIModel.Call> calls = chatResponse.getCalls();
+        if(calls == null
+            || calls.size() == 0) {
+            return chatResponse.getMessage();
+        }
+        else {
+            AIModel.Call call = calls.get(0);
+            return call.toString();
+        }
+    }
+
     private String innerFetchResponse(String session, String userInput) {
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
-        newRequestRecord.setChatTime(new Date());
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(userInput);
+        newRequestRecord.setChatTime(new Date());
 
         AIModel.ChatResponse chatResponse = fetchChatResponse(session, userInput);
         if(chatResponse.getIsSuccess()) {
             AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
-            newResponseRecord.setChatTime(new Date());
             newResponseRecord.setIsRequest(false);
-            newResponseRecord.setContent(chatResponse.getMessage());
+            newResponseRecord.setContent(fetchResultFromChatResponse(chatResponse));
+            newResponseRecord.setChatTime(new Date());
  
             storage.addChatRecord(session, newRequestRecord);
             storage.addChatRecord(session, newResponseRecord);
@@ -110,8 +122,8 @@ public class ChatForUIImpl implements ChatForUIIFC {
         promptStruct.setChatRecords(chatRecords);
         promptStruct.setUserInput(userInput);
 
-        String[] models = openAI.getSupportModels();
-        return openAI.fetchChatResponseWithFunctionCall(models[0], promptStruct, functionCallIFC);
+        String[] models = superAI.getSupportModels();
+        return superAI.fetchChatResponse(models[0], promptStruct, functionCallIFC);
     }
 
     @Override
@@ -218,14 +230,14 @@ abstract class AbsChatForUITask implements DBQueryTaskIFC, DBSaveTaskIFC {
     protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
         FunctionCallIFC functionCallIFC = new FunctionCallImpl();
 
-        OpenAIForUIImpl openAIForUIImpl = new OpenAIForUIImpl();
-        openAIForUIImpl.setDBConnection(dbConnection);
-        OpenAIIFC openAI = openAIForUIImpl;
+        OpenAIForUIImpl superAIForUIImpl = new OpenAIForUIImpl();
+        superAIForUIImpl.setDBConnection(dbConnection);
+        SuperAIIFC superAI = superAIForUIImpl;
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
 
         ChatForUIImpl chatForUIImpl = ChatForUIImpl.getInstance();
-        chatForUIImpl.setOpenAI(openAI);
+        chatForUIImpl.setSuperAI(superAI);
         chatForUIImpl.setStorage(storage);
         chatForUIImpl.setDBConnection(dbConnection);
         chatForUIImpl.setFunctionCall(functionCallIFC);
