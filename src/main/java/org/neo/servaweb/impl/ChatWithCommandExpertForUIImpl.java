@@ -231,9 +231,9 @@ abstract class AbsChatWithCommandExpertForUITask implements DBQueryTaskIFC, DBSa
     protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
         FunctionCallIFC functionCallIFC = new CommandCallImpl();
 
-        OpenAIForUIImpl superAIForUIImpl = new OpenAIForUIImpl();
-        superAIForUIImpl.setDBConnection(dbConnection);
-        SuperAIIFC superAI = superAIForUIImpl;
+        OpenAIForUIImpl openAIForUIImpl = new OpenAIForUIImpl();
+        openAIForUIImpl.setDBConnection(dbConnection);
+        SuperAIIFC superAI = openAIForUIImpl;
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
 

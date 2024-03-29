@@ -8,15 +8,13 @@ import org.neo.servaframe.interfaces.DBServiceIFC;
 import org.neo.servaframe.interfaces.DBSaveTaskIFC;
 import org.neo.servaframe.interfaces.DBQueryTaskIFC;
 import org.neo.servaframe.ServiceFactory;
-import org.neo.servaweb.ifc.SuperAIIFC;
 import org.neo.servaweb.ifc.ChatForUIIFC;
 import org.neo.servaweb.ifc.StorageIFC;
 import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
 
-public class ChatWithBotForUIImpl implements ChatForUIIFC {
+public class ExecuteCommandForUIImpl implements ChatForUIIFC {
     private StorageIFC storage = null;
-    private SuperAIIFC superAI = null;
     private DBConnectionIFC dbConnection = null;
 
     private static String standardExceptionMessage = "Exception occurred! Please contact administrator";
@@ -29,12 +27,6 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC {
 
     // this method should be called by Task
     // to set the environment IFC
-    public void setSuperAI(SuperAIIFC envSuperAI) {
-        superAI = envSuperAI;
-    }
-
-    // this method should be called by Task
-    // to set the environment IFC
     public void setDBConnection(DBConnectionIFC envDBConnection) {
         dbConnection = envDBConnection;
     }
@@ -43,11 +35,11 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC {
         return (dbConnection != null) && (dbConnection.isValid());
     }
 
-    private ChatWithBotForUIImpl() {
+    private ExecuteCommandForUIImpl() {
     }
 
-    public static ChatWithBotForUIImpl getInstance() {
-        return new ChatWithBotForUIImpl();
+    public static ExecuteCommandForUIImpl getInstance() {
+        return new ExecuteCommandForUIImpl();
     }
 
     @Override
@@ -55,7 +47,7 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeSaveTask(new AbsChatWithBotForUITask() {
+                return (String)dbService.executeSaveTask(new AbsExecuteCommandForUITask() {
                     @Override
                     public Object save(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -97,13 +89,17 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC {
     }
 
     private AIModel.ChatResponse fetchChatResponse(String session, String userInput) {
-        AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
-        List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
-        promptStruct.setChatRecords(chatRecords);
-        promptStruct.setUserInput(userInput);
-
-        String[] models = superAI.getSupportModels();
-        return superAI.fetchChatResponse(models[0], promptStruct);
+        String command = userInput;
+        try {
+            String runningResult = CommonUtil.executeCommand(command);
+            String result = "$ " + command + "\n" + runningResult;
+            return new AIModel.ChatResponse(true, result);
+        }
+        catch(Exception ex) {
+            String runningResult = ex.getMessage();
+            String result = "$ " + command + "\n" + runningResult;
+            return new AIModel.ChatResponse(false, result);
+        }
     }
 
     @Override
@@ -111,7 +107,7 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeSaveTask(new AbsChatWithBotForUITask() {
+                return (String)dbService.executeSaveTask(new AbsExecuteCommandForUITask() {
                     @Override
                     public Object save(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -145,7 +141,7 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeQueryTask(new AbsChatWithBotForUITask() {
+                return (String)dbService.executeQueryTask(new AbsExecuteCommandForUITask() {
                     @Override
                     public Object query(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -172,7 +168,7 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeQueryTask(new AbsChatWithBotForUITask() {
+                return (String)dbService.executeQueryTask(new AbsExecuteCommandForUITask() {
                     @Override
                     public Object query(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -206,20 +202,15 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC {
     }
 }
 
-abstract class AbsChatWithBotForUITask implements DBQueryTaskIFC, DBSaveTaskIFC {
+abstract class AbsExecuteCommandForUITask implements DBQueryTaskIFC, DBSaveTaskIFC {
     protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
-        OpenAIForUIImpl openAIForUIImpl = new OpenAIForUIImpl();
-        openAIForUIImpl.setDBConnection(dbConnection);
-        SuperAIIFC superAI = openAIForUIImpl;
-
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
 
-        ChatWithBotForUIImpl chatForUIImpl = ChatWithBotForUIImpl.getInstance();
-        chatForUIImpl.setSuperAI(superAI);
-        chatForUIImpl.setStorage(storage);
-        chatForUIImpl.setDBConnection(dbConnection);
+        ExecuteCommandForUIImpl executeCommandForUIImpl = ExecuteCommandForUIImpl.getInstance();
+        executeCommandForUIImpl.setStorage(storage);
+        executeCommandForUIImpl.setDBConnection(dbConnection);
 
-        ChatForUIIFC chatForUIIFC = chatForUIImpl;
+        ChatForUIIFC chatForUIIFC = executeCommandForUIImpl;
 
         return chatForUIIFC;
     }
