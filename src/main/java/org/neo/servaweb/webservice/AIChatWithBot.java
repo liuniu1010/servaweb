@@ -13,32 +13,32 @@ import java.util.ArrayList;
 import org.apache.log4j.Logger;
 
 import org.neo.servaweb.ifc.ChatForUIIFC;
-import org.neo.servaweb.impl.ChatForUIImpl;
+import org.neo.servaweb.impl.ChatWithBotForUIImpl;
 
-@Path("/aichat")
-public class AIChatResource {
-    final static Logger logger = Logger.getLogger(AIChatResource.class);
+@Path("/aichatwithbot")
+public class AIChatWithBot {
+    final static Logger logger = Logger.getLogger(AIChatWithBot.class);
 
     private ChatForUIIFC getChatForUIInstance() {
-        return ChatForUIImpl.getInstance();
+        return ChatWithBotForUIImpl.getInstance();
     }
 
     @POST
     @Path("/send")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public AIChatResponse send(AIChatParams params) {
+    public WSModel.AIChatResponse send(WSModel.AIChatParams params) {
         try {
             String session = params.getSession();
             String userInput = params.getUserInput();
             String renderedResponse = getChatForUIInstance().fetchResponse(session, userInput);
 
-            AIChatResponse response = new AIChatResponse(true, renderedResponse);
+            WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
             return response;
         }
         catch(Exception ex) {
             logger.error(ex.getMessage(), ex);
-            return new AIChatResponse(false, ex.getMessage());
+            return new WSModel.AIChatResponse(false, ex.getMessage());
         }
     }
 
@@ -46,18 +46,18 @@ public class AIChatResource {
     @Path("/echo")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public AIChatResponse echo(AIChatParams params) {
+    public WSModel.AIChatResponse echo(WSModel.AIChatParams params) {
         try {
             String session = params.getSession();
             String userInput = params.getUserInput();
             String renderedResponse = getChatForUIInstance().echo(session, userInput);
 
-            AIChatResponse response = new AIChatResponse(true, renderedResponse);
+            WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
             return response;
         }
         catch(Exception ex) {
             logger.error(ex.getMessage(), ex);
-            return new AIChatResponse(false, ex.getMessage());
+            return new WSModel.AIChatResponse(false, ex.getMessage());
         }
     }
 
@@ -65,17 +65,17 @@ public class AIChatResource {
     @Path("/newchat")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public AIChatResponse newchat(AIChatParams params) {
+    public WSModel.AIChatResponse newchat(WSModel.AIChatParams params) {
         try {
             String session = params.getSession();
             String renderedResponse = getChatForUIInstance().initNewChat(session);
 
-            AIChatResponse response = new AIChatResponse(true, renderedResponse);
+            WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
             return response;
         }
         catch(Exception ex) {
             logger.error(ex.getMessage(), ex);
-            return new AIChatResponse(false, ex.getMessage());
+            return new WSModel.AIChatResponse(false, ex.getMessage());
         }
     }
 
@@ -83,64 +83,17 @@ public class AIChatResource {
     @Path("/refresh")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public AIChatResponse refresh(AIChatParams params) {
+    public WSModel.AIChatResponse refresh(WSModel.AIChatParams params) {
         try {
             String session = params.getSession();
             String renderedResponse = getChatForUIInstance().refresh(session);
 
-            AIChatResponse response = new AIChatResponse(true, renderedResponse);
+            WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
             return response;
         }
         catch(Exception ex) {
             logger.error(ex.getMessage(), ex);
-            return new AIChatResponse(false, ex.getMessage());
+            return new WSModel.AIChatResponse(false, ex.getMessage());
         }
     }
-}
-
-class AIChatParams {
-    String session;
-    String userInput;
-
-    public String getSession() {
-        return session;
-    }
-
-    public void setSession(String inputSession) {
-        session = inputSession;
-    }
-
-    public String getUserInput() {
-        return userInput;
-    }
-
-    public void setUserInput(String inputUserInput) {
-        userInput = inputUserInput;
-    }
-}
-
-class AIChatResponse {
-    private boolean isSuccess;
-    private String message;
-
-    public AIChatResponse(boolean inputIsSuccess, String inputMessage) {
-        isSuccess = inputIsSuccess;
-        message = inputMessage;
-    }
-
-    public boolean getIsSuccess() {
-        return isSuccess;
-    }
-
-    public void setIsSuccess(boolean inputIsSuccess) {
-        isSuccess = inputIsSuccess;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String inputMessage) {
-        message = inputMessage;
-    } 
 }

@@ -112,7 +112,7 @@
         });
 
         function getSession() {
-            return "chat";   // adjust later
+            return "chatwithbot";   // adjust later
         }
 
         function getCookieValue(cookieName) {
@@ -145,7 +145,7 @@
         }
 
         function refresh() {
-            var refreshUrl = "api/aichat/refresh";
+            var refreshUrl = "api/aichatwithbot/refresh";
             var userInput = document.getElementById("UserInput").value;
             $.ajax({
                 url: refreshUrl,
@@ -170,7 +170,7 @@
         }
 
         function newChat() {
-            var newChatUrl = "api/aichat/newchat";
+            var newChatUrl = "api/aichatwithbot/newchat";
             var userInput = document.getElementById("UserInput").value;
             $.ajax({
                 url: newChatUrl,
@@ -209,7 +209,7 @@
 
         function sendEcho() {
             disableSend();
-            var echoUrl = "api/aichat/echo";
+            var echoUrl = "api/aichatwithbot/echo";
             var userInput = document.getElementById("UserInput").value;
             if(isStringEmptyOrWhitespace(userInput)) {
                 enableSend();
@@ -239,7 +239,7 @@
         }
 
         function sendChat() {
-            var sendUrl = "api/aichat/send";
+            var sendUrl = "api/aichatwithbot/send";
             var userInput = document.getElementById("UserInput").value;
             if(isStringEmptyOrWhitespace(userInput)) {
                 enableSend();

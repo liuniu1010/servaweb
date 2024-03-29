@@ -55,7 +55,7 @@ public class ChatForUITest
     }
 
     public void testChat() throws Exception {
-        ChatForUIIFC chatForUIIFC = ChatForUIImpl.getInstance();
+        ChatForUIIFC chatForUIIFC = ChatWithBotForUIImpl.getInstance();
         String session = "role1ToRole2En";
         // String userInput = "sorry, I forgot my own name, can you tell me?";
         String result = chatForUIIFC.refresh(session);

@@ -11,15 +11,13 @@ import org.neo.servaframe.ServiceFactory;
 import org.neo.servaweb.ifc.SuperAIIFC;
 import org.neo.servaweb.ifc.ChatForUIIFC;
 import org.neo.servaweb.ifc.StorageIFC;
-import org.neo.servaweb.ifc.FunctionCallIFC;
 import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
 
-public class ChatForUIImpl implements ChatForUIIFC {
+public class ChatWithBotForUIImpl implements ChatForUIIFC {
     private StorageIFC storage = null;
     private SuperAIIFC superAI = null;
     private DBConnectionIFC dbConnection = null;
-    private FunctionCallIFC functionCallIFC = null;
 
     private static String standardExceptionMessage = "Exception occurred! Please contact administrator";
 
@@ -41,21 +39,15 @@ public class ChatForUIImpl implements ChatForUIIFC {
         dbConnection = envDBConnection;
     }
 
-    // this method should be called by Task
-    // to set the environment IFC
-    public void setFunctionCall(FunctionCallIFC envFunctionCallIFC) {
-        functionCallIFC = envFunctionCallIFC;
-    }
-
     private boolean isEnvironmentReady() {
         return (dbConnection != null) && (dbConnection.isValid());
     }
 
-    private ChatForUIImpl() {
+    private ChatWithBotForUIImpl() {
     }
 
-    public static ChatForUIImpl getInstance() {
-        return new ChatForUIImpl();
+    public static ChatWithBotForUIImpl getInstance() {
+        return new ChatWithBotForUIImpl();
     }
 
     @Override
@@ -63,7 +55,7 @@ public class ChatForUIImpl implements ChatForUIIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeSaveTask(new AbsChatForUITask() {
+                return (String)dbService.executeSaveTask(new AbsChatWithBotForUITask() {
                     @Override
                     public Object save(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -80,18 +72,6 @@ public class ChatForUIImpl implements ChatForUIIFC {
         }
     }
 
-    private String fetchResultFromChatResponse(AIModel.ChatResponse chatResponse) {
-        List<AIModel.Call> calls = chatResponse.getCalls();
-        if(calls == null
-            || calls.size() == 0) {
-            return chatResponse.getMessage();
-        }
-        else {
-            AIModel.Call call = calls.get(0);
-            return call.toString();
-        }
-    }
-
     private String innerFetchResponse(String session, String userInput) {
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setIsRequest(true);
@@ -102,7 +82,7 @@ public class ChatForUIImpl implements ChatForUIIFC {
         if(chatResponse.getIsSuccess()) {
             AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
             newResponseRecord.setIsRequest(false);
-            newResponseRecord.setContent(fetchResultFromChatResponse(chatResponse));
+            newResponseRecord.setContent(chatResponse.getMessage());
             newResponseRecord.setChatTime(new Date());
  
             storage.addChatRecord(session, newRequestRecord);
@@ -123,7 +103,7 @@ public class ChatForUIImpl implements ChatForUIIFC {
         promptStruct.setUserInput(userInput);
 
         String[] models = superAI.getSupportModels();
-        return superAI.fetchChatResponse(models[0], promptStruct, functionCallIFC);
+        return superAI.fetchChatResponse(models[0], promptStruct);
     }
 
     @Override
@@ -131,7 +111,7 @@ public class ChatForUIImpl implements ChatForUIIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeSaveTask(new AbsChatForUITask() {
+                return (String)dbService.executeSaveTask(new AbsChatWithBotForUITask() {
                     @Override
                     public Object save(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -165,7 +145,7 @@ public class ChatForUIImpl implements ChatForUIIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeQueryTask(new AbsChatForUITask() {
+                return (String)dbService.executeQueryTask(new AbsChatWithBotForUITask() {
                     @Override
                     public Object query(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -192,7 +172,7 @@ public class ChatForUIImpl implements ChatForUIIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeQueryTask(new AbsChatForUITask() {
+                return (String)dbService.executeQueryTask(new AbsChatWithBotForUITask() {
                     @Override
                     public Object query(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -226,21 +206,18 @@ public class ChatForUIImpl implements ChatForUIIFC {
     }
 }
 
-abstract class AbsChatForUITask implements DBQueryTaskIFC, DBSaveTaskIFC {
+abstract class AbsChatWithBotForUITask implements DBQueryTaskIFC, DBSaveTaskIFC {
     protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
-        FunctionCallIFC functionCallIFC = new FunctionCallImpl();
-
         OpenAIForUIImpl superAIForUIImpl = new OpenAIForUIImpl();
         superAIForUIImpl.setDBConnection(dbConnection);
         SuperAIIFC superAI = superAIForUIImpl;
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
 
-        ChatForUIImpl chatForUIImpl = ChatForUIImpl.getInstance();
+        ChatWithBotForUIImpl chatForUIImpl = ChatWithBotForUIImpl.getInstance();
         chatForUIImpl.setSuperAI(superAI);
         chatForUIImpl.setStorage(storage);
         chatForUIImpl.setDBConnection(dbConnection);
-        chatForUIImpl.setFunctionCall(functionCallIFC);
 
         ChatForUIIFC chatForUIIFC = chatForUIImpl;
 
