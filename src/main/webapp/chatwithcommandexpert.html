@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chat With Bot</title>
+    <title>Chat With Command Expert</title>
     <meta charset="UTF-8">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <style>
@@ -112,7 +112,7 @@
         });
 
         function getSession() {
-            return "chatwithbot";   // adjust later
+            return "chatwithcommandexpert";   // adjust later
         }
 
         function getCookieValue(cookieName) {
@@ -145,7 +145,7 @@
         }
 
         function refresh() {
-            var refreshUrl = "api/aichatwithbot/refresh";
+            var refreshUrl = "api/aichatwithcommandexpert/refresh";
             var userInput = document.getElementById("UserInput").value;
             $.ajax({
                 url: refreshUrl,
@@ -170,7 +170,7 @@
         }
 
         function newChat() {
-            var newChatUrl = "api/aichatwithbot/newchat";
+            var newChatUrl = "api/aichatwithcommandexpert/newchat";
             var userInput = document.getElementById("UserInput").value;
             $.ajax({
                 url: newChatUrl,
@@ -209,7 +209,7 @@
 
         function sendEcho() {
             disableSend();
-            var echoUrl = "api/aichatwithbot/echo";
+            var echoUrl = "api/aichatwithcommandexpert/echo";
             var userInput = document.getElementById("UserInput").value;
             if(isStringEmptyOrWhitespace(userInput)) {
                 enableSend();
@@ -239,7 +239,7 @@
         }
 
         function sendChat() {
-            var sendUrl = "api/aichatwithbot/send";
+            var sendUrl = "api/aichatwithcommandexpert/send";
             var userInput = document.getElementById("UserInput").value;
             if(isStringEmptyOrWhitespace(userInput)) {
                 enableSend();

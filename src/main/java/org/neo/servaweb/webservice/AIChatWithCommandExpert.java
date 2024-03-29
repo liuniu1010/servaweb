@@ -8,13 +8,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.neo.servaweb.ifc.ChatForUIIFC;
-import org.neo.servaweb.impl.ChatWithBotForUIImpl;
+import org.neo.servaweb.impl.ChatWithCommandExpertForUIImpl;
 
-@Path("/aichatwithbot")
-public class AIChatWithBot extends AbsAIChat {
+@Path("/aichatwithcommandexpert")
+public class AIChatWithCommandExpert extends AbsAIChat {
     @Override
     protected ChatForUIIFC getChatForUIInstance() {
-        return ChatWithBotForUIImpl.getInstance();
+        return ChatWithCommandExpertForUIImpl.getInstance();
     }
 
     @POST

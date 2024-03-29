@@ -88,7 +88,8 @@ public class ChatWithCommandExpertForUIImpl implements ChatForUIIFC {
         }
         else {
             AIModel.Call call = calls.get(0);
-            return call.toString();
+            AIModel.CallParam param = call.getParams().get(0);
+            return param.getValue();
         }
     }
 
