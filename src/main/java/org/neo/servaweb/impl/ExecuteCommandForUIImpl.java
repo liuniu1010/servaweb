@@ -70,22 +70,25 @@ public class ExecuteCommandForUIImpl implements ChatForUIIFC {
         newRequestRecord.setContent(userInput);
         newRequestRecord.setChatTime(new Date());
 
-        AIModel.ChatResponse chatResponse = fetchChatResponse(session, userInput);
-        if(chatResponse.getIsSuccess()) {
-            AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
-            newResponseRecord.setIsRequest(false);
-            newResponseRecord.setContent(chatResponse.getMessage());
-            newResponseRecord.setChatTime(new Date());
- 
-            storage.addChatRecord(session, newRequestRecord);
-            storage.addChatRecord(session, newResponseRecord);
+        String runningResult = "";
+        try {
+            runningResult = CommonUtil.executeCommand(userInput);
+        }
+        catch(Exception ex) {
+            runningResult = ex.getMessage();
+        }
 
-            String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
-            return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
-        }
-        else {
-            throw new RuntimeException(chatResponse.getMessage());
-        }
+        String result = "$ " + userInput + "\n" + runningResult;
+        AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
+        newResponseRecord.setIsRequest(false);
+        newResponseRecord.setContent(result);
+        newResponseRecord.setChatTime(new Date());
+
+        storage.addChatRecord(session, newRequestRecord);
+        storage.addChatRecord(session, newResponseRecord);
+
+        String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
+        return CommonUtil.renderChatRecords(storage.getChatRecords(session), datetimeFormat);
     }
 
     private AIModel.ChatResponse fetchChatResponse(String session, String userInput) {
