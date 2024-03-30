@@ -15,7 +15,7 @@ import org.neo.servaweb.ifc.FunctionCallIFC;
 import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
 
-public class ChatWithCommandExpertForUIImpl implements ChatForUIIFC {
+public class ChatWithCommandExpertForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSaveTaskIFC {
     private StorageIFC storage = null;
     private SuperAIIFC superAI = null;
     private DBConnectionIFC dbConnection = null;
@@ -58,12 +58,42 @@ public class ChatWithCommandExpertForUIImpl implements ChatForUIIFC {
         return new ChatWithCommandExpertForUIImpl();
     }
 
+    protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
+        FunctionCallIFC functionCallIFC = new CommandCallImpl();
+
+        OpenAIForUIImpl openAIForUIImpl = new OpenAIForUIImpl();
+        openAIForUIImpl.setDBConnection(dbConnection);
+        SuperAIIFC superAI = openAIForUIImpl;
+
+        StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
+
+        ChatWithCommandExpertForUIImpl chatWithCommandExpertForUIImpl = ChatWithCommandExpertForUIImpl.getInstance();
+        chatWithCommandExpertForUIImpl.setSuperAI(superAI);
+        chatWithCommandExpertForUIImpl.setStorage(storage);
+        chatWithCommandExpertForUIImpl.setDBConnection(dbConnection);
+        chatWithCommandExpertForUIImpl.setFunctionCall(functionCallIFC);
+
+        ChatForUIIFC chatForUIIFC = chatWithCommandExpertForUIImpl;
+
+        return chatForUIIFC;
+    }
+
+    @Override
+    public Object query(DBConnectionIFC dbConnection) {
+        return null;
+    }
+
+    @Override
+    public Object save(DBConnectionIFC dbConnection) {
+        return null;
+    }
+
     @Override
     public String fetchResponse(String session, String userInput) {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeSaveTask(new AbsChatWithCommandExpertForUITask() {
+                return (String)dbService.executeSaveTask(new ChatWithCommandExpertForUIImpl() {
                     @Override
                     public Object save(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -132,7 +162,7 @@ public class ChatWithCommandExpertForUIImpl implements ChatForUIIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeSaveTask(new AbsChatWithCommandExpertForUITask() {
+                return (String)dbService.executeSaveTask(new ChatWithCommandExpertForUIImpl() {
                     @Override
                     public Object save(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -166,7 +196,7 @@ public class ChatWithCommandExpertForUIImpl implements ChatForUIIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeQueryTask(new AbsChatWithCommandExpertForUITask() {
+                return (String)dbService.executeQueryTask(new ChatWithCommandExpertForUIImpl() {
                     @Override
                     public Object query(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -193,7 +223,7 @@ public class ChatWithCommandExpertForUIImpl implements ChatForUIIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeQueryTask(new AbsChatWithCommandExpertForUITask() {
+                return (String)dbService.executeQueryTask(new ChatWithCommandExpertForUIImpl() {
                     @Override
                     public Object query(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -224,38 +254,5 @@ public class ChatWithCommandExpertForUIImpl implements ChatForUIIFC {
         tmpChatRecords.add(echoRecord);
         String datetimeFormat = CommonUtil.getConfigValue(dbConnection, "DateTimeFormat");
         return CommonUtil.renderChatRecords(tmpChatRecords, datetimeFormat);
-    }
-}
-
-abstract class AbsChatWithCommandExpertForUITask implements DBQueryTaskIFC, DBSaveTaskIFC {
-    protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
-        FunctionCallIFC functionCallIFC = new CommandCallImpl();
-
-        OpenAIForUIImpl openAIForUIImpl = new OpenAIForUIImpl();
-        openAIForUIImpl.setDBConnection(dbConnection);
-        SuperAIIFC superAI = openAIForUIImpl;
-
-        StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-
-        ChatWithCommandExpertForUIImpl chatWithCommandExpertForUIImpl = ChatWithCommandExpertForUIImpl.getInstance();
-        chatWithCommandExpertForUIImpl.setSuperAI(superAI);
-        chatWithCommandExpertForUIImpl.setStorage(storage);
-        chatWithCommandExpertForUIImpl.setDBConnection(dbConnection);
-        chatWithCommandExpertForUIImpl.setFunctionCall(functionCallIFC);
-
-        ChatForUIIFC chatForUIIFC = chatWithCommandExpertForUIImpl;
-
-        return chatForUIIFC;
-    }
-
-    @Override
-    public Object query(DBConnectionIFC dbConnection) {
-        return null;
-    }
-
-
-    @Override
-    public Object save(DBConnectionIFC dbConnection) {
-        return null;
     }
 }

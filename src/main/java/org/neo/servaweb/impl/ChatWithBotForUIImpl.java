@@ -14,7 +14,7 @@ import org.neo.servaweb.ifc.StorageIFC;
 import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
 
-public class ChatWithBotForUIImpl implements ChatForUIIFC {
+public class ChatWithBotForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSaveTaskIFC {
     private StorageIFC storage = null;
     private SuperAIIFC superAI = null;
     private DBConnectionIFC dbConnection = null;
@@ -51,11 +51,39 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC {
     }
 
     @Override
+    public Object query(DBConnectionIFC dbConnection) {
+        return null;
+    }
+
+
+    @Override
+    public Object save(DBConnectionIFC dbConnection) {
+        return null;
+    }
+
+    protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
+        OpenAIForUIImpl openAIForUIImpl = new OpenAIForUIImpl();
+        openAIForUIImpl.setDBConnection(dbConnection);
+        SuperAIIFC superAI = openAIForUIImpl;
+
+        StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
+
+        ChatWithBotForUIImpl chatForUIImpl = ChatWithBotForUIImpl.getInstance();
+        chatForUIImpl.setSuperAI(superAI);
+        chatForUIImpl.setStorage(storage);
+        chatForUIImpl.setDBConnection(dbConnection);
+
+        ChatForUIIFC chatForUIIFC = chatForUIImpl;
+
+        return chatForUIIFC;
+    }
+
+    @Override
     public String fetchResponse(String session, String userInput) {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeSaveTask(new AbsChatWithBotForUITask() {
+                return (String)dbService.executeSaveTask(new ChatWithBotForUIImpl() {
                     @Override
                     public Object save(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -111,7 +139,7 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeSaveTask(new AbsChatWithBotForUITask() {
+                return (String)dbService.executeSaveTask(new ChatWithBotForUIImpl() {
                     @Override
                     public Object save(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -145,7 +173,7 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeQueryTask(new AbsChatWithBotForUITask() {
+                return (String)dbService.executeQueryTask(new ChatWithBotForUIImpl() {
                     @Override
                     public Object query(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -172,7 +200,7 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeQueryTask(new AbsChatWithBotForUITask() {
+                return (String)dbService.executeQueryTask(new ChatWithBotForUIImpl() {
                     @Override
                     public Object query(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
@@ -206,32 +234,3 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC {
     }
 }
 
-abstract class AbsChatWithBotForUITask implements DBQueryTaskIFC, DBSaveTaskIFC {
-    protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
-        OpenAIForUIImpl openAIForUIImpl = new OpenAIForUIImpl();
-        openAIForUIImpl.setDBConnection(dbConnection);
-        SuperAIIFC superAI = openAIForUIImpl;
-
-        StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-
-        ChatWithBotForUIImpl chatForUIImpl = ChatWithBotForUIImpl.getInstance();
-        chatForUIImpl.setSuperAI(superAI);
-        chatForUIImpl.setStorage(storage);
-        chatForUIImpl.setDBConnection(dbConnection);
-
-        ChatForUIIFC chatForUIIFC = chatForUIImpl;
-
-        return chatForUIIFC;
-    }
-
-    @Override
-    public Object query(DBConnectionIFC dbConnection) {
-        return null;
-    }
-
-
-    @Override
-    public Object save(DBConnectionIFC dbConnection) {
-        return null;
-    }
-}
