@@ -14,6 +14,13 @@ import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
 
 public class ExecuteCommandForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSaveTaskIFC {
+    private ExecuteCommandForUIImpl() {
+    }
+
+    public static ExecuteCommandForUIImpl getInstance() {
+        return new ExecuteCommandForUIImpl();
+    }
+
     private StorageIFC storage = null;
     private DBConnectionIFC dbConnection = null;
 
@@ -33,13 +40,6 @@ public class ExecuteCommandForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DB
 
     private boolean isEnvironmentReady() {
         return (dbConnection != null) && (dbConnection.isValid());
-    }
-
-    private ExecuteCommandForUIImpl() {
-    }
-
-    public static ExecuteCommandForUIImpl getInstance() {
-        return new ExecuteCommandForUIImpl();
     }
 
     protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {

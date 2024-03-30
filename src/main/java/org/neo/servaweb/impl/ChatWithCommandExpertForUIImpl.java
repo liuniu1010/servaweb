@@ -16,6 +16,13 @@ import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
 
 public class ChatWithCommandExpertForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSaveTaskIFC {
+    private ChatWithCommandExpertForUIImpl() {
+    }
+
+    public static ChatWithCommandExpertForUIImpl getInstance() {
+        return new ChatWithCommandExpertForUIImpl();
+    }
+
     private StorageIFC storage = null;
     private SuperAIIFC superAI = null;
     private DBConnectionIFC dbConnection = null;
@@ -51,17 +58,10 @@ public class ChatWithCommandExpertForUIImpl implements ChatForUIIFC, DBQueryTask
         return (dbConnection != null) && (dbConnection.isValid());
     }
 
-    private ChatWithCommandExpertForUIImpl() {
-    }
-
-    public static ChatWithCommandExpertForUIImpl getInstance() {
-        return new ChatWithCommandExpertForUIImpl();
-    }
-
     protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
-        FunctionCallIFC functionCallIFC = new CommandCallImpl();
+        FunctionCallIFC functionCallIFC = CommandCallImpl.getInstance();
 
-        OpenAIForUIImpl openAIForUIImpl = new OpenAIForUIImpl();
+        OpenAIForUIImpl openAIForUIImpl = OpenAIForUIImpl.getInstance();
         openAIForUIImpl.setDBConnection(dbConnection);
         SuperAIIFC superAI = openAIForUIImpl;
 

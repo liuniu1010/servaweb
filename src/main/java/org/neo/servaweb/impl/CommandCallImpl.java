@@ -8,6 +8,13 @@ import org.neo.servaweb.ifc.FunctionCallIFC;
 import org.neo.servaweb.util.CommonUtil;
 
 public class CommandCallImpl implements FunctionCallIFC {
+    private CommandCallImpl() {
+    }
+
+    public static CommandCallImpl getInstance() {
+        return new CommandCallImpl();
+    }
+
     public List<AIModel.Function> getFunctions() {
         // executeCommand
         AIModel.Function executeCommand = generateFunctionForExecuteCommand();

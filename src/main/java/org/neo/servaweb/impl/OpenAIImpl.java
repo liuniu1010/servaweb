@@ -5,6 +5,13 @@ import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
 
 public class OpenAIImpl extends AbsOpenAIImpl {
+    protected OpenAIImpl() {
+    }
+
+    public static OpenAIImpl getInstance() {
+        return new OpenAIImpl();
+    }
+
     private static String gpt_4_turbo_preview = "gpt-4-turbo-preview";
     private static String gpt_35_turbo = "gpt-3.5-turbo";
 

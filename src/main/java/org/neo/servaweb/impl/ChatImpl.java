@@ -14,7 +14,14 @@ import org.neo.servaweb.ifc.StorageIFC;
 import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
 
-public class ChatImpl implements ChatIFC {
+public class ChatImpl implements ChatIFC, DBQueryTaskIFC, DBSaveTaskIFC {
+    private ChatImpl() {
+    }
+
+    public static ChatImpl getInstance() {
+        return new ChatImpl();
+    }
+
     private StorageIFC storage = null;
     private SuperAIIFC superAI = null;
     private DBConnectionIFC dbConnection = null;
@@ -41,11 +48,31 @@ public class ChatImpl implements ChatIFC {
         return (dbConnection != null) && (dbConnection.isValid());
     }
 
-    private ChatImpl() {
+    protected ChatIFC setupEnvironment(DBConnectionIFC dbConnection) {
+        OpenAIImpl openAIImpl = OpenAIImpl.getInstance();
+        openAIImpl.setDBConnection(dbConnection);
+        SuperAIIFC superAI = openAIImpl;
+
+        StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
+
+        ChatImpl chatImpl = ChatImpl.getInstance();
+        chatImpl.setSuperAI(superAI);
+        chatImpl.setStorage(storage);
+        chatImpl.setDBConnection(dbConnection);
+        ChatIFC chatIFC = chatImpl;
+
+        return chatIFC;
     }
 
-    public static ChatImpl getInstance() {
-        return new ChatImpl();
+    @Override
+    public Object query(DBConnectionIFC dbConnection) {
+        return null;
+    }
+
+
+    @Override
+    public Object save(DBConnectionIFC dbConnection) {
+        return null;
     }
 
     @Override
@@ -53,7 +80,7 @@ public class ChatImpl implements ChatIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                return (String)dbService.executeSaveTask(new AbsChatTask() {
+                return (String)dbService.executeSaveTask(new ChatImpl() {
                     @Override
                     public Object save(DBConnectionIFC dbConnection) {
                         ChatIFC chatIFC = super.setupEnvironment(dbConnection);
@@ -111,7 +138,7 @@ public class ChatImpl implements ChatIFC {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
-                dbService.executeSaveTask(new AbsChatTask() {
+                dbService.executeSaveTask(new ChatImpl() {
                     @Override
                     public Object save(DBConnectionIFC dbConnection) {
                         ChatIFC chatIFC = super.setupEnvironment(dbConnection);
@@ -134,34 +161,5 @@ public class ChatImpl implements ChatIFC {
 
     private void innerInitNewChat(String session) {
         storage.clearChatRecords(session);
-    }
-}
-
-abstract class AbsChatTask implements DBQueryTaskIFC, DBSaveTaskIFC {
-    protected ChatIFC setupEnvironment(DBConnectionIFC dbConnection) {
-        OpenAIImpl openAIImpl = new OpenAIImpl();
-        openAIImpl.setDBConnection(dbConnection);
-        SuperAIIFC superAI = openAIImpl;
-
-        StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
-
-        ChatImpl chatImpl = ChatImpl.getInstance();
-        chatImpl.setSuperAI(superAI);
-        chatImpl.setStorage(storage);
-        chatImpl.setDBConnection(dbConnection);
-        ChatIFC chatIFC = chatImpl;
-
-        return chatIFC;
-    }
-
-    @Override
-    public Object query(DBConnectionIFC dbConnection) {
-        return null;
-    }
-
-
-    @Override
-    public Object save(DBConnectionIFC dbConnection) {
-        return null;
     }
 }

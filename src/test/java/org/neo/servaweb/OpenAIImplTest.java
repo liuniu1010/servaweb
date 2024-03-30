@@ -86,7 +86,7 @@ public class OpenAIImplTest
 class GetModelTask implements DBQueryTaskIFC {
     @Override
     public Object query(DBConnectionIFC dbConnection) {
-        OpenAIImpl superAI = new OpenAIImpl();
+        OpenAIImpl superAI = OpenAIImpl.getInstance();
         superAI.setDBConnection(dbConnection);
         String[] models = superAI.getSupportModels();
         return models;
@@ -102,7 +102,7 @@ class FetchChatResponseTask implements DBQueryTaskIFC {
 
     @Override
     public Object query(DBConnectionIFC dbConnection) {
-        OpenAIImpl superAI = new OpenAIImpl();
+        OpenAIImpl superAI = OpenAIImpl.getInstance();
         superAI.setDBConnection(dbConnection);
         String[] models = superAI.getSupportModels();
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();

@@ -15,6 +15,13 @@ import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
 
 public class ChatWithBotForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSaveTaskIFC {
+    private ChatWithBotForUIImpl() {
+    }
+
+    public static ChatWithBotForUIImpl getInstance() {
+        return new ChatWithBotForUIImpl();
+    }
+
     private StorageIFC storage = null;
     private SuperAIIFC superAI = null;
     private DBConnectionIFC dbConnection = null;
@@ -43,12 +50,6 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSav
         return (dbConnection != null) && (dbConnection.isValid());
     }
 
-    private ChatWithBotForUIImpl() {
-    }
-
-    public static ChatWithBotForUIImpl getInstance() {
-        return new ChatWithBotForUIImpl();
-    }
 
     @Override
     public Object query(DBConnectionIFC dbConnection) {
@@ -62,7 +63,7 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSav
     }
 
     protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
-        OpenAIForUIImpl openAIForUIImpl = new OpenAIForUIImpl();
+        OpenAIForUIImpl openAIForUIImpl = OpenAIForUIImpl.getInstance();
         openAIForUIImpl.setDBConnection(dbConnection);
         SuperAIIFC superAI = openAIForUIImpl;
 
