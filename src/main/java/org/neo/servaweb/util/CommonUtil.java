@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.io.File;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.model.SQLStruct;
@@ -161,7 +162,20 @@ public class CommonUtil {
         return renderFormat;
     }
 
-    private static String[] parseCommand(String input) {
+    private static boolean isUnix() {
+        return File.separator.equals("/"); 
+    }
+
+    private static String[] wrapCommand(String input) {
+        if(isUnix()) {
+            return new String[] {"/bin/sh", "-c", input};
+        }
+        else {
+            return new String[] {"cmd", "/c", input};
+        }
+    }
+
+    private static String[] splitCommand(String input) {
         List<String> commandParts = new ArrayList<>();
         Matcher matcher = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(input);
         while (matcher.find()) {
@@ -172,8 +186,8 @@ public class CommonUtil {
 
     public static String executeCommand(String command) {
         try {
-            String[] parsedCommand = parseCommand(command);
-            ProcessBuilder processBuilder = new ProcessBuilder(parsedCommand);
+            String[] wrappedCommand = wrapCommand(command);
+            ProcessBuilder processBuilder = new ProcessBuilder(wrappedCommand);
             Process process = processBuilder.start();
 
             String stdResult = IOUtil.inputStreamToString(process.getInputStream());

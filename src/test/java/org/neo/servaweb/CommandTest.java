@@ -51,7 +51,8 @@ public class CommandTest
     }
 
     public void testCommand() throws Exception {
-        String command = "ls -l /tmp/";
+        // String command = "/bin/sh -c \"ls -l | grep liuniu\"";
+        String command = "ls -l /tmp/ | grep abc";
         System.out.println("command = " + command);
         try {
             String result = CommonUtil.executeCommand(command);
