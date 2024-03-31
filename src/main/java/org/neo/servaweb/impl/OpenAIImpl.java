@@ -14,6 +14,8 @@ public class OpenAIImpl extends AbsOpenAIImpl {
 
     private static String gpt_4_turbo_preview = "gpt-4-turbo-preview";
     private static String gpt_35_turbo = "gpt-3.5-turbo";
+    private static String text_embedding_3_large = "text-embedding-3-large";
+    private static String text_embedding_3_small = "text-embedding-3-small";
 
     private DBConnectionIFC dbConnection;
 
@@ -35,15 +37,24 @@ public class OpenAIImpl extends AbsOpenAIImpl {
     }
 
     @Override
-    public String[] getSupportModels() {
+    public String[] getChatModels() {
         return new String[]{gpt_4_turbo_preview, gpt_35_turbo};
+    }
+
+    @Override
+    public String[] getEmbeddingModels() {
+        return new String[]{text_embedding_3_large, text_embedding_3_small};
     }
 
     @Override
     protected String getUrl(String model) {
         if(model.equals(gpt_4_turbo_preview)
-           || model.equals(gpt_35_turbo)) {
+            || model.equals(gpt_35_turbo)) {
             return "https://api.openai.com/v1/chat/completions";
+        }
+        else if(model.equals(text_embedding_3_large)
+            || model.equals(text_embedding_3_small)) {
+            return "https://api.openai.com/v1/embeddings";
         }
         else {
             throw new RuntimeException("model " + model + " not supported!");

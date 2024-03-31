@@ -49,7 +49,7 @@ public class OpenAIImplTest
         return new TestSuite( OpenAIImplTest.class );
     }
 
-    private String[] getSupportModels() {
+    private String[] getChatModels() {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String[])dbService.executeQueryTask(new GetModelTask());
     }
@@ -59,8 +59,13 @@ public class OpenAIImplTest
         return (String)dbService.executeQueryTask(new FetchChatResponseTask(userInput));
     }
 
-    public void testGetSupportModels() {
-        String[] models = getSupportModels();
+    private AIModel.Embedding getEmbedding(String userInput) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        return (AIModel.Embedding)dbService.executeQueryTask(new GetEmbeddingTask(userInput));
+    }
+
+    public void testGetChatModels() {
+        String[] models = getChatModels();
         System.out.println("models.size = " + models.length);
         for(String model: models) {
             System.out.println("model = " + model);
@@ -80,7 +85,19 @@ public class OpenAIImplTest
         }
     }
 
-    
+    public void testGetEmbedding() throws Exception {
+        try {
+            String userInput = "Hello, how are you! I'm Neo, nice to meet you!";
+            AIModel.Embedding embedding = getEmbedding(userInput);
+            System.out.println("userInput = " + userInput);
+            System.out.println("embedding.size = " + embedding.size());
+            System.out.println("embedding = " + embedding.toString());
+        }
+        catch(Exception ex) {
+            System.out.println("ex.message = " + ex.getMessage());
+            throw ex;
+        }
+    } 
 }
 
 class GetModelTask implements DBQueryTaskIFC {
@@ -88,7 +105,7 @@ class GetModelTask implements DBQueryTaskIFC {
     public Object query(DBConnectionIFC dbConnection) {
         OpenAIImpl superAI = OpenAIImpl.getInstance();
         superAI.setDBConnection(dbConnection);
-        String[] models = superAI.getSupportModels();
+        String[] models = superAI.getChatModels();
         return models;
     }
 }
@@ -104,10 +121,27 @@ class FetchChatResponseTask implements DBQueryTaskIFC {
     public Object query(DBConnectionIFC dbConnection) {
         OpenAIImpl superAI = OpenAIImpl.getInstance();
         superAI.setDBConnection(dbConnection);
-        String[] models = superAI.getSupportModels();
+        String[] models = superAI.getChatModels();
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         promptStruct.setUserInput(userInput);
         AIModel.ChatResponse chatResponse = superAI.fetchChatResponse(models[0], promptStruct);
         return chatResponse.getMessage(); 
+    }
+}
+
+class GetEmbeddingTask implements DBQueryTaskIFC {
+    private String userInput;
+
+    public GetEmbeddingTask(String inputUserInput) {
+        userInput = inputUserInput;
+    }
+
+    @Override
+    public Object query(DBConnectionIFC dbConnection) {
+        OpenAIImpl superAI = OpenAIImpl.getInstance();
+        superAI.setDBConnection(dbConnection);
+        String[] models = superAI.getEmbeddingModels();
+        AIModel.Embedding embedding = superAI.getEmbedding(models[0], userInput, 12);
+        return embedding; 
     }
 }

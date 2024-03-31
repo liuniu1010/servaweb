@@ -65,10 +65,49 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         }
     }
 
+    @Override
+    public AIModel.Embedding getEmbedding(String model, String input) {
+        try {
+            AIModel.Embedding embedding = innerGetEmbedding(model, input, -1);
+            return embedding;
+        }
+        catch(RuntimeException rex) {
+            logger.error(rex.getMessage(), rex);
+            throw rex;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public AIModel.Embedding getEmbedding(String model, String input, int dimensions) {
+        try {
+            AIModel.Embedding embedding = innerGetEmbedding(model, input, dimensions);
+            return embedding;
+        }
+        catch(RuntimeException rex) {
+            logger.error(rex.getMessage(), rex);
+            throw rex;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
     private AIModel.ChatResponse innerFetchChatResponse(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) throws Exception {
         int maxTokens = determineMaxTokens(model, promptStruct, functionCallIFC);
         AIModel.ChatResponse chatResponse = innerFetchChatResponse(model, promptStruct, maxTokens, functionCallIFC);
         return chatResponse;
+    }
+
+    private AIModel.Embedding innerGetEmbedding(String model, String input, int dimensions) throws Exception {
+        String jsonInput = generateJsonBodyToGetEmbedding(model, input, dimensions);
+        String jsonResponse = send(model, jsonInput);
+        AIModel.Embedding embedding = extractEmbeddingFromJson(jsonResponse);
+        return embedding;
     }
 
     private int determineMaxTokens(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) throws Exception {
@@ -107,6 +146,22 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         JsonObject jsonObject = element.getAsJsonObject();
         int tokenNumber = jsonObject.getAsJsonObject("usage").get("prompt_tokens").getAsInt();
         return tokenNumber;
+    }
+
+    private AIModel.Embedding extractEmbeddingFromJson(String jsonResponse) {
+        JsonElement element = JsonParser.parseString(jsonResponse);
+        JsonObject jsonObject = element.getAsJsonObject();
+
+        JsonArray dataArray = jsonObject.getAsJsonArray("data").get(0).getAsJsonObject().getAsJsonArray("embedding");
+
+        int size = dataArray.size();
+        double[] data = new double[size];
+        for(int i = 0;i < size;i++) {
+            data[i] = dataArray.get(i).getAsDouble();
+        }
+
+        AIModel.Embedding embedding = new AIModel.Embedding(data);
+        return embedding;
     }
 
     private List<AIModel.Call> extractCallsFromJson(String jsonResponse) throws Exception {
@@ -276,6 +331,19 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
             JsonArray tools = generateJsonArrayTools(functionCallIFC);
             jsonBody.add("tools", tools);
         }
+        return gson.toJson(jsonBody);
+    }
+
+    private String generateJsonBodyToGetEmbedding(String model, String input, int dimensions) {
+        Gson gson = new Gson();
+        JsonObject jsonBody = new JsonObject();
+
+        jsonBody.addProperty("model", model);
+        jsonBody.addProperty("input", input);
+        if(dimensions > 0) {
+            jsonBody.addProperty("dimensions", dimensions);
+        }
+
         return gson.toJson(jsonBody);
     }
 

@@ -102,7 +102,7 @@ public class Role2ChatImpl implements ChatIFC {
         promptStruct.setChatRecords(chatRecords);
         promptStruct.setUserInput(userInput);
 
-        String[] models = superAI.getSupportModels();
+        String[] models = superAI.getChatModels();
         return superAI.fetchChatResponse(models[0], promptStruct);
     }
 

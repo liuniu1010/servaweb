@@ -131,7 +131,7 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSav
         promptStruct.setChatRecords(chatRecords);
         promptStruct.setUserInput(userInput);
 
-        String[] models = superAI.getSupportModels();
+        String[] models = superAI.getChatModels();
         return superAI.fetchChatResponse(models[0], promptStruct);
     }
 

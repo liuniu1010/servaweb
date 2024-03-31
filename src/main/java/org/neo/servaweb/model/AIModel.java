@@ -220,4 +220,34 @@ public class AIModel {
             return str;
         }
     }
+
+    public static class Embedding {
+        private double[] data;
+
+        public Embedding(double[] inputData) {
+            data = inputData;
+        }
+
+        public int size() {
+            return (data == null)?0:data.length;
+        }
+
+        public double get(int index) {
+            return data[index];
+        }
+
+        @Override
+        public String toString() {
+            String str = "[";
+            for(int i = 0;i < this.size();i++) {
+                if(i > 0) {
+                    str += ", ";
+                }
+                str += data[i];
+            }
+            str += "]";
+
+            return str;
+        }
+    }
 }

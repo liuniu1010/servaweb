@@ -161,7 +161,7 @@ public class ChatWithCommandExecutorForUIImpl implements ChatForUIIFC, DBQueryTa
         promptStruct.setChatRecords(chatRecords);
         promptStruct.setUserInput(userInput);
 
-        String[] models = superAI.getSupportModels();
+        String[] models = superAI.getChatModels();
         return superAI.fetchChatResponse(models[0], promptStruct, functionCallIFC);
     }
 

@@ -49,7 +49,7 @@ public class BotChatBotTest
         return new TestSuite( BotChatBotTest.class );
     }
 
-    private String[] getSupportModels() {
+    private String[] getChatModels() {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String[])dbService.executeQueryTask(new GetModelTask());
     }

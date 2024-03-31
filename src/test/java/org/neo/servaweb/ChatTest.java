@@ -49,7 +49,7 @@ public class ChatTest
         return new TestSuite( ChatTest.class );
     }
 
-    private String[] getSupportModels() {
+    private String[] getChatModels() {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String[])dbService.executeQueryTask(new GetModelTask());
     }
