@@ -64,7 +64,7 @@ public class OpenAIImplTest
         return (AIModel.Embedding)dbService.executeQueryTask(new GetEmbeddingTask(userInput));
     }
 
-    private String[] generateImage(String userInput) {
+    private String[] generateImages(String userInput) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (String[])dbService.executeQueryTask(new GenerateImageTask(userInput));
     }
@@ -107,7 +107,7 @@ public class OpenAIImplTest
     public void testGenerateImage() throws Exception {
         try {
             String userInput = "Blue sky outside the window, with white clouds and blue sea";
-            String[] urls = generateImage(userInput);
+            String[] urls = generateImages(userInput);
             for(String url: urls) {
                 System.out.println("image url = " + url);
             }
@@ -179,7 +179,7 @@ class GenerateImageTask implements DBQueryTaskIFC {
         String[] models = openAI.getImageModels();
         AIModel.ImagePrompt imagePrompt = new AIModel.ImagePrompt();
         imagePrompt.setUserInput(userInput);
-        String[] urls = openAI.generateImage(models[0], imagePrompt);
+        String[] urls = openAI.generateImages(models[0], imagePrompt);
         return urls; 
     }
 }

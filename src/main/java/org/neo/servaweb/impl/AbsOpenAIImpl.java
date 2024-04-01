@@ -94,7 +94,7 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
     }
 
     @Override
-    public String[] generateImage(String model, AIModel.ImagePrompt imagePrompt) {
+    public String[] generateImages(String model, AIModel.ImagePrompt imagePrompt) {
         try {
             return innerGenerateImage(model, imagePrompt);
         }
