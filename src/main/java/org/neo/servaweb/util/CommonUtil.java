@@ -207,4 +207,20 @@ public class CommonUtil {
             throw new RuntimeException(ex);
         }
     }
+
+    public static double consineSimilarity(AIModel.Embedding embeddingA, AIModel.Embedding embeddingB) {
+        if(embeddingA.size() != embeddingB.size()) {
+            throw new RuntimeException("consineSimilartiy can only be applied with two embeddings with the same dimension");
+        }
+
+        double dotProduct = 0.0;
+        double normA = 0.0;
+        double normB = 0.0;
+        for (int i = 0; i < embeddingA.size(); i++) {
+            dotProduct += embeddingA.get(i) * embeddingB.get(i);
+            normA += Math.pow(embeddingA.get(i), 2);
+            normB += Math.pow(embeddingB.get(i), 2);
+        }   
+        return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    }
 }
