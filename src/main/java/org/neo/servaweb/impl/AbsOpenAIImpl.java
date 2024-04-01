@@ -183,8 +183,17 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
     }
 
     private String[] extractImageUrlsFromJson(String jsonResponse) {
-        // to be imeplented
-        return null;
+        JsonElement element = JsonParser.parseString(jsonResponse);
+        JsonObject jsonObject = element.getAsJsonObject();
+
+        JsonArray jsonData = jsonObject.getAsJsonArray("data");
+        String[] urls = new String[jsonData.size()];
+        for(int i = 0;i < jsonData.size();i++) {
+            String url = jsonData.get(i).getAsJsonObject().get("url").getAsString();
+            urls[i] = url;
+        }
+
+        return urls;
     }
 
     private List<AIModel.Call> extractCallsFromJson(String jsonResponse) throws Exception {
