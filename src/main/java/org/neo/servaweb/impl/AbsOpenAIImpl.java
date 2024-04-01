@@ -36,8 +36,7 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
     @Override
     public AIModel.ChatResponse fetchChatResponse(String model, AIModel.PromptStruct promptStruct) {
         try {
-            AIModel.ChatResponse chatResponse = innerFetchChatResponse(model, promptStruct, null);
-            return chatResponse;
+            return innerFetchChatResponse(model, promptStruct, null);
         }
         catch(RuntimeException rex) {
             logger.error(rex.getMessage(), rex);
@@ -52,8 +51,7 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
     @Override
     public AIModel.ChatResponse fetchChatResponse(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) {
         try {
-            AIModel.ChatResponse chatResponse = innerFetchChatResponse(model, promptStruct, functionCallIFC);
-            return chatResponse;
+            return innerFetchChatResponse(model, promptStruct, functionCallIFC);
         }
         catch(RuntimeException rex) {
             logger.error(rex.getMessage(), rex);
@@ -68,8 +66,7 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
     @Override
     public AIModel.Embedding getEmbedding(String model, String input) {
         try {
-            AIModel.Embedding embedding = innerGetEmbedding(model, input, -1);
-            return embedding;
+            return innerGetEmbedding(model, input, -1);
         }
         catch(RuntimeException rex) {
             logger.error(rex.getMessage(), rex);
@@ -84,8 +81,22 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
     @Override
     public AIModel.Embedding getEmbedding(String model, String input, int dimensions) {
         try {
-            AIModel.Embedding embedding = innerGetEmbedding(model, input, dimensions);
-            return embedding;
+            return innerGetEmbedding(model, input, dimensions);
+        }
+        catch(RuntimeException rex) {
+            logger.error(rex.getMessage(), rex);
+            throw rex;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public String[] generateImage(String model, AIModel.ImagePrompt imagePrompt) {
+        try {
+            return innerGenerateImage(model, imagePrompt);
         }
         catch(RuntimeException rex) {
             logger.error(rex.getMessage(), rex);
@@ -101,6 +112,13 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         int maxTokens = determineMaxTokens(model, promptStruct, functionCallIFC);
         AIModel.ChatResponse chatResponse = innerFetchChatResponse(model, promptStruct, maxTokens, functionCallIFC);
         return chatResponse;
+    }
+
+    private String[] innerGenerateImage(String model, AIModel.ImagePrompt imagePrompt) throws Exception {
+        String jsonInput = generateJsonBodyToGenerateImage(model, imagePrompt);
+        String jsonResponse = send(model, jsonInput);
+        String[] urls = extractImageUrlsFromJson(jsonResponse);
+        return urls;
     }
 
     private AIModel.Embedding innerGetEmbedding(String model, String input, int dimensions) throws Exception {
@@ -162,6 +180,11 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
 
         AIModel.Embedding embedding = new AIModel.Embedding(data);
         return embedding;
+    }
+
+    private String[] extractImageUrlsFromJson(String jsonResponse) {
+        // to be imeplented
+        return null;
     }
 
     private List<AIModel.Call> extractCallsFromJson(String jsonResponse) throws Exception {
@@ -343,6 +366,18 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         if(dimensions > 0) {
             jsonBody.addProperty("dimensions", dimensions);
         }
+
+        return gson.toJson(jsonBody);
+    }
+
+    private String generateJsonBodyToGenerateImage(String model, AIModel.ImagePrompt imagePrompt) {
+        Gson gson = new Gson();
+        JsonObject jsonBody = new JsonObject();
+
+        jsonBody.addProperty("model", model);
+        jsonBody.addProperty("prompt", imagePrompt.getUserInput());
+        jsonBody.addProperty("size", imagePrompt.getSize());
+        jsonBody.addProperty("n", imagePrompt.getNumber());
 
         return gson.toJson(jsonBody);
     }

@@ -83,6 +83,36 @@ public class AIModel {
         }
     }
 
+    public static class ImagePrompt {
+        private String userInput;
+        private String size = "1024x1024";   // default as 1024x1024
+        private int number = 1; // default as 1
+
+        public String getUserInput() {
+            return userInput;
+        }
+
+        public void setUserInput(String inputUserInput) {
+            userInput = inputUserInput;
+        }
+       
+        public String getSize() {
+            return size;
+        }
+
+        public void setSize(String inputSize) {
+            size = inputSize;
+        }
+
+        public int getNumber() {
+            return number;
+        }
+
+        public void setNumber(int inputNumber) {
+            number = inputNumber;
+        }
+    }
+
     public static class ChatResponse {
         private boolean isSuccess;
         private String message;   // in case isSuccess is false, message is exception info
