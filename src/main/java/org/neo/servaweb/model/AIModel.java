@@ -324,22 +324,22 @@ public class AIModel {
             for(int i = 0;i < jsonArray.size();i++) {
                 Attachment attachment = null;
                 JsonObject jsonAttachment = jsonArray.get(i).getAsJsonObject();
-                if(!jsonAttachment.get("type").getAsString().equals("jpegAsUrl")) {
+                if(jsonAttachment.get("type").getAsString().equals("jpegAsUrl")) {
                     attachment = JpegFileAsUrl.fromJsonObject(jsonAttachment);
                 }
-                else if(!jsonAttachment.get("type").getAsString().equals("jpegAsBase64")) {
+                else if(jsonAttachment.get("type").getAsString().equals("jpegAsBase64")) {
                     attachment = JpegFileAsBase64.fromJsonObject(jsonAttachment);
                 }
-                else if(!jsonAttachment.get("type").getAsString().equals("pngAsUrl")) {
+                else if(jsonAttachment.get("type").getAsString().equals("pngAsUrl")) {
                     attachment = PngFileAsUrl.fromJsonObject(jsonAttachment);
                 }
-                else if(!jsonAttachment.get("type").getAsString().equals("pngAsBase64")) {
+                else if(jsonAttachment.get("type").getAsString().equals("pngAsBase64")) {
                     attachment = PngFileAsBase64.fromJsonObject(jsonAttachment);
                 }
-                else if(!jsonAttachment.get("type").getAsString().equals("pdfAsUrl")) {
+                else if(jsonAttachment.get("type").getAsString().equals("pdfAsUrl")) {
                     attachment = PdfFileAsUrl.fromJsonObject(jsonAttachment);
                 }
-                else if(!jsonAttachment.get("type").getAsString().equals("pdfAsBase64")) {
+                else if(jsonAttachment.get("type").getAsString().equals("pdfAsBase64")) {
                     attachment = PdfFileAsBase64.fromJsonObject(jsonAttachment);
                 }
 
@@ -357,7 +357,7 @@ public class AIModel {
         abstract public JsonObject toJsonObject();
     }
 
-    abstract static class AttachmentAsUrl implements Attachment {
+    abstract public static class AttachmentAsUrl implements Attachment {
         private String url;
 
         public String getUrl() {
@@ -369,7 +369,7 @@ public class AIModel {
         }
     }
 
-    abstract static class AttachmentAsBase64 implements Attachment {
+    abstract public static class AttachmentAsBase64 implements Attachment {
         private String base64;
 
         public String getBase64() {
