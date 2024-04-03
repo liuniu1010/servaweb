@@ -280,4 +280,70 @@ public class AIModel {
             return str;
         }
     }
+
+    public static class AttachmentGroup {
+        List<Attachment> attachments;
+
+        public List<Attachment> getAttachment() {
+            return attachments;
+        }
+
+        public void setAttachments(List<Attachment> inputAttachments) {
+            attachments = inputAttachments;
+        }
+    }
+
+    public static interface Attachment {
+    }
+
+    abstract static class AttachmentAsUrl implements Attachment {
+        private String url;
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String inputUrl) {
+            url = inputUrl;
+        }
+    }
+
+    abstract static class AttachmentAsBase64 implements Attachment {
+        private String base64;
+
+        public String getBase64() {
+            return base64;
+        }
+
+        public void setBase64(String inputBase64) {
+            base64 = inputBase64;
+        }
+    }
+
+    public static interface JpegFile extends Attachment {
+    }
+
+    public static interface PngFile extends Attachment {
+    }
+
+    public static interface PdfFile extends Attachment {
+    }
+
+    public static class JpegFileAsUrl extends AttachmentAsUrl implements JpegFile {
+    }
+
+    public static class JpegFileAsBase64 extends AttachmentAsBase64 implements JpegFile {
+    }
+
+    public static class PngFileAsUrl extends AttachmentAsUrl implements PngFile {
+    }
+
+    public static class PngFileAsBase64 extends AttachmentAsBase64 implements PngFile {
+    }
+
+    public static class PdfFileAsUrl extends AttachmentAsUrl implements PdfFile {
+    }
+
+    public static class PdfFileAsBase64 extends AttachmentAsBase64 implements PdfFile {
+    }
 }
