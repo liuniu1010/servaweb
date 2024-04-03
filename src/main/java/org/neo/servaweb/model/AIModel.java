@@ -20,6 +20,7 @@ public class AIModel {
         public static final String SESSION = "session";
         public static final String CHATTIME = "chattime";
         public static final String CONTENT = "content";
+        public static final String ATTACHMENTGROUP = "attachmentgroup";
         public static final String ISREQUEST = "isrequest";
 
         public ChatRecord(VersionEntity inputVersionEntity) {
@@ -59,6 +60,14 @@ public class AIModel {
             versionEntity.setAttribute(CONTENT, inputContent);
         }
 
+        public String getAttachmentGroup() {
+            return (String)versionEntity.getAttribute(ATTACHMENTGROUP);
+        }
+
+        public void setAttachmentGroup(String inputAttachmentGroup) {
+            versionEntity.setAttribute(ATTACHMENTGROUP, inputAttachmentGroup);
+        }
+
         public boolean getIsRequest() {
             return (boolean)versionEntity.getAttribute(ISREQUEST);
         }
@@ -71,6 +80,7 @@ public class AIModel {
     public static class PromptStruct {
         private List<AIModel.ChatRecord> chatRecords = new ArrayList<AIModel.ChatRecord>();
         private String userInput;
+        private AIModel.AttachmentGroup attachmentGroup;
 
         public List<AIModel.ChatRecord> getChatRecords() {
             return chatRecords;
@@ -86,6 +96,14 @@ public class AIModel {
 
         public void setUserInput(String inputUserInput) {
             userInput = inputUserInput;
+        }
+
+        public AIModel.AttachmentGroup getAttachmentGroup() {
+            return attachmentGroup;
+        }
+
+        public void setAttachmentGroup(AIModel.AttachmentGroup inputAttachmentGroup) {
+            attachmentGroup = inputAttachmentGroup;
         }
     }
 

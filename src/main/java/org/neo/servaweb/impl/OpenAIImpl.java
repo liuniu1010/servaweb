@@ -1,11 +1,15 @@
 package org.neo.servaweb.impl;
 
+import java.util.Map;
+import java.util.HashMap;
+
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
 
 public class OpenAIImpl extends AbsOpenAIImpl {
     protected OpenAIImpl() {
+        setup();
     }
 
     public static OpenAIImpl getInstance() {
@@ -18,6 +22,42 @@ public class OpenAIImpl extends AbsOpenAIImpl {
     private static String text_embedding_3_small = "text-embedding-3-small";
     private static String dall_e_3 = "dall-e-3";
     private static String dall_e_2 = "dall-e-2";
+    private static String gpt_4_vision_preview = "gpt-4-vision-preview";
+
+    private String[] chatModels;
+    private String[] embeddingModels;
+    private String[] imageModels;
+    private String[] visionModels;
+
+    private Map<String, String> urlMapping;
+    private Map<String, Integer> contextWindowMapping;
+    private Map<String, Integer> maxOutputMapping;
+
+    private void setup() {
+        chatModels = new String[]{gpt_4_turbo_preview, gpt_35_turbo};
+        embeddingModels = new String[]{text_embedding_3_large, text_embedding_3_small};
+        imageModels = new String[]{dall_e_3, dall_e_2};
+        visionModels = new String[]{gpt_4_vision_preview};
+
+        urlMapping = new HashMap<String, String>();
+        urlMapping.put(gpt_4_turbo_preview, "https://api.openai.com/v1/chat/completions");
+        urlMapping.put(gpt_35_turbo, "https://api.openai.com/v1/chat/completions");
+        urlMapping.put(text_embedding_3_large, "https://api.openai.com/v1/embeddings");
+        urlMapping.put(text_embedding_3_small, "https://api.openai.com/v1/embeddings");
+        urlMapping.put(dall_e_3, "https://api.openai.com/v1/images/generations");
+        urlMapping.put(dall_e_2, "https://api.openai.com/v1/images/generations");
+        urlMapping.put(gpt_4_vision_preview, "https://api.openai.com/v1/chat/completions");
+
+        contextWindowMapping = new HashMap<String, Integer>();
+        contextWindowMapping.put(gpt_4_turbo_preview, 128000);
+        contextWindowMapping.put(gpt_35_turbo, 16385);
+        contextWindowMapping.put(gpt_4_vision_preview, 128000);
+
+        maxOutputMapping = new HashMap<String, Integer>();
+        maxOutputMapping.put(gpt_4_turbo_preview, 4096);
+        maxOutputMapping.put(gpt_35_turbo, 4096);
+        maxOutputMapping.put(gpt_4_vision_preview, 4096);
+    }
 
     private DBConnectionIFC dbConnection;
 
@@ -40,58 +80,52 @@ public class OpenAIImpl extends AbsOpenAIImpl {
 
     @Override
     public String[] getChatModels() {
-        return new String[]{gpt_4_turbo_preview, gpt_35_turbo};
+        return chatModels;
     }
 
     @Override
     public String[] getEmbeddingModels() {
-        return new String[]{text_embedding_3_large, text_embedding_3_small};
+        return embeddingModels;
     }
 
     @Override
     public String[] getImageModels() {
-        return new String[]{dall_e_3, dall_e_2};
+        return imageModels;
+    }
+
+    @Override
+    public String[] getVisionModels() {
+        return visionModels;
     }
 
     @Override
     protected String getUrl(String model) {
-        if(model.equals(gpt_4_turbo_preview)
-            || model.equals(gpt_35_turbo)) {
-            return "https://api.openai.com/v1/chat/completions";
-        }
-        else if(model.equals(text_embedding_3_large)
-            || model.equals(text_embedding_3_small)) {
-            return "https://api.openai.com/v1/embeddings";
-        }
-        else if(model.equals(dall_e_3)
-            || model.equals(dall_e_2)) {
-            return "https://api.openai.com/v1/images/generations";
+        if(urlMapping.containsKey(model)) {
+            return urlMapping.get(model);
         }
         else {
-            throw new RuntimeException("model " + model + " not supported!");
+            throw new RuntimeException("model " + model + " not supported to get url!");
         }
     }
 
     @Override
     protected int getContextWindow(String model) {
-        if(model.equals(gpt_4_turbo_preview)) {
-            return 128000;
+        if(contextWindowMapping.containsKey(model)) {
+            return contextWindowMapping.get(model);
         }
-        else if(model.equals(gpt_35_turbo)) {
-            return 16385;
+        else {
+            throw new RuntimeException("model " + model + " not supported to get context window!");
         }
-        return -1;
     }
 
     @Override
     protected int getMaxOutputTokenNumber(String model) {
-        if(model.equals(gpt_4_turbo_preview)) {
-            return 4096;
+        if(maxOutputMapping.containsKey(model)) {
+            return maxOutputMapping.get(model);
         }
-        else if(model.equals(gpt_35_turbo)) {
-            return 4096;
+        else {
+            throw new RuntimeException("model " + model + " not supported to get max output tokens!");
         }
-        return -1;
     }
 
     @Override

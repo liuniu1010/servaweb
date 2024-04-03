@@ -7,6 +7,7 @@ public interface SuperAIIFC {
     public String[] getChatModels();
     public String[] getEmbeddingModels();
     public String[] getImageModels();
+    public String[] getVisionModels();
     public AIModel.ChatResponse fetchChatResponse(String inputModel, AIModel.PromptStruct inputPromptStruct);
     public AIModel.ChatResponse fetchChatResponse(String inputModel, AIModel.PromptStruct inputPromptStruct, FunctionCallIFC functionCallIFC);
 }
