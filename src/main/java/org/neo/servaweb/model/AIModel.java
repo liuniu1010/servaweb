@@ -4,6 +4,12 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+
 import org.neo.servaframe.model.VersionEntity;
 
 public class AIModel {
@@ -291,9 +297,64 @@ public class AIModel {
         public void setAttachments(List<Attachment> inputAttachments) {
             attachments = inputAttachments;
         }
+
+        public JsonObject toJsonObject() {
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("type", "attachmentGroup");
+ 
+            JsonArray jsonArray = new JsonArray();
+            for(Attachment attachment: attachments) {
+                JsonObject jsonAttachment = attachment.toJsonObject();
+                jsonArray.add(jsonAttachment);
+            }
+
+            jsonObject.add("attachments", jsonArray);
+
+            return jsonObject;
+        }
+
+        public static AttachmentGroup fromJsonObject(JsonObject jsonObject) {
+            if(!jsonObject.get("type").getAsString().equals("attachmentGroup")) {
+                throw new RuntimeException("this jsonObject is not an AttachmentGroup");
+            }
+
+            AttachmentGroup attachmentGroup = new AttachmentGroup();
+            List<Attachment> attachments = new ArrayList<Attachment>();
+            JsonArray jsonArray = jsonObject.getAsJsonArray("attachments");
+            for(int i = 0;i < jsonArray.size();i++) {
+                Attachment attachment = null;
+                JsonObject jsonAttachment = jsonArray.get(i).getAsJsonObject();
+                if(!jsonAttachment.get("type").getAsString().equals("jpegAsUrl")) {
+                    attachment = JpegFileAsUrl.fromJsonObject(jsonAttachment);
+                }
+                else if(!jsonAttachment.get("type").getAsString().equals("jpegAsBase64")) {
+                    attachment = JpegFileAsBase64.fromJsonObject(jsonAttachment);
+                }
+                else if(!jsonAttachment.get("type").getAsString().equals("pngAsUrl")) {
+                    attachment = PngFileAsUrl.fromJsonObject(jsonAttachment);
+                }
+                else if(!jsonAttachment.get("type").getAsString().equals("pngAsBase64")) {
+                    attachment = PngFileAsBase64.fromJsonObject(jsonAttachment);
+                }
+                else if(!jsonAttachment.get("type").getAsString().equals("pdfAsUrl")) {
+                    attachment = PdfFileAsUrl.fromJsonObject(jsonAttachment);
+                }
+                else if(!jsonAttachment.get("type").getAsString().equals("pdfAsBase64")) {
+                    attachment = PdfFileAsBase64.fromJsonObject(jsonAttachment);
+                }
+
+                if(attachment != null) {
+                    attachments.add(attachment);
+                } 
+            }
+
+            attachmentGroup.setAttachments(attachments);
+            return attachmentGroup;
+        }
     }
 
     public static interface Attachment {
+        abstract public JsonObject toJsonObject();
     }
 
     abstract static class AttachmentAsUrl implements Attachment {
@@ -330,20 +391,128 @@ public class AIModel {
     }
 
     public static class JpegFileAsUrl extends AttachmentAsUrl implements JpegFile {
+        @Override
+        public JsonObject toJsonObject() {
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("type", "jpegAsUrl");
+            jsonObject.addProperty("url", getUrl());
+
+            return jsonObject;
+        }
+
+        public static JpegFileAsUrl fromJsonObject(JsonObject jsonObject) {
+            if(!jsonObject.get("type").getAsString().equals("jpegAsUrl")) {
+                throw new RuntimeException("this jsonObject is not a JpegAsUrl");
+            }
+
+            JpegFileAsUrl jpegFileAsUrl = new JpegFileAsUrl();
+            jpegFileAsUrl.setUrl(jsonObject.get("url").getAsString());
+            return jpegFileAsUrl;
+        }
     }
 
     public static class JpegFileAsBase64 extends AttachmentAsBase64 implements JpegFile {
+        @Override
+        public JsonObject toJsonObject() {
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("type", "jpegAsBase64");
+            jsonObject.addProperty("base64", getBase64());
+
+            return jsonObject;
+        }
+
+        public static JpegFileAsBase64 fromJsonObject(JsonObject jsonObject) {
+            if(!jsonObject.get("type").getAsString().equals("jpegAsBase64")) {
+                throw new RuntimeException("this jsonObject is not a JpegAsBase64");
+            }
+
+            JpegFileAsBase64 jpegFileAsBase64 = new JpegFileAsBase64();
+            jpegFileAsBase64.setBase64(jsonObject.get("base64").getAsString());
+            return jpegFileAsBase64;
+        }
     }
 
     public static class PngFileAsUrl extends AttachmentAsUrl implements PngFile {
+        @Override
+        public JsonObject toJsonObject() {
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("type", "pngAsUrl");
+            jsonObject.addProperty("url", getUrl());
+
+            return jsonObject;
+        }
+
+        public static PngFileAsUrl fromJsonObject(JsonObject jsonObject) {
+            if(!jsonObject.get("type").getAsString().equals("pngAsUrl")) {
+                throw new RuntimeException("this jsonObject is not a PngAsUrl");
+            }
+
+            PngFileAsUrl pngFileAsUrl = new PngFileAsUrl();
+            pngFileAsUrl.setUrl(jsonObject.get("url").getAsString());
+            return pngFileAsUrl;
+        }
     }
 
     public static class PngFileAsBase64 extends AttachmentAsBase64 implements PngFile {
+        @Override
+        public JsonObject toJsonObject() {
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("type", "pngAsBase64");
+            jsonObject.addProperty("base64", getBase64());
+
+            return jsonObject;
+        }
+
+        public static PngFileAsBase64 fromJsonObject(JsonObject jsonObject) {
+            if(!jsonObject.get("type").getAsString().equals("pngAsBase64")) {
+                throw new RuntimeException("this jsonObject is not a PngAsBase64");
+            }
+
+            PngFileAsBase64 pngFileAsBase64 = new PngFileAsBase64();
+            pngFileAsBase64.setBase64(jsonObject.get("base64").getAsString());
+            return pngFileAsBase64;
+        }
     }
 
     public static class PdfFileAsUrl extends AttachmentAsUrl implements PdfFile {
+        @Override
+        public JsonObject toJsonObject() {
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("type", "pdfAsUrl");
+            jsonObject.addProperty("url", getUrl());
+
+            return jsonObject;
+        }
+
+        public static PdfFileAsUrl fromJsonObject(JsonObject jsonObject) {
+            if(!jsonObject.get("type").getAsString().equals("pdfAsUrl")) {
+                throw new RuntimeException("this jsonObject is not a PdfAsUrl");
+            }
+
+            PdfFileAsUrl pdfFileAsUrl = new PdfFileAsUrl();
+            pdfFileAsUrl.setUrl(jsonObject.get("url").getAsString());
+            return pdfFileAsUrl;
+        }
     }
 
     public static class PdfFileAsBase64 extends AttachmentAsBase64 implements PdfFile {
+        @Override
+        public JsonObject toJsonObject() {
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("type", "pdfAsBase64");
+            jsonObject.addProperty("base64", getBase64());
+
+            return jsonObject;
+        }
+
+        public static PdfFileAsBase64 fromJsonObject(JsonObject jsonObject) {
+            if(!jsonObject.get("type").getAsString().equals("pdfAsBase64")) {
+                throw new RuntimeException("this jsonObject is not a pdfAsBase64");
+            }
+
+            PdfFileAsBase64 pdfFileAsBase64 = new PdfFileAsBase64();
+            pdfFileAsBase64.setBase64(jsonObject.get("base64").getAsString());
+            return pdfFileAsBase64;
+        }
     }
 }
