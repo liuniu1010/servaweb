@@ -23,6 +23,8 @@ abstract public class AbsAIChat {
         try {
             String session = params.getSession();
             String userInput = params.getUserInput();
+            String fileAsBase64 = params.getFileAsBase64();
+            logger.info("fileAsBase64 = " + fileAsBase64);
             String renderedResponse = getChatForUIInstance().fetchResponse(session, userInput);
 
             WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);

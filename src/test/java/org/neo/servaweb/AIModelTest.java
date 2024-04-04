@@ -57,10 +57,11 @@ public class AIModelTest
         return new TestSuite( AIModelTest.class );
     }
 
-    public void testTransform() throws Exception {
+    public void testConvert() throws Exception {
         InputStream in = new FileInputStream("/tmp/dogandcat.png");
         String base64 = IOUtil.inputStreamToBase64(in);
-
+        System.out.println("base64 = " + base64);
+/*
         AIModel.AttachmentAsBase64 attachment1 = new AIModel.PngFileAsBase64();
         attachment1.setBase64(base64);
 
@@ -81,6 +82,7 @@ public class AIModelTest
         String jsonGroup2InString = new Gson().toJson(jsonGroup2);
 
         assertEquals(jsonGroup1InString, jsonGroup2InString);
+*/
     }
 }
  

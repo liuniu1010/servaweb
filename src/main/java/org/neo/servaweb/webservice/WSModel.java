@@ -4,6 +4,7 @@ public class WSModel {
     public static class AIChatParams {
         String session;
         String userInput;
+        String fileAsBase64;
 
         public String getSession() {
             return session;
@@ -19,6 +20,14 @@ public class WSModel {
 
         public void setUserInput(String inputUserInput) {
             userInput = inputUserInput;
+        }
+
+        public String getFileAsBase64() {
+            return fileAsBase64;
+        }
+
+        public void setFileAsBase64(String inputFileAsBase64) {
+            fileAsBase64 = inputFileAsBase64;
         }
     }
 
