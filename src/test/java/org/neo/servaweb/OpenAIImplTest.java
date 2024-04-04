@@ -59,6 +59,11 @@ public class OpenAIImplTest
         return (String)dbService.executeQueryTask(new FetchChatResponseTask(userInput));
     }
 
+    private String visionImage(String userInput) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        return (String)dbService.executeQueryTask(new VisionImageTask(userInput));
+    }
+
     private AIModel.Embedding getEmbedding(String userInput) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         return (AIModel.Embedding)dbService.executeQueryTask(new GetEmbeddingTask(userInput));
@@ -81,6 +86,19 @@ public class OpenAIImplTest
         try {
             String userInput = "Hello, how are you! I'm Neo, nice to meet you!";
             String response = fetchChatResponse(userInput);
+            System.out.println("userInput = " + userInput);
+            System.out.println("response = " + response);
+        }
+        catch(Exception ex) {
+            System.out.println("ex.message = " + ex.getMessage());
+            throw ex;
+        }
+    }
+
+    public void testVisionImage() throws Exception {
+        try {
+            String userInput = "Hello, please give me an description of this image";
+            String response = visionImage(userInput);
             System.out.println("userInput = " + userInput);
             System.out.println("response = " + response);
         }
@@ -116,7 +134,7 @@ public class OpenAIImplTest
             System.out.println("ex.message = " + ex.getMessage());
             throw ex;
         }
-    } 
+    }
 }
 
 class GetModelTask implements DBQueryTaskIFC {
@@ -143,6 +161,37 @@ class FetchChatResponseTask implements DBQueryTaskIFC {
         String[] models = openAI.getChatModels();
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         promptStruct.setUserInput(userInput);
+        AIModel.ChatResponse chatResponse = openAI.fetchChatResponse(models[0], promptStruct);
+        return chatResponse.getMessage(); 
+    }
+}
+
+class VisionImageTask implements DBQueryTaskIFC {
+    private String userInput;
+
+    public VisionImageTask(String inputUserInput) {
+        userInput = inputUserInput;
+    }
+
+    @Override
+    public Object query(DBConnectionIFC dbConnection) {
+        OpenAIImpl openAI = OpenAIImpl.getInstance();
+        openAI.setDBConnection(dbConnection);
+        String[] models = openAI.getVisionModels();
+        AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
+        promptStruct.setUserInput(userInput);
+
+        AIModel.JpegFileAsUrl attachment = new AIModel.JpegFileAsUrl();
+        attachment.setUrl("https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg");
+
+        List<AIModel.Attachment> attachments = new ArrayList<AIModel.Attachment>();
+        attachments.add(attachment);
+
+        AIModel.AttachmentGroup attachmentGroup = new AIModel.AttachmentGroup();
+        attachmentGroup.setAttachments(attachments);
+
+        promptStruct.setAttachmentGroup(attachmentGroup);
+
         AIModel.ChatResponse chatResponse = openAI.fetchChatResponse(models[0], promptStruct);
         return chatResponse.getMessage(); 
     }

@@ -333,7 +333,6 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
 
         JsonObject userInputMessage = new JsonObject();
         userInputMessage.addProperty("role", "user");
-//////////////////////////////////////////////////////////////////////////////////
         if(isVisionModel(model)) {
             JsonArray jsonContentArray = new JsonArray();
 
@@ -380,7 +379,6 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         else { // is chat model
             userInputMessage.addProperty("content", promptStruct.getUserInput());
         }
-//////////////////////////////////////////////////////////////////////////////////
         messages.add(userInputMessage);
 
         return messages;
