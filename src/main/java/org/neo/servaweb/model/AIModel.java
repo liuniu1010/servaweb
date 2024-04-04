@@ -308,7 +308,7 @@ public class AIModel {
     public static class AttachmentGroup {
         List<Attachment> attachments;
 
-        public List<Attachment> getAttachment() {
+        public List<Attachment> getAttachments() {
             return attachments;
         }
 

@@ -304,7 +304,18 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         return tools;
     }
 
-    private JsonArray generateJsonArrayMessages(AIModel.PromptStruct promptStruct) {
+    private boolean isVisionModel(String model) {
+        String[] visionModels = getVisionModels();
+        boolean isVisionModel = false;
+        for(String visionModel: visionModels) {
+            if(model.equals(visionModel)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private JsonArray generateJsonArrayMessages(String model, AIModel.PromptStruct promptStruct) {
         JsonArray messages = new JsonArray();
 
         JsonObject systemMessage = new JsonObject();
@@ -322,7 +333,54 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
 
         JsonObject userInputMessage = new JsonObject();
         userInputMessage.addProperty("role", "user");
-        userInputMessage.addProperty("content", promptStruct.getUserInput());
+//////////////////////////////////////////////////////////////////////////////////
+        if(isVisionModel(model)) {
+            JsonArray jsonContentArray = new JsonArray();
+
+            JsonObject jsonTextContent = new JsonObject();
+            jsonTextContent.addProperty("type", "text");
+            jsonTextContent.addProperty("text", promptStruct.getUserInput());
+
+            jsonContentArray.add(jsonTextContent);
+
+            AIModel.AttachmentGroup attachmentGroup = promptStruct.getAttachmentGroup();
+            if(attachmentGroup != null
+                && attachmentGroup.getAttachments() != null) {
+                List<AIModel.Attachment> attachments = attachmentGroup.getAttachments();
+                for(AIModel.Attachment attachment: attachments) {
+                    JsonObject jsonUrl = null; 
+                    if(attachment instanceof AIModel.JpegFileAsUrl) {
+                        jsonUrl = new JsonObject();
+                        jsonUrl.addProperty("url", ((AIModel.JpegFileAsUrl)attachment).getUrl());
+                    }
+                    else if(attachment instanceof AIModel.JpegFileAsBase64) {
+                        jsonUrl = new JsonObject();
+                        jsonUrl.addProperty("url", "data:image/jpeg;base64," + ((AIModel.JpegFileAsBase64)attachment).getBase64());
+                    }
+                    else if(attachment instanceof AIModel.PngFileAsUrl) {
+                        jsonUrl = new JsonObject();
+                        jsonUrl.addProperty("url", ((AIModel.PngFileAsUrl)attachment).getUrl());
+                    }
+                    else if(attachment instanceof AIModel.PngFileAsBase64) {
+                        jsonUrl = new JsonObject();
+                        jsonUrl.addProperty("url", "data:image/png;base64," + ((AIModel.JpegFileAsBase64)attachment).getBase64());
+                    }
+
+                    if(jsonUrl != null) {
+                        JsonObject jsonImage = new JsonObject();
+                        jsonImage.addProperty("type", "image_url");
+                        jsonImage.add("image_url", jsonUrl);
+                        jsonContentArray.add(jsonImage);
+                    }
+                }
+            }
+
+            userInputMessage.add("content", jsonContentArray);
+        }
+        else { // is chat model
+            userInputMessage.addProperty("content", promptStruct.getUserInput());
+        }
+//////////////////////////////////////////////////////////////////////////////////
         messages.add(userInputMessage);
 
         return messages;
@@ -338,7 +396,7 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         jsonBody.addProperty("n", 1);
         jsonBody.addProperty("stop", "");
 
-        JsonArray messages = generateJsonArrayMessages(promptStruct);
+        JsonArray messages = generateJsonArrayMessages(model, promptStruct);
         jsonBody.add("messages", messages);
 
         if(functionCallIFC != null) {
@@ -356,7 +414,7 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
         jsonBody.addProperty("max_tokens", maxTokens);
         jsonBody.addProperty("temperature", 0.5);
 
-        JsonArray messages = generateJsonArrayMessages(promptStruct);
+        JsonArray messages = generateJsonArrayMessages(model, promptStruct);
         jsonBody.add("messages", messages);
 
         if(functionCallIFC != null) {
