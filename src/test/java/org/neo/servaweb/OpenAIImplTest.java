@@ -1,13 +1,14 @@
 package org.neo.servaframe;
 
 import java.util.*;
+import java.io.*;
 import java.sql.SQLException;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import org.neo.servaframe.util.ConfigUtil;
+import org.neo.servaframe.util.*;
 import org.neo.servaframe.interfaces.*;
 import org.neo.servaframe.model.*;
 
@@ -97,7 +98,7 @@ public class OpenAIImplTest
 
     public void testVisionImage() throws Exception {
         try {
-            String userInput = "Hello, please give me an description of this image";
+            String userInput = "Hello, please give me an description of the images";
             String response = visionImage(userInput);
             System.out.println("userInput = " + userInput);
             System.out.println("response = " + response);
@@ -175,17 +176,32 @@ class VisionImageTask implements DBQueryTaskIFC {
 
     @Override
     public Object query(DBConnectionIFC dbConnection) {
+        try {
+            return innerQuery(dbConnection);
+        }
+        catch(Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private Object innerQuery(DBConnectionIFC dbConnection) throws Exception {
         OpenAIImpl openAI = OpenAIImpl.getInstance();
         openAI.setDBConnection(dbConnection);
         String[] models = openAI.getVisionModels();
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         promptStruct.setUserInput(userInput);
 
-        AIModel.JpegFileAsUrl attachment = new AIModel.JpegFileAsUrl();
-        attachment.setUrl("https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg");
+        AIModel.PngFileAsBase64 attachment1 = new AIModel.PngFileAsBase64();
+        InputStream in = new FileInputStream("/tmp/dogandcat.png");
+        String base64 = IOUtil.inputStreamToBase64(in);
+        attachment1.setBase64(base64);
+
+        AIModel.JpegFileAsUrl attachment2 = new AIModel.JpegFileAsUrl();
+        attachment2.setUrl("https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg");
 
         List<AIModel.Attachment> attachments = new ArrayList<AIModel.Attachment>();
-        attachments.add(attachment);
+        attachments.add(attachment1);
+        attachments.add(attachment2);
 
         AIModel.AttachmentGroup attachmentGroup = new AIModel.AttachmentGroup();
         attachmentGroup.setAttachments(attachments);

@@ -362,7 +362,7 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
                     }
                     else if(attachment instanceof AIModel.PngFileAsBase64) {
                         jsonUrl = new JsonObject();
-                        jsonUrl.addProperty("url", "data:image/png;base64," + ((AIModel.JpegFileAsBase64)attachment).getBase64());
+                        jsonUrl.addProperty("url", "data:image/png;base64," + ((AIModel.PngFileAsBase64)attachment).getBase64());
                     }
 
                     if(jsonUrl != null) {
