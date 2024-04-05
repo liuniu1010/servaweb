@@ -347,30 +347,14 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
                 && attachmentGroup.getAttachments() != null) {
                 List<AIModel.Attachment> attachments = attachmentGroup.getAttachments();
                 for(AIModel.Attachment attachment: attachments) {
-                    JsonObject jsonUrl = null; 
-                    if(attachment instanceof AIModel.JpegFileAsUrl) {
-                        jsonUrl = new JsonObject();
-                        jsonUrl.addProperty("url", ((AIModel.JpegFileAsUrl)attachment).getUrl());
-                    }
-                    else if(attachment instanceof AIModel.JpegFileAsBase64) {
-                        jsonUrl = new JsonObject();
-                        jsonUrl.addProperty("url", "data:image/jpeg;base64," + ((AIModel.JpegFileAsBase64)attachment).getBase64());
-                    }
-                    else if(attachment instanceof AIModel.PngFileAsUrl) {
-                        jsonUrl = new JsonObject();
-                        jsonUrl.addProperty("url", ((AIModel.PngFileAsUrl)attachment).getUrl());
-                    }
-                    else if(attachment instanceof AIModel.PngFileAsBase64) {
-                        jsonUrl = new JsonObject();
-                        jsonUrl.addProperty("url", "data:image/png;base64," + ((AIModel.PngFileAsBase64)attachment).getBase64());
-                    }
+                    JsonObject jsonUrl = new JsonObject();
+                    jsonUrl.addProperty("url", attachment.getContent());
 
-                    if(jsonUrl != null) {
-                        JsonObject jsonImage = new JsonObject();
-                        jsonImage.addProperty("type", "image_url");
-                        jsonImage.add("image_url", jsonUrl);
-                        jsonContentArray.add(jsonImage);
-                    }
+                    JsonObject jsonImage = new JsonObject();
+                    jsonImage.addProperty("type", "image_url");
+                    jsonImage.add("image_url", jsonUrl);
+
+                    jsonContentArray.add(jsonImage);
                 }
             }
 

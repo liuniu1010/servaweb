@@ -59,11 +59,10 @@ public class AIModelTest
 
     public void testConvert() throws Exception {
         InputStream in = new FileInputStream("/tmp/dogandcat.png");
-        String base64 = IOUtil.inputStreamToBase64(in);
-        System.out.println("base64 = " + base64);
-/*
-        AIModel.AttachmentAsBase64 attachment1 = new AIModel.PngFileAsBase64();
-        attachment1.setBase64(base64);
+        String rawBase64 = IOUtil.inputStreamToRawBase64(in);
+
+        AIModel.Attachment attachment1 = new AIModel.Attachment();
+        attachment1.setContent(rawBase64);
 
         List<AIModel.Attachment> attachments1 = new ArrayList<AIModel.Attachment>();
         attachments1.add(attachment1);
@@ -82,7 +81,6 @@ public class AIModelTest
         String jsonGroup2InString = new Gson().toJson(jsonGroup2);
 
         assertEquals(jsonGroup1InString, jsonGroup2InString);
-*/
     }
 }
  

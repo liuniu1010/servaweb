@@ -191,13 +191,14 @@ class VisionImageTask implements DBQueryTaskIFC {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         promptStruct.setUserInput(userInput);
 
-        AIModel.PngFileAsBase64 attachment1 = new AIModel.PngFileAsBase64();
+        AIModel.Attachment attachment1 = new AIModel.Attachment();
         InputStream in = new FileInputStream("/tmp/dogandcat.png");
-        String base64 = IOUtil.inputStreamToBase64(in);
-        attachment1.setBase64(base64);
+        String rawBase64 = IOUtil.inputStreamToRawBase64(in);
+        String base64 = "data:image/png;base64," + rawBase64;
+        attachment1.setContent(base64);
 
-        AIModel.JpegFileAsUrl attachment2 = new AIModel.JpegFileAsUrl();
-        attachment2.setUrl("https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg");
+        AIModel.Attachment attachment2 = new AIModel.Attachment();
+        attachment2.setContent("https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg");
 
         List<AIModel.Attachment> attachments = new ArrayList<AIModel.Attachment>();
         attachments.add(attachment1);
