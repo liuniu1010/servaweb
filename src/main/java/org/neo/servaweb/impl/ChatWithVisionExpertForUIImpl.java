@@ -80,7 +80,7 @@ public class ChatWithVisionExpertForUIImpl implements ChatForUIIFC, DBQueryTaskI
     }
 
     @Override
-    public String fetchResponse(String session, String userInput) {
+    public String fetchResponse(String session, String userInput, List<String> attachFiles) {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -88,12 +88,12 @@ public class ChatWithVisionExpertForUIImpl implements ChatForUIIFC, DBQueryTaskI
                     @Override
                     public Object save(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
-                        return chatForUIIFC.fetchResponse(session, userInput);
+                        return chatForUIIFC.fetchResponse(session, userInput, attachFiles);
                     }
                 });
             }
             else {
-                return innerFetchResponse(session, userInput);
+                return innerFetchResponse(session, userInput, attachFiles);
             }
         }
         catch(Exception ex) {
@@ -101,13 +101,13 @@ public class ChatWithVisionExpertForUIImpl implements ChatForUIIFC, DBQueryTaskI
         }
     }
 
-    private String innerFetchResponse(String session, String userInput) {
+    private String innerFetchResponse(String session, String userInput, List<String> attachFiles) {
         AIModel.ChatRecord newRequestRecord = new AIModel.ChatRecord(session);
         newRequestRecord.setIsRequest(true);
         newRequestRecord.setContent(userInput);
         newRequestRecord.setChatTime(new Date());
 
-        AIModel.ChatResponse chatResponse = fetchChatResponse(session, userInput);
+        AIModel.ChatResponse chatResponse = fetchChatResponse(session, userInput, attachFiles);
         if(chatResponse.getIsSuccess()) {
             AIModel.ChatRecord newResponseRecord = new AIModel.ChatRecord(session);
             newResponseRecord.setIsRequest(false);
@@ -125,11 +125,24 @@ public class ChatWithVisionExpertForUIImpl implements ChatForUIIFC, DBQueryTaskI
         }
     }
 
-    private AIModel.ChatResponse fetchChatResponse(String session, String userInput) {
+    private AIModel.ChatResponse fetchChatResponse(String session, String userInput, List<String> attachFiles) {
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         List<AIModel.ChatRecord> chatRecords = storage.getChatRecords(session);
         promptStruct.setChatRecords(chatRecords);
         promptStruct.setUserInput(userInput);
+
+        if(attachFiles != null 
+             && attachFiles.size() > 0) {
+            AIModel.AttachmentGroup attachmentGroup = new AIModel.AttachmentGroup();
+            List<AIModel.Attachment> attachments = new ArrayList<AIModel.Attachment>();
+            for(String attachFile: attachFiles) {
+                AIModel.Attachment attachment = new AIModel.Attachment();
+                attachment.setContent(attachFile);
+                attachments.add(attachment);
+            }
+            attachmentGroup.setAttachments(attachments);
+            promptStruct.setAttachmentGroup(attachmentGroup);
+        }
 
         String[] models = superAI.getVisionModels();
         return superAI.fetchChatResponse(models[0], promptStruct);

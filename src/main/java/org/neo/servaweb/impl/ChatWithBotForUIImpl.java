@@ -80,7 +80,7 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSav
     }
 
     @Override
-    public String fetchResponse(String session, String userInput) {
+    public String fetchResponse(String session, String userInput, List<String> attachFiles) {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -88,7 +88,7 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSav
                     @Override
                     public Object save(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
-                        return chatForUIIFC.fetchResponse(session, userInput);
+                        return chatForUIIFC.fetchResponse(session, userInput, attachFiles);
                     }
                 });
             }

@@ -24,8 +24,14 @@ abstract public class AbsAIChat {
             String session = params.getSession();
             String userInput = params.getUserInput();
             String fileAsBase64 = params.getFileAsBase64();
-            logger.info("fileAsBase64 = " + fileAsBase64);
-            String renderedResponse = getChatForUIInstance().fetchResponse(session, userInput);
+
+            List<String> attachFiles = null;
+            if(fileAsBase64 != null 
+                && !fileAsBase64.trim().equals("")) {
+                attachFiles = new ArrayList<String>();
+                attachFiles.add(fileAsBase64.trim());
+            }
+            String renderedResponse = getChatForUIInstance().fetchResponse(session, userInput, attachFiles);
 
             WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
             return response;

@@ -80,7 +80,7 @@ public class ChatWithImageExpertForUIImpl implements ChatForUIIFC, DBQueryTaskIF
     }
 
     @Override
-    public String fetchResponse(String session, String userInput) {
+    public String fetchResponse(String session, String userInput, List<String> attachFiles) {
         try {
             if(!isEnvironmentReady()) {
                 DBServiceIFC dbService = ServiceFactory.getDBService();
@@ -88,7 +88,7 @@ public class ChatWithImageExpertForUIImpl implements ChatForUIIFC, DBQueryTaskIF
                     @Override
                     public Object save(DBConnectionIFC dbConnection) {
                         ChatForUIIFC chatForUIIFC = super.setupEnvironment(dbConnection);
-                        return chatForUIIFC.fetchResponse(session, userInput);
+                        return chatForUIIFC.fetchResponse(session, userInput, attachFiles);
                     }
                 });
             }
