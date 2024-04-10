@@ -8,12 +8,18 @@ import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
 
 public class OpenAIImpl extends AbsOpenAIImpl {
+    protected DBConnectionIFC dbConnection;
+
     protected OpenAIImpl() {
+    }
+
+    protected OpenAIImpl(DBConnectionIFC inputDBConnection) {
+        dbConnection = inputDBConnection;
         setup();
     }
 
-    public static OpenAIImpl getInstance() {
-        return new OpenAIImpl();
+    public static OpenAIImpl getInstance(DBConnectionIFC inputDBConnection) {
+        return new OpenAIImpl(inputDBConnection);
     }
 
     private static String gpt_4_turbo_preview = "gpt-4-turbo-preview";
@@ -33,7 +39,7 @@ public class OpenAIImpl extends AbsOpenAIImpl {
     private Map<String, Integer> contextWindowMapping;
     private Map<String, Integer> maxOutputMapping;
 
-    private void setup() {
+    protected void setup() {
         chatModels = new String[]{gpt_4_turbo_preview, gpt_35_turbo};
         embeddingModels = new String[]{text_embedding_3_large, text_embedding_3_small};
         imageModels = new String[]{dall_e_3, dall_e_2};
@@ -57,12 +63,6 @@ public class OpenAIImpl extends AbsOpenAIImpl {
         maxOutputMapping.put(gpt_4_turbo_preview, 4096);
         maxOutputMapping.put(gpt_35_turbo, 4096);
         maxOutputMapping.put(gpt_4_vision_preview, 4096);
-    }
-
-    private DBConnectionIFC dbConnection;
-
-    public void setDBConnection(DBConnectionIFC inputDBConnection) {
-        dbConnection = inputDBConnection;
     }
 
     @Override

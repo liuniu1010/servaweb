@@ -139,8 +139,7 @@ public class Role2ChatImpl implements ChatIFC {
 
 abstract class AbsRole2ChatTask implements DBQueryTaskIFC, DBSaveTaskIFC {
     protected ChatIFC setupEnvironment(DBConnectionIFC dbConnection) {
-        OpenAIImpl openAIImpl = new Role2AIImpl();
-        openAIImpl.setDBConnection(dbConnection);
+        OpenAIImpl openAIImpl = Role2AIImpl.getInstance(dbConnection);
         SuperAIIFC superAI = openAIImpl;
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);

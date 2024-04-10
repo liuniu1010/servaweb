@@ -61,9 +61,8 @@ public class ChatWithCommandExpertForUIImpl implements ChatForUIIFC, DBQueryTask
     protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
         FunctionCallIFC functionCallIFC = CommandCallImpl.getInstance();
 
-        OpenAIForUIImpl openAIForUIImpl = OpenAIForUIImpl.getInstance();
-        openAIForUIImpl.setDBConnection(dbConnection);
-        SuperAIIFC superAI = openAIForUIImpl;
+        OpenAIImpl openAIImpl = OpenAIImpl.getInstance(dbConnection);
+        SuperAIIFC superAI = openAIImpl;
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
 

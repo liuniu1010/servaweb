@@ -63,9 +63,8 @@ public class ChatWithImageExpertForUIImpl implements ChatForUIIFC, DBQueryTaskIF
     }
 
     protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
-        OpenAIForUIImpl openAIForUIImpl = OpenAIForUIImpl.getInstance();
-        openAIForUIImpl.setDBConnection(dbConnection);
-        OpenAIIFC openAI = openAIForUIImpl;
+        OpenAIImpl openAIImpl = OpenAIImpl.getInstance(dbConnection);
+        OpenAIIFC openAI = openAIImpl;
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
 

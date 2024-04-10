@@ -63,9 +63,8 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSav
     }
 
     protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
-        OpenAIForUIImpl openAIForUIImpl = OpenAIForUIImpl.getInstance();
-        openAIForUIImpl.setDBConnection(dbConnection);
-        SuperAIIFC superAI = openAIForUIImpl;
+        OpenAIImpl openAIImpl = OpenAIImpl.getInstance(dbConnection);
+        SuperAIIFC superAI = openAIImpl;
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
 

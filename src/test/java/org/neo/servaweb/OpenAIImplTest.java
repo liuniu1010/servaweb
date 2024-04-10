@@ -141,8 +141,7 @@ public class OpenAIImplTest
 class GetModelTask implements DBQueryTaskIFC {
     @Override
     public Object query(DBConnectionIFC dbConnection) {
-        OpenAIImpl openAI = OpenAIImpl.getInstance();
-        openAI.setDBConnection(dbConnection);
+        OpenAIImpl openAI = OpenAIImpl.getInstance(dbConnection);
         String[] models = openAI.getChatModels();
         return models;
     }
@@ -157,8 +156,7 @@ class FetchChatResponseTask implements DBQueryTaskIFC {
 
     @Override
     public Object query(DBConnectionIFC dbConnection) {
-        OpenAIImpl openAI = OpenAIImpl.getInstance();
-        openAI.setDBConnection(dbConnection);
+        OpenAIImpl openAI = OpenAIImpl.getInstance(dbConnection);
         String[] models = openAI.getChatModels();
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         promptStruct.setUserInput(userInput);
@@ -185,8 +183,7 @@ class VisionImageTask implements DBQueryTaskIFC {
     }
 
     private Object innerQuery(DBConnectionIFC dbConnection) throws Exception {
-        OpenAIImpl openAI = OpenAIImpl.getInstance();
-        openAI.setDBConnection(dbConnection);
+        OpenAIImpl openAI = OpenAIImpl.getInstance(dbConnection);
         String[] models = openAI.getVisionModels();
         AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
         promptStruct.setUserInput(userInput);
@@ -223,8 +220,7 @@ class GetEmbeddingTask implements DBQueryTaskIFC {
 
     @Override
     public Object query(DBConnectionIFC dbConnection) {
-        OpenAIImpl openAI = OpenAIImpl.getInstance();
-        openAI.setDBConnection(dbConnection);
+        OpenAIImpl openAI = OpenAIImpl.getInstance(dbConnection);
         String[] models = openAI.getEmbeddingModels();
         AIModel.Embedding embedding = openAI.getEmbedding(models[0], userInput, 12);
         return embedding; 
@@ -240,8 +236,7 @@ class GenerateImageTask implements DBQueryTaskIFC {
 
     @Override
     public Object query(DBConnectionIFC dbConnection) {
-        OpenAIImpl openAI = OpenAIImpl.getInstance();
-        openAI.setDBConnection(dbConnection);
+        OpenAIImpl openAI = OpenAIImpl.getInstance(dbConnection);
         String[] models = openAI.getImageModels();
         AIModel.ImagePrompt imagePrompt = new AIModel.ImagePrompt();
         imagePrompt.setUserInput(userInput);

@@ -49,8 +49,7 @@ public class ChatImpl implements ChatIFC, DBQueryTaskIFC, DBSaveTaskIFC {
     }
 
     protected ChatIFC setupEnvironment(DBConnectionIFC dbConnection) {
-        OpenAIImpl openAIImpl = OpenAIImpl.getInstance();
-        openAIImpl.setDBConnection(dbConnection);
+        OpenAIImpl openAIImpl = OpenAIImpl.getInstance(dbConnection);
         SuperAIIFC superAI = openAIImpl;
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);

@@ -53,7 +53,10 @@ public class StreamTest
         return new TestSuite( StreamTest.class );
     }
 
-    public void testStream() throws Exception {
+    public void test1() {
+    }
+
+    public void _testStream() throws Exception {
         OkHttpClient client = new OkHttpClient();
         String API_KEY = "<openAiApiKey>";
         // Constructing the JSON payload with the prompt and enabling streaming
