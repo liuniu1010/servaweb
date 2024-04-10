@@ -8,12 +8,18 @@ import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
 
 public class GoogleAIImpl extends AbsGoogleAIImpl {
+    private DBConnectionIFC dbConnection;
+
     protected GoogleAIImpl() {
+    }
+
+    protected GoogleAIImpl(DBConnectionIFC inputDBConnection) {
+        dbConnection = inputDBConnection;
         setup();
     }
 
-    public static GoogleAIImpl getInstance() {
-        return new GoogleAIImpl();
+    public static GoogleAIImpl getInstance(DBConnectionIFC inputDBConnection) {
+        return new GoogleAIImpl(inputDBConnection);
     }
 
     private static String gemini_pro = "gemini-pro";
@@ -42,11 +48,6 @@ public class GoogleAIImpl extends AbsGoogleAIImpl {
         maxOutputMapping = new HashMap<String, Integer>();
     }
 
-    private DBConnectionIFC dbConnection;
-
-    public void setDBConnection(DBConnectionIFC inputDBConnection) {
-        dbConnection = inputDBConnection;
-    }
 
     @Override
     protected String getApiKey() {
@@ -89,30 +90,5 @@ public class GoogleAIImpl extends AbsGoogleAIImpl {
         else {
             throw new RuntimeException("model " + model + " not supported to get url!");
         }
-    }
-
-    @Override
-    protected int getContextWindow(String model) {
-        if(contextWindowMapping.containsKey(model)) {
-            return contextWindowMapping.get(model);
-        }
-        else {
-            throw new RuntimeException("model " + model + " not supported to get context window!");
-        }
-    }
-
-    @Override
-    protected int getMaxOutputTokenNumber(String model) {
-        if(maxOutputMapping.containsKey(model)) {
-            return maxOutputMapping.get(model);
-        }
-        else {
-            throw new RuntimeException("model " + model + " not supported to get max output tokens!");
-        }
-    }
-
-    @Override
-    protected String getSystemHint() {
-        return "You are a helpful assistant. You always response result in plain text.";
     }
 }

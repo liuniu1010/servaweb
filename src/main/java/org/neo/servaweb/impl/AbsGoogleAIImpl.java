@@ -29,9 +29,6 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
 
     abstract protected String getApiKey();
     abstract protected String getUrl(String model);
-    abstract protected int getMaxOutputTokenNumber(String model);
-    abstract protected int getContextWindow(String model);
-    abstract protected String getSystemHint();
 
     @Override
     public AIModel.ChatResponse fetchChatResponse(String model, AIModel.PromptStruct promptStruct) {
@@ -162,7 +159,6 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
         }
         else {
             String errorMessage = jsonObject.getAsJsonObject("error").get("message").getAsString();
-
             chatResponse = new AIModel.ChatResponse(false, errorMessage);
         }
         return chatResponse;
