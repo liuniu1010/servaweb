@@ -13,6 +13,7 @@ import org.neo.servaweb.ifc.ChatForUIIFC;
 import org.neo.servaweb.ifc.StorageIFC;
 import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
+import org.neo.servaweb.factory.AIFactory;
 
 public class ChatWithBotForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSaveTaskIFC {
     private ChatWithBotForUIImpl() {
@@ -63,8 +64,7 @@ public class ChatWithBotForUIImpl implements ChatForUIIFC, DBQueryTaskIFC, DBSav
     }
 
     protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
-        OpenAIImpl openAIImpl = OpenAIImpl.getInstance(dbConnection);
-        SuperAIIFC superAI = openAIImpl;
+        SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
 

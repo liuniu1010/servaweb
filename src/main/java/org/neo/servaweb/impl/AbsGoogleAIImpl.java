@@ -164,22 +164,39 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
         return chatResponse;
     }
 
+    private JsonObject generateJsonObjectFromChatRecord(AIModel.ChatRecord chatRecord) {
+        JsonArray jsonParts = new JsonArray();
+        JsonObject jsonText = new JsonObject();
+        jsonText.addProperty("text", chatRecord.getContent());
+        jsonParts.add(jsonText);
+
+        JsonObject recordContent = new JsonObject();
+        recordContent.addProperty("role", chatRecord.getIsRequest()?"user":"model");
+        recordContent.add("parts", jsonParts);
+
+        return recordContent;
+    }
+
     private JsonArray generateJsonArrayContents(String model, AIModel.PromptStruct promptStruct) {
         JsonArray jsonContents = new JsonArray();
         
         List<AIModel.ChatRecord> chatRecords = promptStruct.getChatRecords();
-        for(AIModel.ChatRecord chatRecord: chatRecords) {
-            JsonArray jsonParts = new JsonArray();
-            JsonObject jsonText = new JsonObject();
-            jsonText.addProperty("text", chatRecord.getContent());
-            jsonParts.add(jsonText);
 
-            JsonObject recordContent = new JsonObject();
-            recordContent.addProperty("role", chatRecord.getIsRequest()?"user":"model");
-            recordContent.add("parts", jsonParts);
-            jsonContents.add(recordContent);
+        // conversation history parts
+        boolean beginWithUserRole = false;
+        for(AIModel.ChatRecord chatRecord: chatRecords) {
+            // for google api request, the first and last end text should be role user
+            // so the first end text with role model should be filtered out
+            if(chatRecord.getIsRequest()) {
+                beginWithUserRole = true;
+            }
+            
+            if(beginWithUserRole) {
+                jsonContents.add(generateJsonObjectFromChatRecord(chatRecord));
+            }
         }
 
+        // user input part
         JsonArray jsonUserParts = new JsonArray();
         JsonObject jsonUserText = new JsonObject();
         jsonUserText.addProperty("text", promptStruct.getUserInput());
