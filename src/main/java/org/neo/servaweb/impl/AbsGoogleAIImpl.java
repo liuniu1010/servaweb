@@ -139,8 +139,43 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
     }
 
     private List<AIModel.Call> extractCallsFromJson(String jsonResponse) throws Exception {
-        // to be implemented
-        return null;
+        List<AIModel.Call> calls = null;
+        JsonElement element = JsonParser.parseString(jsonResponse);
+        JsonObject jsonObject = element.getAsJsonObject();
+        if(jsonObject.has("candidates")) {
+            JsonArray choicesArray = jsonObject.getAsJsonArray("candidates");
+            JsonObject firstChoice = choicesArray.get(0).getAsJsonObject();
+            JsonObject contentObject = firstChoice.getAsJsonObject("content");
+            JsonArray partsArray = contentObject.getAsJsonArray("parts");
+            JsonObject firstPart = partsArray.get(0).getAsJsonObject();
+
+            if(firstPart.get("functionCall") == null
+                || firstPart.get("functionCall").isJsonNull()) {
+                return null;
+            }
+
+            calls = new ArrayList<AIModel.Call>();
+            JsonObject functionCall = firstPart.getAsJsonObject("functionCall");
+            AIModel.Call call = new AIModel.Call();
+            call.setMethodName(functionCall.get("name").getAsString());
+
+            JsonObject argumentsObject = functionCall.getAsJsonObject("args");
+            if(argumentsObject != null
+                && !argumentsObject.isJsonNull()) {
+                Set<String> paramNames = argumentsObject.keySet();
+                List<AIModel.CallParam> callParams = new ArrayList<AIModel.CallParam>();
+                for(String paramName: paramNames) {
+                    AIModel.CallParam callParam = new AIModel.CallParam();
+                    callParam.setName(paramName);
+                    callParam.setValue(argumentsObject.get(paramName).getAsString());
+                    callParams.add(callParam);
+                }
+                call.setParams(callParams);
+            }
+            calls.add(call);
+        }
+
+        return calls;
     }
 
     private AIModel.ChatResponse extractChatResponseFromJson(String jsonResponse) throws Exception {
@@ -153,7 +188,11 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
             JsonObject contentObject = firstChoice.getAsJsonObject("content");
             JsonArray partsArray = contentObject.getAsJsonArray("parts");
             JsonObject firstPart = partsArray.get(0).getAsJsonObject();
-            String text = firstPart.get("text").getAsString();
+            String text = "";
+            if(firstPart.get("text") != null
+                && !firstPart.get("text").isJsonNull()) {
+                text = firstPart.get("text").getAsString();
+            }
 
             chatResponse = new AIModel.ChatResponse(true, text);
         }
@@ -217,7 +256,48 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
         JsonObject jsonBody = new JsonObject();
         JsonArray jsonContents = generateJsonArrayContents(model, promptStruct);
         jsonBody.add("contents", jsonContents);
+
+        if(functionCallIFC != null) {
+            JsonArray tools = generateJsonArrayTools(functionCallIFC);
+            jsonBody.add("tools", tools);
+        }
+
         return gson.toJson(jsonBody);
+    }
+
+    private JsonArray generateJsonArrayTools(FunctionCallIFC functionCallIFC) {
+        JsonArray tools = new JsonArray();
+
+        List<AIModel.Function> functions = functionCallIFC.getFunctions();
+        for(AIModel.Function function: functions) {
+            JsonObject jsonFunctionDeclaration = new JsonObject();
+            jsonFunctionDeclaration.addProperty("name", function.getMethodName());
+            jsonFunctionDeclaration.addProperty("description", function.getDescription());
+
+            JsonObject jsonParameters = new JsonObject();
+            jsonParameters.addProperty("type", "object");
+            List<AIModel.FunctionParam> functionParams = function.getParams();
+            JsonObject jsonProperties = new JsonObject();
+            JsonArray jsonRequiredParams = new JsonArray();
+            for(AIModel.FunctionParam functionParam: functionParams) {
+                JsonObject jsonParam = new JsonObject();
+                jsonParam.addProperty("type", "string");
+                jsonParam.addProperty("description", functionParam.getDescription());
+
+                jsonProperties.add(functionParam.getName(), jsonParam);
+                jsonRequiredParams.add(functionParam.getName());
+            }
+            jsonParameters.add("properties", jsonProperties);
+            jsonParameters.add("required", jsonRequiredParams);
+            jsonFunctionDeclaration.add("parameters", jsonParameters);
+
+            JsonObject jsonTool = new JsonObject();
+            jsonTool.add("functionDeclarations", jsonFunctionDeclaration);
+
+            tools.add(jsonTool);
+        }
+
+        return tools;
     }
 
     private String generateJsonBodyToGetEmbedding(String model, String input, int dimensions) {

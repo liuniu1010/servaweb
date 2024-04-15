@@ -62,17 +62,27 @@ public class GoogleAIImplTest
         });
     }
 
-    private String fetchChatResponse(String userInput) {
+    private void fetchChatResponse(String userInput) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
-        return (String)dbService.executeQueryTask(new DBQueryTaskIFC() {
+        dbService.executeQueryTask(new DBQueryTaskIFC() {
             @Override
             public Object query(DBConnectionIFC dbConnection) {
                 GoogleAIImpl googleAI = GoogleAIImpl.getInstance(dbConnection);
+
                 String[] models = googleAI.getChatModels();
+                for(String model: models) {
+                    printChat(model, userInput, googleAI);
+                }
+                return null; 
+            }
+
+            private void printChat(String model, String userInput, GoogleAIImpl googleAI) {
                 AIModel.PromptStruct promptStruct = new AIModel.PromptStruct();
                 promptStruct.setUserInput(userInput);
-                AIModel.ChatResponse chatResponse = googleAI.fetchChatResponse(models[0], promptStruct);
-                return chatResponse.getMessage(); 
+                AIModel.ChatResponse chatResponse = googleAI.fetchChatResponse(model, promptStruct);
+
+                System.out.println("userInput = " + userInput);
+                System.out.println("response from " + model + ": " + chatResponse.getMessage());
             }
         });
     }
@@ -121,9 +131,7 @@ public class GoogleAIImplTest
     public void testFetchChatResponse() throws Exception {
         try {
             String userInput = "Hello, how are you! I'm Neo, nice to meet you!";
-            String response = fetchChatResponse(userInput);
-            System.out.println("userInput = " + userInput);
-            System.out.println("response = " + response);
+            fetchChatResponse(userInput);
         }
         catch(Exception ex) {
             System.out.println("ex.message = " + ex.getMessage());

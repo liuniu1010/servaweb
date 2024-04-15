@@ -22,7 +22,8 @@ public class GoogleAIImpl extends AbsGoogleAIImpl {
         return new GoogleAIImpl(inputDBConnection);
     }
 
-    private static String gemini_pro = "gemini-pro";
+    private static String gemini_1_0_pro = "gemini-1.0-pro";
+    private static String gemini_1_5_pro_latest = "gemini-1.5-pro-latest";
 
     private String[] chatModels;
     private String[] embeddingModels;
@@ -34,14 +35,15 @@ public class GoogleAIImpl extends AbsGoogleAIImpl {
     private Map<String, Integer> maxOutputMapping;
 
     private void setup() {
-        chatModels = new String[]{gemini_pro};
+        chatModels = new String[]{gemini_1_5_pro_latest, gemini_1_0_pro};
         embeddingModels = new String[]{};
         imageModels = new String[]{};
         visionModels = new String[]{};
 
         String apiKey = getApiKey();
         urlMapping = new HashMap<String, String>();
-        urlMapping.put(gemini_pro, "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + apiKey);
+        urlMapping.put(gemini_1_0_pro, "https://generativelanguage.googleapis.com/v1beta/models/" + gemini_1_0_pro + ":generateContent?key=" + apiKey);
+        urlMapping.put(gemini_1_5_pro_latest, "https://generativelanguage.googleapis.com/v1beta/models/" + gemini_1_5_pro_latest + ":generateContent?key=" + apiKey);
 
         contextWindowMapping = new HashMap<String, Integer>();
 
