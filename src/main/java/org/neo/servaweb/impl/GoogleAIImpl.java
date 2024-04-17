@@ -30,9 +30,8 @@ public class GoogleAIImpl extends AbsGoogleAIImpl {
     private String[] imageModels;
     private String[] visionModels;
 
-    private Map<String, String> urlMapping;
-    private Map<String, Integer> contextWindowMapping;
     private Map<String, Integer> maxOutputMapping;
+    private Map<String, Integer> maxInputMapping;
 
     private void setup() {
         chatModels = new String[]{gemini_1_5_pro_latest, gemini_1_0_pro};
@@ -40,14 +39,13 @@ public class GoogleAIImpl extends AbsGoogleAIImpl {
         imageModels = new String[]{};
         visionModels = new String[]{};
 
-        String apiKey = getApiKey();
-        urlMapping = new HashMap<String, String>();
-        urlMapping.put(gemini_1_0_pro, "https://generativelanguage.googleapis.com/v1beta/models/" + gemini_1_0_pro + ":generateContent?key=" + apiKey);
-        urlMapping.put(gemini_1_5_pro_latest, "https://generativelanguage.googleapis.com/v1beta/models/" + gemini_1_5_pro_latest + ":generateContent?key=" + apiKey);
-
-        contextWindowMapping = new HashMap<String, Integer>();
-
         maxOutputMapping = new HashMap<String, Integer>();
+        maxOutputMapping.put(gemini_1_5_pro_latest, 8192);
+        maxOutputMapping.put(gemini_1_0_pro, 2048);
+
+        maxInputMapping = new HashMap<String, Integer>();
+        maxInputMapping.put(gemini_1_5_pro_latest, 1048576);
+        maxInputMapping.put(gemini_1_0_pro, 30720);
     }
 
 
@@ -85,12 +83,28 @@ public class GoogleAIImpl extends AbsGoogleAIImpl {
     }
 
     @Override
-    protected String getUrl(String model) {
-        if(urlMapping.containsKey(model)) {
-            return urlMapping.get(model);
+    protected String getUrl(String model, String action) {
+        String apiKey = getApiKey();
+        return "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":" + action + "?key=" + apiKey;
+    }
+
+    @Override
+    protected int getMaxOutputTokenNumber(String model) {
+        if(maxOutputMapping.containsKey(model)) {
+            return maxOutputMapping.get(model);
         }
         else {
-            throw new RuntimeException("model " + model + " not supported to get url!");
+            throw new RuntimeException("model " + model + " not supported to get max output tokens!");
+        }
+    }
+
+    @Override
+    protected int getMaxInputTokenNumber(String model) {
+        if(maxInputMapping.containsKey(model)) {
+            return maxInputMapping.get(model);
+        }
+        else {
+            throw new RuntimeException("model " + model + " not supported to get max input tokens!");
         }
     }
 }

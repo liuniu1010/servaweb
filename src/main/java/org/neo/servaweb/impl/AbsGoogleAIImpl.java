@@ -28,7 +28,9 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
     final static Logger logger = Logger.getLogger(AbsGoogleAIImpl.class);
 
     abstract protected String getApiKey();
-    abstract protected String getUrl(String model);
+    abstract protected String getUrl(String model, String action);
+    abstract protected int getMaxOutputTokenNumber(String model);
+    abstract protected int getMaxInputTokenNumber(String model);
 
     @Override
     public AIModel.ChatResponse fetchChatResponse(String model, AIModel.PromptStruct promptStruct) {
@@ -107,25 +109,38 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
 
     private String[] innerGenerateImage(String model, AIModel.ImagePrompt imagePrompt) throws Exception {
         String jsonInput = generateJsonBodyToGenerateImage(model, imagePrompt);
-        String jsonResponse = send(model, jsonInput);
+        String url = getUrl(model, "generateImage");   // adjust later
+        String jsonResponse = send(model, url, jsonInput);
         String[] urls = extractImageUrlsFromJson(jsonResponse);
         return urls;
     }
 
     private AIModel.Embedding innerGetEmbedding(String model, String input, int dimensions) throws Exception {
         String jsonInput = generateJsonBodyToGetEmbedding(model, input, dimensions);
-        String jsonResponse = send(model, jsonInput);
+        String url = getUrl(model, "embedContent");
+        String jsonResponse = send(model, url, jsonInput);
         AIModel.Embedding embedding = extractEmbeddingFromJson(jsonResponse);
         return embedding;
     }
 
     private AIModel.ChatResponse innerFetchChatResponse(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) throws Exception {
-        String jsonInput = generateJsonBodyToFetchResponse(model, promptStruct, functionCallIFC);
-        String jsonResponse = send(model, jsonInput);
+        int maxTokens = determineMaxTokens(model, promptStruct, functionCallIFC);
+        AIModel.ChatResponse chatResponse = innerFetchChatResponse(model, promptStruct, maxTokens, functionCallIFC);
+        return chatResponse;
+    }
+
+    private AIModel.ChatResponse innerFetchChatResponse(String model, AIModel.PromptStruct promptStruct, int maxTokens, FunctionCallIFC functionCallIFC) throws Exception {
+        String jsonInput = generateJsonBodyToFetchResponse(model, promptStruct, maxTokens, functionCallIFC);
+        String url = getUrl(model, "generateContent");
+        String jsonResponse = send(model, url, jsonInput);
         List<AIModel.Call> calls = extractCallsFromJson(jsonResponse);
         AIModel.ChatResponse chatResponse = extractChatResponseFromJson(jsonResponse);
         chatResponse.setCalls(calls);
         return chatResponse;
+    }
+
+    private int determineMaxTokens(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) throws Exception {
+        return getMaxOutputTokenNumber(model);
     }
 
     private AIModel.Embedding extractEmbeddingFromJson(String jsonResponse) {
@@ -178,6 +193,35 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
         return calls;
     }
 
+    private int fetchPromptTokenNumber(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) throws Exception {
+        String jsonInput = generateJsonBodyForGetTokenNumber(model, promptStruct, functionCallIFC);
+        String url = getUrl(model, "countTokens");
+        String jsonTokenNumber = send(model, url, jsonInput);
+        int tokenNumber = extractTokenNumberFromJson(jsonTokenNumber);
+        return tokenNumber;
+    }
+
+    private int extractTokenNumberFromJson(String jsonTokenNumber) {
+        JsonElement element = JsonParser.parseString(jsonTokenNumber);
+        JsonObject jsonObject = element.getAsJsonObject();
+        int tokenNumber = jsonObject.get("totalTokens").getAsInt();
+        return tokenNumber;
+    }
+
+    private String generateJsonBodyForGetTokenNumber(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) {
+        Gson gson = new Gson();
+        JsonObject jsonBody = new JsonObject();
+        JsonArray jsonContents = generateJsonArrayContents(model, promptStruct);
+        jsonBody.add("contents", jsonContents);
+
+        if(functionCallIFC != null) {
+            JsonArray tools = generateJsonArrayTools(functionCallIFC);
+            jsonBody.add("tools", tools);
+        }
+
+        return gson.toJson(jsonBody);
+    }
+
     private AIModel.ChatResponse extractChatResponseFromJson(String jsonResponse) throws Exception {
         AIModel.ChatResponse chatResponse = null;
         JsonElement element = JsonParser.parseString(jsonResponse);
@@ -216,6 +260,14 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
         return recordContent;
     }
 
+    private JsonObject generateJsonObjectGenerationConfig(int maxTokens) {
+        JsonObject jsonGenerationConfig = new JsonObject();
+        jsonGenerationConfig.addProperty("maxOutputTokens", maxTokens); 
+        jsonGenerationConfig.addProperty("temperature", 0.5); 
+
+        return jsonGenerationConfig;
+    }
+
     private JsonArray generateJsonArrayContents(String model, AIModel.PromptStruct promptStruct) {
         JsonArray jsonContents = new JsonArray();
         
@@ -251,11 +303,14 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
     }
 
 
-    private String generateJsonBodyToFetchResponse(String model, AIModel.PromptStruct promptStruct, FunctionCallIFC functionCallIFC) {
+    private String generateJsonBodyToFetchResponse(String model, AIModel.PromptStruct promptStruct, int maxTokens, FunctionCallIFC functionCallIFC) {
         Gson gson = new Gson();
         JsonObject jsonBody = new JsonObject();
         JsonArray jsonContents = generateJsonArrayContents(model, promptStruct);
         jsonBody.add("contents", jsonContents);
+
+        JsonObject jsonGenerationConfig = generateJsonObjectGenerationConfig(maxTokens);
+        jsonBody.add("generationConfig", jsonGenerationConfig);
 
         if(functionCallIFC != null) {
             JsonArray tools = generateJsonArrayTools(functionCallIFC);
@@ -310,10 +365,9 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
         return null;
     }
 
-    private String send(String model, String jsonInput) throws Exception {
+    private String send(String model, String url, String jsonInput) throws Exception {
         logger.debug("call googleai api, model = " + model + ", jsonInput = " + jsonInput);
-        URL url = new URL(getUrl(model));
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         try {
             connection.setRequestMethod("POST");
 
