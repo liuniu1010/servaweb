@@ -77,6 +77,9 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
         }
     }
 
+    /*
+     * it is not support to reduce dimensions currently
+     */  
     @Override
     public AIModel.Embedding getEmbedding(String model, String input, int dimensions) {
         try {
@@ -144,8 +147,19 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
     }
 
     private AIModel.Embedding extractEmbeddingFromJson(String jsonResponse) {
-        // to be implemented
-        return null;
+        JsonElement element = JsonParser.parseString(jsonResponse);
+        JsonObject jsonObject = element.getAsJsonObject();
+
+        JsonArray dataArray = jsonObject.getAsJsonObject("embedding").getAsJsonArray("values");
+
+        int size = dataArray.size();
+        double[] data = new double[size];
+        for(int i = 0;i < size;i++) {
+            data[i] = dataArray.get(i).getAsDouble();
+        }
+
+        AIModel.Embedding embedding = new AIModel.Embedding(data);
+        return embedding;
     }
 
     private String[] extractImageUrlsFromJson(String jsonResponse) {
@@ -268,6 +282,19 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
         return jsonGenerationConfig;
     }
 
+    private JsonObject generateJsonContentForEmbedding(String model, String input) {
+        JsonObject jsonContent = new JsonObject();
+
+        JsonArray jsonParts = new JsonArray();
+        JsonObject jsonText = new JsonObject();
+        jsonText.addProperty("text", input);
+        jsonParts.add(jsonText);
+
+        jsonContent.add("parts", jsonParts);
+
+        return jsonContent;
+    }
+
     private JsonArray generateJsonArrayContents(String model, AIModel.PromptStruct promptStruct) {
         JsonArray jsonContents = new JsonArray();
         
@@ -356,8 +383,13 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
     }
 
     private String generateJsonBodyToGetEmbedding(String model, String input, int dimensions) {
-        // to be implemented
-        return null;
+        Gson gson = new Gson();
+        JsonObject jsonBody = new JsonObject();
+        jsonBody.addProperty("model", "models/" + model);
+        JsonObject jsonContent = generateJsonContentForEmbedding(model, input);
+        jsonBody.add("content", jsonContent);
+
+        return gson.toJson(jsonBody);
     }
 
     private String generateJsonBodyToGenerateImage(String model, AIModel.ImagePrompt imagePrompt) {

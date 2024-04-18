@@ -24,6 +24,7 @@ public class GoogleAIImpl extends AbsGoogleAIImpl {
 
     private static String gemini_1_0_pro = "gemini-1.0-pro";
     private static String gemini_1_5_pro_latest = "gemini-1.5-pro-latest";
+    private static String embedding_001 = "embedding-001";
 
     private String[] chatModels;
     private String[] embeddingModels;
@@ -35,7 +36,7 @@ public class GoogleAIImpl extends AbsGoogleAIImpl {
 
     private void setup() {
         chatModels = new String[]{gemini_1_5_pro_latest, gemini_1_0_pro};
-        embeddingModels = new String[]{};
+        embeddingModels = new String[]{embedding_001};
         imageModels = new String[]{};
         visionModels = new String[]{};
 

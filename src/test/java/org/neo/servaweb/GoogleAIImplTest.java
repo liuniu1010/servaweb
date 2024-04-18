@@ -99,7 +99,7 @@ public class GoogleAIImplTest
             public Object query(DBConnectionIFC dbConnection) {
                 GoogleAIImpl googleAI = GoogleAIImpl.getInstance(dbConnection);
                 String[] models = googleAI.getEmbeddingModels();
-                AIModel.Embedding embedding = googleAI.getEmbedding(models[0], userInput, 12);
+                AIModel.Embedding embedding = googleAI.getEmbedding(models[0], userInput);
                 return embedding; 
             }
         });
@@ -152,7 +152,7 @@ public class GoogleAIImplTest
         }
     }
 
-    public void _testGetEmbedding() throws Exception {
+    public void testGetEmbedding() throws Exception {
         try {
             String userInput = "Hello, how are you! I'm Neo, nice to meet you!";
             AIModel.Embedding embedding = getEmbedding(userInput);
