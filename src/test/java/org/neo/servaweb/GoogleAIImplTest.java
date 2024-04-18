@@ -139,7 +139,7 @@ public class GoogleAIImplTest
         }
     }
 
-    public void _testVisionImage() throws Exception {
+    public void testVisionImage() throws Exception {
         try {
             String userInput = "Hello, please give me an description of the images";
             String response = visionImage(userInput);
@@ -207,7 +207,8 @@ class GoogleVisionImageTask implements DBQueryTaskIFC {
         AIModel.Attachment attachment1 = new AIModel.Attachment();
         InputStream in = new FileInputStream("/tmp/dogandcat.png");
         String rawBase64 = IOUtil.inputStreamToRawBase64(in);
-        String base64 = "data:image/png;base64," + rawBase64;
+        // String base64 = "data:image/png;base64," + rawBase64;
+        String base64 = rawBase64;
         attachment1.setContent(base64);
 
         AIModel.Attachment attachment2 = new AIModel.Attachment();
@@ -215,7 +216,7 @@ class GoogleVisionImageTask implements DBQueryTaskIFC {
 
         List<AIModel.Attachment> attachments = new ArrayList<AIModel.Attachment>();
         attachments.add(attachment1);
-        attachments.add(attachment2);
+        // attachments.add(attachment2);
 
         AIModel.AttachmentGroup attachmentGroup = new AIModel.AttachmentGroup();
         attachmentGroup.setAttachments(attachments);

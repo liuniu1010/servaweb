@@ -25,6 +25,7 @@ public class GoogleAIImpl extends AbsGoogleAIImpl {
     private static String gemini_1_0_pro = "gemini-1.0-pro";
     private static String gemini_1_5_pro_latest = "gemini-1.5-pro-latest";
     private static String embedding_001 = "embedding-001";
+    private static String gemini_pro_vision = "gemini-pro-vision";
 
     private String[] chatModels;
     private String[] embeddingModels;
@@ -38,15 +39,17 @@ public class GoogleAIImpl extends AbsGoogleAIImpl {
         chatModels = new String[]{gemini_1_5_pro_latest, gemini_1_0_pro};
         embeddingModels = new String[]{embedding_001};
         imageModels = new String[]{};
-        visionModels = new String[]{};
+        visionModels = new String[]{gemini_pro_vision};
 
         maxOutputMapping = new HashMap<String, Integer>();
         maxOutputMapping.put(gemini_1_5_pro_latest, 8192);
         maxOutputMapping.put(gemini_1_0_pro, 2048);
+        maxOutputMapping.put(gemini_pro_vision, 4096);
 
         maxInputMapping = new HashMap<String, Integer>();
         maxInputMapping.put(gemini_1_5_pro_latest, 1048576);
         maxInputMapping.put(gemini_1_0_pro, 30720);
+        maxInputMapping.put(gemini_pro_vision, 12288);
     }
 
 

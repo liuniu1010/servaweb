@@ -295,6 +295,17 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
         return jsonContent;
     }
 
+    private boolean isVisionModel(String model) {
+        String[] visionModels = getVisionModels();
+        boolean isVisionModel = false;
+        for(String visionModel: visionModels) {
+            if(model.equals(visionModel)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private JsonArray generateJsonArrayContents(String model, AIModel.PromptStruct promptStruct) {
         JsonArray jsonContents = new JsonArray();
         
@@ -314,11 +325,28 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
             }
         }
 
-        // user input part
         JsonArray jsonUserParts = new JsonArray();
-        JsonObject jsonUserText = new JsonObject();
-        jsonUserText.addProperty("text", promptStruct.getUserInput());
-        jsonUserParts.add(jsonUserText);
+        JsonObject jsonUserPart = new JsonObject();
+
+        // text of part
+        jsonUserPart.addProperty("text", promptStruct.getUserInput());
+
+        // inlineData of part
+        if(isVisionModel(model)) {
+            AIModel.AttachmentGroup attachmentGroup = promptStruct.getAttachmentGroup();
+            if(attachmentGroup != null
+                && attachmentGroup.getAttachments() != null) {
+                List<AIModel.Attachment> attachments = attachmentGroup.getAttachments();
+                for(AIModel.Attachment attachment: attachments) {
+                    JsonObject jsonInlineData = new JsonObject();
+                    jsonInlineData.addProperty("mimeType", "image/png");
+                    jsonInlineData.addProperty("data", attachment.getContent());
+                    jsonUserPart.add("inlineData", jsonInlineData);
+                }
+            }
+        }
+
+        jsonUserParts.add(jsonUserPart);
 
         JsonObject userInputContent = new JsonObject();
         userInputContent.addProperty("role", "user");
