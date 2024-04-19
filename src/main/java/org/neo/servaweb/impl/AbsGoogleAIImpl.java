@@ -326,10 +326,11 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
         }
 
         JsonArray jsonUserParts = new JsonArray();
-        JsonObject jsonUserPart = new JsonObject();
+        JsonObject jsonUserPartOnText = new JsonObject();
 
         // text of part
-        jsonUserPart.addProperty("text", promptStruct.getUserInput());
+        jsonUserPartOnText.addProperty("text", promptStruct.getUserInput());
+        jsonUserParts.add(jsonUserPartOnText);
 
         // inlineData of part
         if(isVisionModel(model)) {
@@ -338,15 +339,17 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
                 && attachmentGroup.getAttachments() != null) {
                 List<AIModel.Attachment> attachments = attachmentGroup.getAttachments();
                 for(AIModel.Attachment attachment: attachments) {
+                    JsonObject jsonUserPartOnInline = new JsonObject();
                     JsonObject jsonInlineData = new JsonObject();
-                    jsonInlineData.addProperty("mimeType", "image/png");
+                    jsonInlineData.addProperty("mime_type", "image/png");
                     jsonInlineData.addProperty("data", attachment.getContent());
-                    jsonUserPart.add("inlineData", jsonInlineData);
+                    jsonUserPartOnInline.add("inlineData", jsonInlineData);
+
+                    jsonUserParts.add(jsonUserPartOnInline);
                 }
             }
         }
 
-        jsonUserParts.add(jsonUserPart);
 
         JsonObject userInputContent = new JsonObject();
         userInputContent.addProperty("role", "user");

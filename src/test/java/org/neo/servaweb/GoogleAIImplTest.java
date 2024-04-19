@@ -207,7 +207,7 @@ class GoogleVisionImageTask implements DBQueryTaskIFC {
         AIModel.Attachment attachment1 = new AIModel.Attachment();
         InputStream in = new FileInputStream("/tmp/dogandcat.png");
         String rawBase64 = IOUtil.inputStreamToRawBase64(in);
-        // String base64 = "data:image/png;base64," + rawBase64;
+        // String base64 = "data:image/jpeg;base64," + rawBase64;
         String base64 = rawBase64;
         attachment1.setContent(base64);
 

@@ -11,7 +11,7 @@
 
     <appender name="file" class="org.apache.log4j.RollingFileAppender">
         <param name="append" value="true" />
-        <param name="maxFileSize" value="10MB" />
+        <param name="maxFileSize" value="100MB" />
         <param name="maxBackupIndex" value="10" />
         <param name="file" value="logs/servaweb.log" />
         <layout class="org.apache.log4j.PatternLayout">
