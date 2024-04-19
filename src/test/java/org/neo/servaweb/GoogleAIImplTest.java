@@ -205,18 +205,23 @@ class GoogleVisionImageTask implements DBQueryTaskIFC {
         promptStruct.setUserInput(userInput);
 
         AIModel.Attachment attachment1 = new AIModel.Attachment();
-        InputStream in = new FileInputStream("/tmp/dogandcat.png");
-        String rawBase64 = IOUtil.inputStreamToRawBase64(in);
-        // String base64 = "data:image/jpeg;base64," + rawBase64;
-        String base64 = rawBase64;
-        attachment1.setContent(base64);
+        InputStream in1 = new FileInputStream("/tmp/dogandcat.png");
+        String rawBase64OfAttach1 = IOUtil.inputStreamToRawBase64(in1);
+        attachment1.setContent(rawBase64OfAttach1);
 
         AIModel.Attachment attachment2 = new AIModel.Attachment();
-        attachment2.setContent("https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg");
+        InputStream in2 = new FileInputStream("/tmp/image.jpg");
+        String rawBase64OfAttach2 = IOUtil.inputStreamToRawBase64(in2);
+        attachment2.setContent(rawBase64OfAttach2);
+
+        AIModel.Attachment attachment3 = new AIModel.Attachment();
+        String imageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg";
+        attachment3.setContent(imageUrl);
 
         List<AIModel.Attachment> attachments = new ArrayList<AIModel.Attachment>();
         attachments.add(attachment1);
-        // attachments.add(attachment2);
+        attachments.add(attachment2);
+        // attachments.add(attachment3);
 
         AIModel.AttachmentGroup attachmentGroup = new AIModel.AttachmentGroup();
         attachmentGroup.setAttachments(attachments);

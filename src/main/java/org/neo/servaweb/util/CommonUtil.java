@@ -223,4 +223,27 @@ public class CommonUtil {
         }   
         return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
+
+    public static String extractMimeTypeFromBase64(String base64) {
+        // Check if the string starts with "data:" and contains ";base64,"
+        if (base64.startsWith("data:") && base64.contains(";base64,")) {
+            // Define the regular expression pattern for extracting the MIME type
+            Pattern pattern = Pattern.compile("data:([^;]+);base64,");
+            Matcher matcher = pattern.matcher(base64);
+            
+            // If the pattern matches, return the MIME type
+            if (matcher.find()) {
+                return matcher.group(1);
+            }
+        }
+        // Return null if no MIME type is present or the string does not follow the data URI format
+        return null;
+    }
+
+    public static String extractRawBase64(String base64) {
+        if (base64.startsWith("data:") && base64.contains(";base64,")) {
+            return base64.substring(base64.indexOf(";base64,") + 8);
+        }
+        return base64; // If no prefix is present, return the original string
+    }
 }

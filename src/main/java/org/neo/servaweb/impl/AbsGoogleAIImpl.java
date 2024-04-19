@@ -23,6 +23,7 @@ import org.neo.servaframe.util.IOUtil;
 import org.neo.servaweb.ifc.GoogleAIIFC;
 import org.neo.servaweb.ifc.FunctionCallIFC;
 import org.neo.servaweb.model.AIModel;
+import org.neo.servaweb.util.CommonUtil;
 
 abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
     final static Logger logger = Logger.getLogger(AbsGoogleAIImpl.class);
@@ -339,10 +340,15 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
                 && attachmentGroup.getAttachments() != null) {
                 List<AIModel.Attachment> attachments = attachmentGroup.getAttachments();
                 for(AIModel.Attachment attachment: attachments) {
+                    String mimeType = CommonUtil.extractMimeTypeFromBase64(attachment.getContent());
+                    if(mimeType == null) {
+                        throw new RuntimeException("the attachment doesn't have mime type");
+                    }
+
                     JsonObject jsonUserPartOnInline = new JsonObject();
                     JsonObject jsonInlineData = new JsonObject();
-                    jsonInlineData.addProperty("mime_type", "image/png");
-                    jsonInlineData.addProperty("data", attachment.getContent());
+                    jsonInlineData.addProperty("mime_type", mimeType);
+                    jsonInlineData.addProperty("data", CommonUtil.extractRawBase64(attachment.getContent()));
                     jsonUserPartOnInline.add("inlineData", jsonInlineData);
 
                     jsonUserParts.add(jsonUserPartOnInline);

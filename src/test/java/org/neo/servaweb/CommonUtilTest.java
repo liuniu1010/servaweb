@@ -20,14 +20,14 @@ import org.neo.servaweb.util.*;
 /**
  * Unit test 
  */
-public class CommandTest 
+public class CommonUtilTest 
     extends TestCase {
     /**
      * Create the test case
      *
      * @param testName name of the test case
      */
-    public CommandTest( String testName ) {
+    public CommonUtilTest( String testName ) {
         super( testName );
     }
 
@@ -47,7 +47,7 @@ public class CommandTest
      * @return the suite of tests being tested
      */
     public static Test suite() {
-        return new TestSuite( CommandTest.class );
+        return new TestSuite( CommonUtilTest.class );
     }
 
     public void testCommand() throws Exception {
@@ -61,6 +61,38 @@ public class CommandTest
         catch(Exception ex) {
             System.out.println("execute fail, message = " + ex.getMessage());
         }
+    }
+
+    public void testMimeTypeBase64() {
+        String rawBase64 = "iVBORw0KGgoA";
+        String mimeType = "image/png";
+        String prefix = "data:" + mimeType + ";base64,";
+        String base64 = prefix + rawBase64;
+
+        String extractMimeType = CommonUtil.extractMimeTypeFromBase64(base64);
+        String extractRawBase64 = CommonUtil.extractRawBase64(base64);
+        assertEquals(extractMimeType, mimeType);
+        assertEquals(extractRawBase64, rawBase64);
+
+        extractMimeType = CommonUtil.extractMimeTypeFromBase64(rawBase64);
+        extractRawBase64 = CommonUtil.extractRawBase64(rawBase64);
+        assertEquals(extractMimeType, null);
+        assertEquals(extractRawBase64, rawBase64);
+
+
+        mimeType = "image/jpeg";
+        prefix = "data:" + mimeType + ";base64,";
+        base64 = prefix + rawBase64;
+
+        extractMimeType = CommonUtil.extractMimeTypeFromBase64(base64);
+        extractRawBase64 = CommonUtil.extractRawBase64(base64);
+        assertEquals(extractMimeType, mimeType);
+        assertEquals(extractRawBase64, rawBase64);
+
+        extractMimeType = CommonUtil.extractMimeTypeFromBase64(rawBase64);
+        extractRawBase64 = CommonUtil.extractRawBase64(rawBase64);
+        assertEquals(extractMimeType, null);
+        assertEquals(extractRawBase64, rawBase64);
     }
 }
 
