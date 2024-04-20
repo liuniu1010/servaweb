@@ -453,6 +453,13 @@ abstract public class AbsOpenAIImpl implements OpenAIIFC {
                 return response;
             }
         }
+        catch(Exception ex) {
+            try (InputStream errIn = connection.getErrorStream()) {
+                String errorResponse = IOUtil.inputStreamToString(errIn);
+                logger.error("get exception from openai api, response = " + errorResponse);
+            }
+            throw ex;
+        }
         finally {
             connection.disconnect();
         }

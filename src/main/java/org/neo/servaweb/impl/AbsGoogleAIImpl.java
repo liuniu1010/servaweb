@@ -309,32 +309,27 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
 
     private JsonArray generateJsonArrayContents(String model, AIModel.PromptStruct promptStruct) {
         JsonArray jsonContents = new JsonArray();
-        
-        List<AIModel.ChatRecord> chatRecords = promptStruct.getChatRecords();
-
-        // conversation history parts
-        boolean beginWithUserRole = false;
-        for(AIModel.ChatRecord chatRecord: chatRecords) {
-            // for google api request, the first and last end text should be role user
-            // so the first end text with role model should be filtered out
-            if(chatRecord.getIsRequest()) {
-                beginWithUserRole = true;
-            }
-            
-            if(beginWithUserRole) {
-                jsonContents.add(generateJsonObjectFromChatRecord(chatRecord));
-            }
-        }
 
         JsonArray jsonUserParts = new JsonArray();
-        JsonObject jsonUserPartOnText = new JsonObject();
 
-        // text of part
-        jsonUserPartOnText.addProperty("text", promptStruct.getUserInput());
-        jsonUserParts.add(jsonUserPartOnText);
-
-        // inlineData of part
-        if(isVisionModel(model)) {
+        if(!isVisionModel(model)) {
+            // conversation history parts
+            List<AIModel.ChatRecord> chatRecords = promptStruct.getChatRecords();
+            boolean beginWithUserRole = false;
+            for(AIModel.ChatRecord chatRecord: chatRecords) {
+                // for google api request, the first and last end text should be role user
+                // so the first end text with role model should be filtered out
+                if(chatRecord.getIsRequest()) {
+                    beginWithUserRole = true;
+                }
+            
+                if(beginWithUserRole) {
+                    jsonContents.add(generateJsonObjectFromChatRecord(chatRecord));
+                }
+            }
+        }
+        else { // current google vision model doesn't support multi turn
+            // inlineData of part
             AIModel.AttachmentGroup attachmentGroup = promptStruct.getAttachmentGroup();
             if(attachmentGroup != null
                 && attachmentGroup.getAttachments() != null) {
@@ -356,6 +351,10 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
             }
         }
 
+        // text of part
+        JsonObject jsonUserPartOnText = new JsonObject();
+        jsonUserPartOnText.addProperty("text", promptStruct.getUserInput());
+        jsonUserParts.add(jsonUserPartOnText);
 
         JsonObject userInputContent = new JsonObject();
         userInputContent.addProperty("role", "user");
@@ -453,6 +452,13 @@ abstract public class AbsGoogleAIImpl implements GoogleAIIFC {
                 logger.debug("return from googleai api, response = " + response);
                 return response;
             }
+        }
+        catch(Exception ex) {
+            try (InputStream errIn = connection.getErrorStream()) {
+                String errorResponse = IOUtil.inputStreamToString(errIn);
+                logger.error("get exception from googleai api, response = " + errorResponse);
+            }
+            throw ex;
         }
         finally {
             connection.disconnect();
