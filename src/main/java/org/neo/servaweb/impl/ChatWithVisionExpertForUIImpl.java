@@ -11,6 +11,7 @@ import org.neo.servaframe.ServiceFactory;
 import org.neo.servaweb.ifc.SuperAIIFC;
 import org.neo.servaweb.ifc.ChatForUIIFC;
 import org.neo.servaweb.ifc.StorageIFC;
+import org.neo.servaweb.factory.AIFactory;
 import org.neo.servaweb.model.AIModel;
 import org.neo.servaweb.util.CommonUtil;
 
@@ -63,8 +64,7 @@ public class ChatWithVisionExpertForUIImpl implements ChatForUIIFC, DBQueryTaskI
     }
 
     protected ChatForUIIFC setupEnvironment(DBConnectionIFC dbConnection) {
-        OpenAIImpl openAIImpl = OpenAIImpl.getInstance(dbConnection);
-        SuperAIIFC superAI = openAIImpl;
+        SuperAIIFC superAI = AIFactory.getSuperAIInstance(dbConnection);
 
         StorageIFC storage = StorageInDBImpl.getInstance(dbConnection);
 

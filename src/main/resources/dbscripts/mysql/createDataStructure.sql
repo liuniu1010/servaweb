@@ -12,7 +12,7 @@ insert into configs(id, version, configname, configvalue) values(2, 1, 'DateForm
 insert into configs(id, version, configname, configvalue) values(3, 1, 'TimeFormat', 'HH:mm:ss');
 insert into configs(id, version, configname, configvalue) values(4, 1, 'DateTimeFormat', 'dd/MM/yyyy HH:mm:ss');
 insert into configs(id, version, configname, configvalue) values(5, 1, 'GoogleApiKey', '<apiKey>');
-insert into configs(id, version, configname, configvalue, comments) values(6, 1, 'AIInstance', 'GoogleAI', 'option of GoogleAI/OpenAI');
+insert into configs(id, version, configname, configvalue, comments) values(6, 1, 'AIInstance', 'GoogleAIImpl', 'option of GoogleAIImpl/OpenAIImpl');
 
 create table chatrecord(
 id               int             not null primary key,
