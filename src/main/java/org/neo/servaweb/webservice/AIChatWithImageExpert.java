@@ -7,8 +7,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.neo.servaweb.ifc.ChatForUIIFC;
-import org.neo.servaweb.impl.ChatWithImageExpertForUIImpl;
+import org.neo.servaaiagent.ifc.ChatForUIIFC;
+import org.neo.servaaiagent.impl.ChatWithImageExpertForUIImpl;
 
 @Path("/aichatwithimageexpert")
 public class AIChatWithImageExpert extends AbsAIChat {

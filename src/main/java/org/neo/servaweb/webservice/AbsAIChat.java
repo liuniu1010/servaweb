@@ -12,8 +12,8 @@ import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
-import org.neo.servaweb.ifc.ChatForUIIFC;
-import org.neo.servaweb.impl.ChatWithBotForUIImpl;
+import org.neo.servaaiagent.ifc.ChatForUIIFC;
+import org.neo.servaaiagent.impl.ChatWithBotForUIImpl;
 
 abstract public class AbsAIChat {
     final static Logger logger = Logger.getLogger(AbsAIChat.class);

@@ -14,12 +14,6 @@ import org.neo.servaframe.util.*;
 import org.neo.servaframe.interfaces.*;
 import org.neo.servaframe.model.*;
 
-import org.neo.servaweb.*;
-import org.neo.servaweb.ifc.*;
-import org.neo.servaweb.impl.*;
-import org.neo.servaweb.model.*;
-import org.neo.servaweb.util.*;
-
 /**
  * Unit test 
  */

@@ -7,8 +7,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.neo.servaweb.ifc.ChatForUIIFC;
-import org.neo.servaweb.impl.ExecuteCommandForUIImpl;
+import org.neo.servaaiagent.ifc.ChatForUIIFC;
+import org.neo.servaaiagent.impl.ExecuteCommandForUIImpl;
 
 @Path("/aiexecutecommand")
 public class AIExecuteCommand extends AbsAIChat {
