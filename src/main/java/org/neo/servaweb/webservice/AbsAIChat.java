@@ -1,9 +1,11 @@
 package org.neo.servaweb.webservice;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -13,11 +15,21 @@ import java.util.ArrayList;
 import org.apache.log4j.Logger;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
-import org.neo.servaaiagent.impl.ChatWithBotForUIImpl;
 
 abstract public class AbsAIChat {
     final static Logger logger = Logger.getLogger(AbsAIChat.class);
     abstract protected ChatForUIIFC getChatForUIInstance();
+
+    @Context
+    private ServletContext servletContext;
+
+    protected String getAbsoluteResourcePath() {
+        return servletContext.getRealPath("/");
+    }
+
+    protected String getRelavantResourcePath() {
+        return "/";
+    }
 
     public WSModel.AIChatResponse send(WSModel.AIChatParams params) {
         try {
