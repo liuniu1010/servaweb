@@ -24,11 +24,13 @@ abstract public class AbsAIChat {
     private ServletContext servletContext;
 
     protected String getAbsoluteResourcePath() {
-        return servletContext.getRealPath("/");
+        String absoluteResourcePath = servletContext.getRealPath("/");
+        return absoluteResourcePath;
     }
 
     protected String getRelavantResourcePath() {
-        return "/";
+        String relavantResourcePath = "/";
+        return relavantResourcePath;
     }
 
     public WSModel.AIChatResponse send(WSModel.AIChatParams params) {

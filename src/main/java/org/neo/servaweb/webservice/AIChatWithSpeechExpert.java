@@ -14,14 +14,14 @@ import org.neo.servaaiagent.impl.ChatWithSpeechExpertForUIImpl;
 
 @Path("/aichatwithspeechexpert")
 public class AIChatWithSpeechExpert extends AbsAIChat {
-    private String mp3Folder = "mp3";
+    private String audiosFolder = "audios";
 
     protected String getOnlineFileMountPoint() {
-        return super.getAbsoluteResourcePath() + File.separator + mp3Folder;
+        return super.getAbsoluteResourcePath() + File.separator + audiosFolder;
     }
 
     protected String getRelavantVisitPath() {
-        return mp3Folder;
+        return audiosFolder;
     }
 
     @Override
