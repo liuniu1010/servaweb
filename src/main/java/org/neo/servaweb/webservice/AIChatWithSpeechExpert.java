@@ -16,7 +16,7 @@ import org.neo.servaaiagent.impl.ChatWithSpeechExpertForUIImpl;
 public class AIChatWithSpeechExpert extends AbsAIChat {
     private String audiosFolder = "audios";
 
-    protected String getOnlineFileMountPoint() {
+    protected String getOnlineFileAbsolutePath() {
         return super.getAbsoluteResourcePath() + File.separator + audiosFolder;
     }
 
@@ -26,7 +26,7 @@ public class AIChatWithSpeechExpert extends AbsAIChat {
 
     @Override
     protected ChatForUIIFC getChatForUIInstance() {
-        return ChatWithSpeechExpertForUIImpl.getInstance(getOnlineFileMountPoint(), getRelavantVisitPath());
+        return ChatWithSpeechExpertForUIImpl.getInstance(getOnlineFileAbsolutePath(), getRelavantVisitPath());
     }
 
     @POST
