@@ -96,9 +96,11 @@
                             <textarea id="UserInput" placeholder="Input your conversation here..." onkeydown="handleKeyPressForInput(event)"></textarea>
                         </td>
                         <td>
+<!--
                             <button id="ButtonSend" style="visibility: hidden;" type="button" class="button-send" onclick="sendEcho()">
                                 <img src="images/send.png" alt="Send">
                             </button>
+-->
                             <button id="ButtonSendAudio" type="button" class="button-send" onclick="sendAudio()">
                                 <img id="recordButtonImage" src="images/macphone.webp" alt="Record">
                             </button>
@@ -133,15 +135,23 @@
         }
 
         function enableSend() {
-            document.getElementById("ButtonSend").disabled = false;
+            // document.getElementById("ButtonSend").disabled = false;
+           
+            isRecording = false; 
+            document.getElementById("ButtonSendAudio").disabled = false;
             document.getElementById("UserInput").disabled = false;
             document.getElementById("UserInput").focus();
             document.getElementById('fileInput').value = "";
         }
 
         function disableSend() {
-            document.getElementById("ButtonSend").disabled = true;
+            // document.getElementById("ButtonSend").disabled = true;
+            document.getElementById("ButtonSendAudio").disabled = true;
             document.getElementById("UserInput").disabled = true;
+        }
+
+        function isSendEabled() {
+            return !document.getElementById("ButtonSendAudio").disabled;
         }
 
         function handleKeyPressForInput(event) {
@@ -154,6 +164,7 @@
         function refresh() {
             var refreshUrl = "api/aichatwithspeechtotextexpert/refresh";
             var userInput = document.getElementById("UserInput").value;
+            enableSend();
             $.ajax({
                 url: refreshUrl,
                 type: "POST",
@@ -224,12 +235,12 @@
         function sendAudio() {
             if (!isRecording) {
                 isRecording = true;
+                recordButtonImage.src = recordImageUrl;
                 startRecording();
-                recordButtonImage.src = stopImageUrl;
             } else {
                 isRecording = false;
+                recordButtonImage.src = stopImageUrl;
                 stopRecording();
-                recordButtonImage.src = recordImageUrl;
             }
         }
 
@@ -260,6 +271,7 @@
             var sendUrl = "api/aichatwithspeechtotextexpert/send";
             var userInput = document.getElementById("UserInput").value;
             var base64String = "data:audio/mpeg;base64," + rawBase64;
+            disableSend();
             $.ajax({
                 url: sendUrl,
                 type: "POST",
