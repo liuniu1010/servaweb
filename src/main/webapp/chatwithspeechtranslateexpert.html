@@ -102,18 +102,10 @@
                         </div>
                     </tr>
                     <tr>
-                        <input type="file" id="fileInput" name="file">
-                    </tr>
-                    <tr>
                         <td>
-                            <textarea id="UserInput" placeholder="Input your conversation here..." onkeydown="handleKeyPressForInput(event)"></textarea>
+                            <textarea id="UserInput" placeholder="Click right button to speak..." onkeydown="handleKeyPressForInput(event)"></textarea>
                         </td>
                         <td>
-<!--
-                            <button id="ButtonSend" style="visibility: hidden;" type="button" class="button-send" onclick="sendEcho()">
-                                <img src="images/send.png" alt="Send">
-                            </button>
--->
                             <button id="ButtonSendAudio" type="button" class="button-send" onclick="sendAudio()">
                                 <img id="recordButtonImage" src="images/macphone.webp" alt="Record">
                             </button>
@@ -148,17 +140,13 @@
         }
 
         function enableSend() {
-            // document.getElementById("ButtonSend").disabled = false;
-           
             isRecording = false; 
             document.getElementById("ButtonSendAudio").disabled = false;
             document.getElementById("UserInput").disabled = false;
             document.getElementById("UserInput").focus();
-            document.getElementById('fileInput').value = "";
         }
 
         function disableSend() {
-            // document.getElementById("ButtonSend").disabled = true;
             document.getElementById("ButtonSendAudio").disabled = true;
             document.getElementById("UserInput").disabled = true;
         }
@@ -170,7 +158,6 @@
         function handleKeyPressForInput(event) {
             if (event.keyCode === 13 && !event.shiftKey) {
                 event.preventDefault();
-                sendEcho();
             }
         }
 
@@ -312,37 +299,6 @@
             document.getElementById("UserInput").value = "Please wait...";
         }
 
-        function sendEcho() {
-            disableSend();
-            var echoUrl = "api/aichatwithspeechtranslateexpert/echo";
-            var userInput = document.getElementById("UserInput").value;
-            if(isStringEmptyOrWhitespace(userInput)) {
-                enableSend();
-                return false;
-            }
-            $.ajax({
-                url: echoUrl,
-                type: "POST",
-                data: JSON.stringify({session: getSession(), userInput: userInput}),
-                cache: false,
-                contentType: "application/json; charset=utf-8",
-                success: function (data) {
-                    document.getElementById("RichChatRecord").innerHTML = data.message;
-                    // Delay the scrolling code by 100ms to ensure that the content is fully loaded
-                    setTimeout(function() {
-                        chatRecordEditor = document.getElementById("RichChatRecord");
-                        chatRecordEditor.scrollTop = chatRecordEditor.scrollHeight;
-                        encodeInputFileAndSend();
-                    }, 100);
-                },
-                error: function(xhr, status, error) {
-                    document.getElementById("RichChatRecord").innerHTML = error;
-                    document.getElementById("UserInput").value = "";
-                    enableSend();
-                }
-            });
-        }
-
         async function getFileBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -350,25 +306,6 @@
                 reader.onerror = error => reject(error);
                 reader.readAsDataURL(file);
             });
-        }
-
-        function encodeInputFileAndSend() {
-            var fileInput = document.getElementById('fileInput');
-            var file = fileInput.files[0];
-
-            if (file) {
-                getFileBase64(file)
-                    .then(base64String => {
-                        sendChat(base64String);
-                    })
-                .catch(error => {
-                    console.error('Error converting file to base64:', error);
-                    enableSend();
-                });
-            } 
-            else {
-                sendChat("");
-            }
         }
 
         function sendChat(base64String) {
