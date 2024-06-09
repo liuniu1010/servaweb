@@ -55,6 +55,11 @@
             <version>${jersey.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-sse</artifactId>
+            <version>${jersey.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.neo</groupId>
             <artifactId>servaframe</artifactId>
             <version>${servaframe.version}</version>
