@@ -140,7 +140,7 @@
     </div>
     <script>
         window.onload = function() {
-            refresh();
+            streamrefresh();
         }
 
         window.addEventListener('resize', function(){
@@ -178,6 +178,37 @@
         function refresh() {
         }
 
+        function streamrefresh() {
+            var streamrefreshUrl = "api/aicoderbot/streamrefresh";
+            var userInput = "";
+            $.ajax({
+                url: streamrefreshUrl,
+                type: "POST",
+                data: JSON.stringify({session: getSession(), userInput: userInput}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                xhrFields: {
+                    onprogress: function(e) {
+                        var newText = e.target.responseText;
+                        document.getElementById("RichChatRecord").innerHTML = newText;
+                        // Delay the scrolling code by 100ms to ensure that the content is fully loaded
+                        setTimeout(function() {
+                            chatRecordEditor = document.getElementById("RichChatRecord");
+                            chatRecordEditor.scrollTop = chatRecordEditor.scrollHeight;
+                        }, 100);
+                    }
+                },
+                success: function (data) {
+                    enableSend();
+                },
+                error: function(xhr, status, error) {
+                    document.getElementById("RichChatRecord").innerHTML = error;
+                    document.getElementById("UserInput").value = "";
+                    enableSend();
+                }
+            });
+        }
+
         function newChat() {
         }
 
@@ -206,7 +237,6 @@
                 contentType: "application/json; charset=utf-8",
                 xhrFields: {
                     onprogress: function(e) {
-                        var outputDiv = $('#stream-output');
                         var newText = e.target.responseText;
                         document.getElementById("RichChatRecord").innerHTML = newText;
                         // Delay the scrolling code by 100ms to ensure that the content is fully loaded

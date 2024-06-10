@@ -1,5 +1,8 @@
 package org.neo.servaweb.webservice;
 
+import java.util.Map;
+import java.util.HashMap;
+
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -43,12 +46,33 @@ public class AICoderBot extends AbsAIChat {
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Connection", "keep-alive");
 
-        try (ServletOutputStream outputStream = response.getOutputStream()) {
-            NotifyCallbackIFC notifyCallback = new AICoderBot.StreamCallbackImpl(outputStream);
-            super.streamsend(params, notifyCallback);
+        ServletOutputStream outputStream = null;
+        StreamCallbackImpl notifyCallback = null;
+        try {
+            outputStream = response.getOutputStream();
+            notifyCallback = new AICoderBot.StreamCallbackImpl(outputStream);
+            StreamCache.getInstance().put(params.getSession(), notifyCallback);
+            // super.streamsend(params, notifyCallback);
+            virtualStreamsend(notifyCallback);
         }
         catch (Exception ex) {
         }
+        finally {
+            StreamCache.getInstance().remove(params.getSession()); // this will close the associated outputstream
+        }
+    }
+
+    private void virtualStreamsend(NotifyCallbackIFC notifyCallback) {
+        for(int i = 0;i < 50;i++) {
+            String information = "Begin to process step " + i + "...";
+            notifyCallback.notify(information);
+            try {
+                Thread.sleep(1000);
+            }
+            catch(Exception ex) {
+            }
+        }
+        notifyCallback.notify("Process completed!");
     }
 
     @POST
@@ -68,6 +92,29 @@ public class AICoderBot extends AbsAIChat {
     }
 
     @POST
+    @Path("/streamrefresh")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    public void streamrefresh(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        StreamCallbackImpl streamCallback = StreamCache.getInstance().get(params.getSession());
+        if(streamCallback == null) {
+            return;
+        }
+
+        response.setContentType("text/event-stream");
+        response.setCharacterEncoding("UTF-8");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setHeader("Connection", "keep-alive");
+
+        try {
+            ServletOutputStream outputStream = response.getOutputStream();
+            streamCallback.setOutputStream(outputStream); // this output stream would be closed when streamCallback are finished
+        }
+        catch(Exception ex) {
+        }
+    }
+
+    @POST
     @Path("/refresh")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -75,10 +122,61 @@ public class AICoderBot extends AbsAIChat {
         return super.refresh(params);
     }
 
+    public static class StreamCache {
+        private static StreamCache instance = new StreamCache();
+        private StreamCache() {
+        }
+
+        public static StreamCache getInstance() {
+            return instance; 
+        }
+
+        private Map<String, AICoderBot.StreamCallbackImpl> streamMap = new HashMap<String, AICoderBot.StreamCallbackImpl>();
+        public void put(String session, AICoderBot.StreamCallbackImpl streamCallback) {
+            streamMap.put(session, streamCallback);
+        }
+
+        public AICoderBot.StreamCallbackImpl get(String session) {
+            if(streamMap.containsKey(session)) {
+                return streamMap.get(session);
+            }
+            else {
+                return null;
+            }
+        }
+
+        public void remove(String session) {
+            if(streamMap.containsKey(session)) {
+                StreamCallbackImpl streamCallback = streamMap.get(session);
+                streamCallback.closeOutputStream(); // make sure the output stream was closed to release resource
+                streamMap.remove(session);
+            } 
+        }
+    }
+
     public static class StreamCallbackImpl implements NotifyCallbackIFC {
         OutputStream  outputStream;
         public StreamCallbackImpl(OutputStream inputOutputStream) {
             outputStream = inputOutputStream;
+        }
+
+        public void setOutputStream(OutputStream inputOutputStream) {
+            logger.info("set new outputstream");
+            closeOutputStream(); // close original output stream before switch to new one
+            logger.info("origin outputstream closed");
+            outputStream = inputOutputStream;
+            logger.info("new outputstream setted");
+        }
+
+        public void closeOutputStream() {
+            if(outputStream == null) {
+                return;
+            }
+            try {
+               outputStream.close();
+            }
+            catch(Exception ex) {
+            }
         }
 
         @Override
@@ -89,6 +187,7 @@ public class AICoderBot extends AbsAIChat {
                 toFlush = toFlush.replace("\n", "<br>");
                 outputStream.write(toFlush.getBytes(StandardCharsets.UTF_8));
                 outputStream.flush();
+                logger.info("flush success");
             }
             catch(Exception ex) {
                 logger.error(ex.getMessage(), ex);
