@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import org.apache.log4j.Logger;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
+import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 abstract public class AbsAIChat {
     final static Logger logger = Logger.getLogger(AbsAIChat.class);
@@ -46,6 +47,29 @@ abstract public class AbsAIChat {
                 attachFiles.add(fileAsBase64.trim());
             }
             String renderedResponse = getChatForUIInstance().fetchResponse(session, userInput, attachFiles);
+
+            WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
+            return response;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+            return new WSModel.AIChatResponse(false, ex.getMessage());
+        }
+    }
+
+    public WSModel.AIChatResponse streamsend(WSModel.AIChatParams params, NotifyCallbackIFC notifyCallback) {
+        try {
+            String session = params.getSession();
+            String userInput = params.getUserInput();
+            String fileAsBase64 = params.getFileAsBase64();
+
+            List<String> attachFiles = null;
+            if(fileAsBase64 != null 
+                && !fileAsBase64.trim().equals("")) {
+                attachFiles = new ArrayList<String>();
+                attachFiles.add(fileAsBase64.trim());
+            }
+            String renderedResponse = getChatForUIInstance().fetchResponse(session, notifyCallback, userInput, attachFiles);
 
             WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
             return response;
