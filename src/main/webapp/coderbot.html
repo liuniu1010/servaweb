@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coder Bot</title>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .background {
+            background-color: #ffffff;
+            width: calc(100% - 20px);
+            height: calc(100% - 20px);
+            margin: 10px;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            height: calc(100%);
+            width: calc(100%);
+            border: 1px solid #ccc;
+        }
+        .left-panel {
+            width: 60px;
+            height: calc(100% - 4px);
+            padding: 2px;
+            border-right: 1px solid #ccc;
+        }
+        .right-window {
+            width: calc(100% - 40px);
+            height: 100%;
+            padding: 20px;
+        }
+        .leftpanel-button {
+            background: none;
+            padding: 0;
+            cursor: pointer;
+            width: 200px;
+            height: 40px;
+            border: 1px solid #ccc;
+            font-family: sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .chatRecordArea {
+            border: none;
+            padding: 10px;
+            min-height: calc(100vh - 240px);
+            max-height: calc(100vh - 240px);
+            width: calc(100vw - 160px);
+            overflow-y: auto;
+        }
+        #UserInput {
+            height: 135px;
+            width: calc(100vw - 220px);
+        }
+        .button-send {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            overflow: hidden;
+            padding: 0;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .button-send img {
+            width: 100%;
+            height: 100%;
+        }
+        #recordButtonImage {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            user-drag: none;
+            -webkit-user-drag: none;
+        }
+        .leftpanel-button {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            overflow: hidden;
+            padding: 0;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .leftpanel-button img {
+            width: 100%;
+            height: 100%;
+        }
+        #NewButtonImage {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            user-drag: none;
+            -webkit-user-drag: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="background">
+        <div class="container">
+            <div class="left-panel">
+                <br>
+                <br>
+                <button id="ButtonNewChat" type="button" class="leftpanel-button">
+                    <img id="NewButtonImage" src="images/newstart.webp" alt="New">
+                </button>
+            </div>
+            <div class="right-window">
+                <table class="chatcontent">
+                    <tr>
+                        <div id="RichChatRecord" contenteditable="true" class="chatRecordArea">
+                        </div>
+                    </tr>
+                    <tr>
+                        <td>
+                            <textarea id="UserInput" placeholder="Type your requirement here..."></textarea>
+                        </td>
+                        <td>
+                            <button id="ButtonSend" type="button" class="button-send" onclick="streamsend()">
+                                <img src="images/send.png" alt="Send">
+                            </button>
+                        </td>
+                    </tr>
+                </table> 
+            </div>
+        </div>
+    </div>
+    <script>
+        window.onload = function() {
+            refresh();
+        }
+
+        window.addEventListener('resize', function(){
+            location.reload();
+        });
+
+        function getSession() {
+            return "coderbot";   // adjust later
+        }
+
+        function getCookieValue(cookieName) {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.indexOf(cookieName + '=') === 0) {
+                    return cookie.substring(cookieName.length + 1);
+                }
+            }
+            return null;
+        }
+
+        function enableSend() {
+            isRecording = false; 
+            document.getElementById("ButtonSend").disabled = false;
+            document.getElementById("UserInput").disabled = false;
+            document.getElementById("UserInput").value = "";
+            document.getElementById("UserInput").focus();
+        }
+
+        function disableSend() {
+            document.getElementById("ButtonSend").disabled = true;
+            document.getElementById("UserInput").disabled = true;
+        }
+
+        function refresh() {
+        }
+
+        function newChat() {
+        }
+
+        function isStringEmptyOrWhitespace(str) {
+            if(str) {
+                return (str.trim() == "");
+            }
+            else {
+                return true;
+            }
+        }
+
+        function streamsend() {
+            disableSend();
+            var streamsendUrl = "api/aicoderbot/streamsend";
+            var userInput = document.getElementById("UserInput").value;
+            if(isStringEmptyOrWhitespace(userInput)) {
+                enableSend();
+                return false;
+            }
+            $.ajax({
+                url: streamsendUrl,
+                type: "POST",
+                data: JSON.stringify({session: getSession(), userInput: userInput}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                xhrFields: {
+                    onprogress: function(e) {
+                        var outputDiv = $('#stream-output');
+                        var newText = e.target.responseText;
+                        document.getElementById("RichChatRecord").innerHTML = newText;
+                        // Delay the scrolling code by 100ms to ensure that the content is fully loaded
+                        setTimeout(function() {
+                            chatRecordEditor = document.getElementById("RichChatRecord");
+                            chatRecordEditor.scrollTop = chatRecordEditor.scrollHeight;
+                        }, 100);
+                    }
+                },
+                success: function (data) {
+                    enableSend();
+                },
+                error: function(xhr, status, error) {
+                    document.getElementById("RichChatRecord").innerHTML = error;
+                    document.getElementById("UserInput").value = "";
+                    enableSend();
+                }
+            });
+        }
+
+        function downloadFile(url, fileName) {
+            var link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.getElementById("ButtonNewChat").addEventListener("click", function() {
+            newChat();
+        });
+    </script>
+</body>
+</html>
