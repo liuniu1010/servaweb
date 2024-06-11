@@ -22,3 +22,12 @@ isrequest        tinyint(1)      not null,
 chattime         datetime        not null,
 content          text            not null
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+create table coderecord(
+id               int             not null primary key,
+version          int             not null,
+session          varchar(50)     not null,
+createtime       datetime        not null,
+requirement      text            null,
+content          text            null
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

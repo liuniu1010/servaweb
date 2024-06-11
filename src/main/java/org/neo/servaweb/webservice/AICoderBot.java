@@ -2,6 +2,7 @@ package org.neo.servaweb.webservice;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Date;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -15,6 +16,15 @@ import javax.ws.rs.core.MediaType;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletOutputStream;
 import java.nio.charset.StandardCharsets;
+
+import org.neo.servaframe.interfaces.DBConnectionIFC;
+import org.neo.servaframe.interfaces.DBSaveTaskIFC;
+import org.neo.servaframe.interfaces.DBServiceIFC;
+import org.neo.servaframe.ServiceFactory;
+
+import org.neo.servaaibase.model.AIModel;
+import org.neo.servaaibase.ifc.StorageIFC;
+import org.neo.servaaibase.impl.StorageInDBImpl;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
@@ -50,7 +60,7 @@ public class AICoderBot extends AbsAIChat {
         StreamCallbackImpl notifyCallback = null;
         try {
             outputStream = response.getOutputStream();
-            notifyCallback = new AICoderBot.StreamCallbackImpl(outputStream);
+            notifyCallback = new AICoderBot.StreamCallbackImpl(params, outputStream);
             StreamCache.getInstance().put(params.getSession(), notifyCallback);
             // super.streamsend(params, notifyCallback);
             virtualStreamsend(notifyCallback);
@@ -109,6 +119,7 @@ public class AICoderBot extends AbsAIChat {
         try {
             ServletOutputStream outputStream = response.getOutputStream();
             streamCallback.setOutputStream(outputStream); // this output stream would be closed when streamCallback are finished
+            Thread.sleep(600000);
         }
         catch(Exception ex) {
         }
@@ -155,9 +166,36 @@ public class AICoderBot extends AbsAIChat {
     }
 
     public static class StreamCallbackImpl implements NotifyCallbackIFC {
-        OutputStream  outputStream;
-        public StreamCallbackImpl(OutputStream inputOutputStream) {
+        private WSModel.AIChatParams params;
+        private OutputStream  outputStream;
+        public StreamCallbackImpl(WSModel.AIChatParams inputParams, OutputStream inputOutputStream) {
+            params = inputParams; 
             outputStream = inputOutputStream;
+
+            AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(params.getSession());
+            codeRecord.setCreateTime(new Date());
+            codeRecord.setRequirement(params.getUserInput());
+            saveCodeRecord(codeRecord);
+        }
+
+        private void saveCodeRecord(AIModel.CodeRecord codeRecord) {
+            try {
+                innerSaveCodeRecord(codeRecord);
+            }
+            catch(Exception ex) {
+            }
+        }
+
+        private void innerSaveCodeRecord(AIModel.CodeRecord codeRecord) {
+            DBServiceIFC dbService = ServiceFactory.getDBService();
+            dbService.executeSaveTask(new DBSaveTaskIFC() {
+                @Override
+                public Object save(DBConnectionIFC dbConnection) {
+                    StorageIFC storageIFC = StorageInDBImpl.getInstance(dbConnection);
+                    storageIFC.addCodeRecord(codeRecord.getSession(), codeRecord);
+                    return null;
+                }
+            });
         }
 
         public void setOutputStream(OutputStream inputOutputStream) {
@@ -182,7 +220,13 @@ public class AICoderBot extends AbsAIChat {
         @Override
         public void notify(String information) {
             try {
+                AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(params.getSession());
+                codeRecord.setCreateTime(new Date());
+                codeRecord.setContent(information);
+                saveCodeRecord(codeRecord);
+
                 logger.info("notify: " + information);
+
                 String toFlush = "\n\n" + information;
                 toFlush = toFlush.replace("\n", "<br>");
                 outputStream.write(toFlush.getBytes(StandardCharsets.UTF_8));
