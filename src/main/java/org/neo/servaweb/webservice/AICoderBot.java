@@ -66,9 +66,11 @@ public class AICoderBot extends AbsAIChat {
             notifyCallback = new AICoderBot.StreamCallbackImpl(params, outputStream);
             StreamCache.getInstance().put(params.getSession(), notifyCallback);
             // super.streamsend(params, notifyCallback);
+            
             virtualStreamsend(notifyCallback);
         }
         catch (Exception ex) {
+            logger.error(ex.getMessage(), ex);
         }
         finally {
             StreamCache.getInstance().remove(params.getSession()); // this will close the associated outputstream
@@ -122,9 +124,10 @@ public class AICoderBot extends AbsAIChat {
                 return;
             }
             streamCallback.changeOutputStream(outputStream); // this output stream would be closed when streamCallback are finished
-            Thread.sleep(60*1000*5);
+            Thread.sleep(60*1000*5); // wait 5 minutes to ensure the task be completed.
         }
         catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
         }
     }
 
@@ -173,12 +176,10 @@ public class AICoderBot extends AbsAIChat {
         if(information == null || information.trim().equals("")) {
             return;
         }
-        logger.info("notify: " + information);
         String toFlush = "\n\n" + information;
         toFlush = toFlush.replace("\n", "<br>");
         outputStream.write(toFlush.getBytes(StandardCharsets.UTF_8));
         outputStream.flush();
-        logger.info("flush success");
     }
 
     public static class StreamCache {
@@ -227,11 +228,8 @@ public class AICoderBot extends AbsAIChat {
         }
 
         public void changeOutputStream(OutputStream inputOutputStream) {
-            logger.info("change new outputstream");
             closeOutputStream(); // close original output stream before switch to new one
-            logger.info("origin outputstream closed");
             outputStream = inputOutputStream;
-            logger.info("new outputstream changed");
         }
 
         private void saveCodeRecord(AIModel.CodeRecord codeRecord) {

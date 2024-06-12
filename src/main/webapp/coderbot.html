@@ -121,7 +121,7 @@
             <div class="right-window">
                 <table class="chatcontent">
                     <tr>
-                        <div id="RichChatRecord" contenteditable="true" class="chatRecordArea" style="background-color: #300A24; color: #EEEEEC; font-size: 20px;">
+                        <div id="RichChatRecord" contenteditable="false" class="chatRecordArea" style="background-color: #300A24; color: #EEEEEC; font-size: 20px; padding: 10px; border: 5px solid #555; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); border-radius: 5px;">
                         </div>
                     </tr>
                     <tr>
@@ -179,6 +179,7 @@
         }
 
         function streamrefresh() {
+            disableSend();
             var streamrefreshUrl = "api/aicoderbot/streamrefresh";
             var userInput = "";
             $.ajax({
@@ -205,6 +206,9 @@
                     document.getElementById("RichChatRecord").innerHTML = error;
                     document.getElementById("UserInput").value = "";
                     enableSend();
+                },
+                complete: function() {
+                    document.getElementById("UserInput").value = "";
                 }
             });
         }
@@ -253,6 +257,9 @@
                     document.getElementById("RichChatRecord").innerHTML = error;
                     document.getElementById("UserInput").value = "";
                     enableSend();
+                },
+                complete: function() {
+                    document.getElementById("UserInput").value = "";
                 }
             });
         }
