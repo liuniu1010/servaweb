@@ -1,5 +1,6 @@
 package org.neo.servaweb.webservice;
 
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Date;
@@ -19,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBSaveTaskIFC;
+import org.neo.servaframe.interfaces.DBQueryTaskIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
 import org.neo.servaframe.ServiceFactory;
 
@@ -60,6 +62,7 @@ public class AICoderBot extends AbsAIChat {
         StreamCallbackImpl notifyCallback = null;
         try {
             outputStream = response.getOutputStream();
+            notifyHistory(params.getSession(), outputStream);
             notifyCallback = new AICoderBot.StreamCallbackImpl(params, outputStream);
             StreamCache.getInstance().put(params.getSession(), notifyCallback);
             // super.streamsend(params, notifyCallback);
@@ -106,20 +109,20 @@ public class AICoderBot extends AbsAIChat {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.SERVER_SENT_EVENTS)
     public void streamrefresh(@Context HttpServletResponse response, WSModel.AIChatParams params) {
-        StreamCallbackImpl streamCallback = StreamCache.getInstance().get(params.getSession());
-        if(streamCallback == null) {
-            return;
-        }
-
         response.setContentType("text/event-stream");
         response.setCharacterEncoding("UTF-8");
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Connection", "keep-alive");
 
         try {
-            ServletOutputStream outputStream = response.getOutputStream();
-            streamCallback.setOutputStream(outputStream); // this output stream would be closed when streamCallback are finished
-            Thread.sleep(600000);
+            OutputStream outputStream = response.getOutputStream();
+            notifyHistory(params.getSession(), outputStream);
+            StreamCallbackImpl streamCallback = StreamCache.getInstance().get(params.getSession());
+            if(streamCallback == null) {
+                return;
+            }
+            streamCallback.changeOutputStream(outputStream); // this output stream would be closed when streamCallback are finished
+            Thread.sleep(60*1000*5);
         }
         catch(Exception ex) {
         }
@@ -131,6 +134,51 @@ public class AICoderBot extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse refresh(WSModel.AIChatParams params) {
         return super.refresh(params);
+    }
+
+    private void notifyHistory(String session, OutputStream inputOutputStream) {
+        try {
+            innerNotifyHistory(session, inputOutputStream);
+        }
+        catch(Exception ex) {
+        }
+    }
+
+    private void innerNotifyHistory(String session, OutputStream outputStream) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeQueryTask(new DBQueryTaskIFC() {
+            @Override
+            public Object query(DBConnectionIFC dbConnection) {
+                try {
+                    StorageIFC storageIFC = StorageInDBImpl.getInstance(dbConnection);
+                    List<AIModel.CodeRecord> codeRecords = storageIFC.getCodeRecords(session);
+                    String information = "";
+                    for(AIModel.CodeRecord codeRecord: codeRecords) {
+                        if(codeRecord.getContent() == null || codeRecord.getContent().trim().equals("")) {
+                            continue;
+                        }
+                        information += "\n\n" + codeRecord.getContent();
+                    }
+                    flushInformation(information, outputStream);
+                }
+                catch(Exception ex) {
+                    logger.error(ex.getMessage(), ex);
+                }
+                return null;
+            }
+        });
+    }
+
+    private static void flushInformation(String information, OutputStream outputStream) throws Exception {
+        if(information == null || information.trim().equals("")) {
+            return;
+        }
+        logger.info("notify: " + information);
+        String toFlush = "\n\n" + information;
+        toFlush = toFlush.replace("\n", "<br>");
+        outputStream.write(toFlush.getBytes(StandardCharsets.UTF_8));
+        outputStream.flush();
+        logger.info("flush success");
     }
 
     public static class StreamCache {
@@ -178,6 +226,14 @@ public class AICoderBot extends AbsAIChat {
             saveCodeRecord(codeRecord);
         }
 
+        public void changeOutputStream(OutputStream inputOutputStream) {
+            logger.info("change new outputstream");
+            closeOutputStream(); // close original output stream before switch to new one
+            logger.info("origin outputstream closed");
+            outputStream = inputOutputStream;
+            logger.info("new outputstream changed");
+        }
+
         private void saveCodeRecord(AIModel.CodeRecord codeRecord) {
             try {
                 innerSaveCodeRecord(codeRecord);
@@ -198,14 +254,6 @@ public class AICoderBot extends AbsAIChat {
             });
         }
 
-        public void setOutputStream(OutputStream inputOutputStream) {
-            logger.info("set new outputstream");
-            closeOutputStream(); // close original output stream before switch to new one
-            logger.info("origin outputstream closed");
-            outputStream = inputOutputStream;
-            logger.info("new outputstream setted");
-        }
-
         public void closeOutputStream() {
             if(outputStream == null) {
                 return;
@@ -217,6 +265,7 @@ public class AICoderBot extends AbsAIChat {
             }
         }
 
+
         @Override
         public void notify(String information) {
             try {
@@ -224,17 +273,10 @@ public class AICoderBot extends AbsAIChat {
                 codeRecord.setCreateTime(new Date());
                 codeRecord.setContent(information);
                 saveCodeRecord(codeRecord);
-
-                logger.info("notify: " + information);
-
-                String toFlush = "\n\n" + information;
-                toFlush = toFlush.replace("\n", "<br>");
-                outputStream.write(toFlush.getBytes(StandardCharsets.UTF_8));
-                outputStream.flush();
-                logger.info("flush success");
+                flushInformation(information, outputStream);
             }
             catch(Exception ex) {
-                logger.error(ex.getMessage(), ex);
+                logger.error(ex.getMessage());
             }
         }
     }
