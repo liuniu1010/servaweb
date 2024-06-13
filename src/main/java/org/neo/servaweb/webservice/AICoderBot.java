@@ -65,9 +65,17 @@ public class AICoderBot extends AbsAIChat {
             notifyHistory(params.getSession(), outputStream);
             notifyCallback = new AICoderBot.StreamCallbackImpl(params, outputStream);
             StreamCache.getInstance().put(params.getSession(), notifyCallback);
-            // super.streamsend(params, notifyCallback);
-            
-            virtualStreamsend(notifyCallback);
+            WSModel.AIChatResponse chatResponse = super.streamsend(params, notifyCallback);
+
+            String information = "";
+            if(chatResponse.getIsSuccess()) {
+                information = "Code generated success, " + chatResponse.getMessage();
+            }
+            else {
+                information = "Failed to generate code due to: " + chatResponse.getMessage();
+            }
+            notifyCallback.notify(information);
+            // virtualStreamsend(notifyCallback);
         }
         catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
