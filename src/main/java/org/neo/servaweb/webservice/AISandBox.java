@@ -12,16 +12,16 @@ import org.neo.servaaibase.util.CommonUtil;
 @Path("/aisandbox")
 public class AISandBox {
     @POST
-    @Path("/send")
+    @Path("/executecommand")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse executeCommand(WSModel.AIChatParams params) {
+    public WSModel.AIChatResponse executecommand(WSModel.AIChatParams params) {
         String command = params.getUserInput();
         WSModel.AIChatResponse chatResponse = null;
 
         try {
             String result = CommonUtil.executeCommand(command);
-            chatResponse = new WSModel.AIChatResponse(true, command);
+            chatResponse = new WSModel.AIChatResponse(true, result);
         }
         catch(Exception ex) {
             chatResponse = new WSModel.AIChatResponse(false, ex.getMessage());
