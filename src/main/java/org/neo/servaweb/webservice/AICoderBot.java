@@ -132,7 +132,16 @@ public class AICoderBot extends AbsAIChat {
                 return;
             }
             streamCallback.changeOutputStream(outputStream); // this output stream would be closed when streamCallback are finished
-            Thread.sleep(60*1000*5); // wait 5 minutes to ensure the task be completed.
+
+            // wait 30 minutes, every 1 minute, check if the project was finished
+            for(int i = 0;i < 30;i++) {
+                Thread.sleep(60*1000);
+                streamCallback = StreamCache.getInstance().get(params.getSession());
+                if(streamCallback == null) {
+                    // finished, no need to wait, return directly
+                    return;
+                }
+            }
         }
         catch(Exception ex) {
             logger.error(ex.getMessage(), ex);
