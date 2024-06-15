@@ -7,6 +7,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.neo.servaframe.util.IOUtil;
 import org.neo.servaaibase.util.CommonUtil;
 
 @Path("/aisandbox")
@@ -22,6 +23,29 @@ public class AISandBox {
         try {
             String result = CommonUtil.executeCommand(command);
             chatResponse = new WSModel.AIChatResponse(true, result);
+        }
+        catch(Exception ex) {
+            chatResponse = new WSModel.AIChatResponse(false, ex.getMessage());
+        }
+        return chatResponse;
+    }
+
+    @POST
+    @Path("/download")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public WSModel.AIChatResponse download(WSModel.AIChatParams params) {
+        String session = params.getSession();
+        String projectPath = params.getUserInput();
+        WSModel.AIChatResponse chatResponse = null;
+
+        try {
+            String tarFilePath = "/tmp/" + session + ".tar.gz"; 
+            String command = "tar -zcvf " + tarFilePath + " " + projectPath;
+            CommonUtil.executeCommand(command);
+
+            String base64 = IOUtil.fileToRawBase64(tarFilePath);
+            chatResponse = new WSModel.AIChatResponse(true, base64);
         }
         catch(Exception ex) {
             chatResponse = new WSModel.AIChatResponse(false, ex.getMessage());
