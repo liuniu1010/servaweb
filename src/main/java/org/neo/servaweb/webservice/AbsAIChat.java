@@ -29,9 +29,9 @@ abstract public class AbsAIChat {
         return absoluteResourcePath;
     }
 
-    protected String getRelavantResourcePath() {
-        String relavantResourcePath = "/";
-        return relavantResourcePath;
+    protected String getRelevantResourcePath() {
+        String relevantResourcePath = "/";
+        return relevantResourcePath;
     }
 
     public WSModel.AIChatResponse send(WSModel.AIChatParams params) {

@@ -20,13 +20,13 @@ public class AIChatWithSpeechTranslateExpert extends AbsAIChat {
         return super.getAbsoluteResourcePath() + File.separator + audiosFolder;
     }
 
-    protected String getRelavantVisitPath() {
+    protected String getRelevantVisitPath() {
         return audiosFolder;
     }
 
     @Override
     protected ChatForUIIFC getChatForUIInstance() {
-        return ChatWithSpeechTranslateForUIImpl.getInstance(getOnlineFileAbsolutePath(), getRelavantVisitPath());
+        return ChatWithSpeechTranslateForUIImpl.getInstance(getOnlineFileAbsolutePath(), getRelevantVisitPath());
     }
 
     @POST
