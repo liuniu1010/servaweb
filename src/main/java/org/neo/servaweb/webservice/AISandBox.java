@@ -41,7 +41,7 @@ public class AISandBox {
 
         try {
             String tarFilePath = "/tmp/" + session + ".tar.gz"; 
-            String command = "tar -zcvf " + tarFilePath + " " + projectPath;
+            String command = "cd " + projectPath + "/../ && tar -zcvf " + tarFilePath + " myProject/";
             CommonUtil.executeCommand(command);
 
             String base64 = IOUtil.fileToRawBase64(tarFilePath);
