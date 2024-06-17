@@ -22,6 +22,13 @@ insert into configs(id, version, configname, configvalue, comments) values(13, 1
 insert into configs(id, version, configname, configvalue, comments) values(14, 1, 'python3linuxSandBoxUrl', 'http://localhost:8084/api/aisandbox', '');
 insert into configs(id, version, configname, configvalue, comments) values(15, 1, 'nodejslinuxSandBoxUrl', 'http://localhost:8085/api/aisandbox', '');
 
+insert into configs(id, version, configname, configvalue, comments) values(51, 1, 'email.username', '<username>', '');
+insert into configs(id, version, configname, configvalue, comments) values(52, 1, 'email.password', '<password>', '');
+insert into configs(id, version, configname, configvalue, comments) values(53, 1, 'mail.smtp.auth', 'true', '');
+insert into configs(id, version, configname, configvalue, comments) values(54, 1, 'mail.smtp.starttls.enable', 'true', '');
+insert into configs(id, version, configname, configvalue, comments) values(55, 1, 'mail.smtp.host', 'smtp.gmail.com', '');
+insert into configs(id, version, configname, configvalue, comments) values(56, 1, 'mail.smtp.port', '587', '');
+
 create table chatrecord(
 id               int             not null primary key,
 version          int             not null,
