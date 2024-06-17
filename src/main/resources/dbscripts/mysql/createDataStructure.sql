@@ -46,3 +46,38 @@ createtime       datetime        not null,
 requirement      text            null,
 content          text            null
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+create table useraccount(
+id               int             not null primary key,
+version          int             not null,
+username         varchar(50)     not null unique,
+encyptedpassword varchar(50)     not null,
+registtime       datetime        not null
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+create table loginsession(
+id               int             not null primary key,
+version          int             not null,
+session          varchar(20)     not null,
+accountid        int             not null,
+expiretime       datetime        not null,
+foreign key (accountid) references useraccount(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+create table chasedcredits(
+id               int             not null primary key,
+version          int             not null,
+accountid        int             not null,
+credits          int             not null default 0,
+expiretime       datetime        not null,
+foreign key (accountid) references useraccount(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+create table consumedcredits(
+id               int             not null primary key,
+version          int             not null,
+accountid        int             not null,
+credits          int             not null,
+consumetime      datetime        not null,
+foreign key (accountid) references useraccount(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
