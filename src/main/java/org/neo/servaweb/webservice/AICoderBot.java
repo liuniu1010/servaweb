@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Date;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -35,9 +36,20 @@ import org.neo.servaaiagent.impl.CoderBotForUIImpl;
 @Path("/aicoderbot")
 public class AICoderBot extends AbsAIChat {
     final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AICoderBot.class);
+
+    private String downloadFolder = "download";
+
+    protected String getOnlineFileAbsolutePath() {
+        return super.getAbsoluteResourcePath() + File.separator + downloadFolder;
+    }
+
+    protected String getRelevantVisitPath() {
+        return downloadFolder;
+    }
+
     @Override
     protected ChatForUIIFC getChatForUIInstance() {
-        return CoderBotForUIImpl.getInstance();
+        return CoderBotForUIImpl.getInstance(getOnlineFileAbsolutePath(), getRelevantVisitPath());
     }
 
     @POST
