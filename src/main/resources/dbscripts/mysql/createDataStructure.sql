@@ -51,7 +51,7 @@ create table useraccount(
 id               int             not null primary key,
 version          int             not null,
 username         varchar(50)     not null unique,
-encyptedpassword varchar(50)     not null,
+encyptedpassword varchar(64)     not null,
 registtime       datetime        not null
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
