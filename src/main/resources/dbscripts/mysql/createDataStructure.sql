@@ -52,7 +52,8 @@ id               int             not null primary key,
 version          int             not null,
 username         varchar(50)     not null unique,
 encyptedpassword varchar(64)     not null,
-registtime       datetime        not null
+registtime       datetime        not null,
+ip               varchar(20)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 create table loginsession(
@@ -61,6 +62,7 @@ version          int             not null,
 session          varchar(20)     not null,
 accountid        int             not null,
 expiretime       datetime        not null,
+ip               varchar(20)
 foreign key (accountid) references useraccount(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
