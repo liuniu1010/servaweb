@@ -1,7 +1,7 @@
 create table configs(
 id                int            not null primary key,
 version           int            not null,
-configname        varchar(30)    not null,
+configname        varchar(50)    not null,
 configvalue       varchar(100),
 comments          varchar(100),
 unique key        uniqueno_element (configname)
@@ -32,6 +32,11 @@ insert into configs(id, version, configname, configvalue, comments) values(56, 1
 insert into configs(id, version, configname, configvalue, comments) values(61, 1, 'sessionExpireMinutes', '30', '');
 insert into configs(id, version, configname, configvalue, comments) values(62, 1, 'creditsExpireMonths', '6', '');
 insert into configs(id, version, configname, configvalue, comments) values(63, 1, 'topupOnRegister', '200', '');
+insert into configs(id, version, configname, configvalue, comments) values(64, 1, 'retryTimesOnLLMException', '4', '');
+insert into configs(id, version, configname, configvalue, comments) values(65, 1, 'firstWaitSecondsOnLLMException', '10', '');
+insert into configs(id, version, configname, configvalue, comments) values(66, 1, 'codeIterationRounds', '2', '');
+insert into configs(id, version, configname, configvalue, comments) values(67, 1, 'codeInterationDeep', '20', '');
+
 
 create table chatrecord(
 id               int             not null primary key,
