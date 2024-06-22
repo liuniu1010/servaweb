@@ -38,6 +38,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: space-between; /* This will space the buttons apart */
         }
         .leftpanel-button {
             width: 56px;
@@ -156,6 +157,35 @@
         .login-dialog button:hover {
             background-color: #0056b3;
         }
+        /* Add styles for the logout menu */
+        .logout-menu {
+            display: none;
+            position: fixed;
+            bottom: 80px; /* Adjust this value to align with the logout button */
+            left: 70px; /* Adjust this value to align with the left panel */
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            width: 200px;
+        }
+        .logout-menu button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .logout-menu button:hover {
+            background-color: #f7f7f7;
+        }
+        .logout-menu hr {
+            margin: 0;
+            border: 0.5px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -164,6 +194,10 @@
             <div class="left-panel">
                 <button id="ButtonNewChat" type="button" class="leftpanel-button">
                     <img id="NewButtonImage" src="images/newstart.webp" alt="New">
+                </button>
+                <!-- Add the logout button here -->
+                <button id="ButtonLogout" type="button" class="leftpanel-button">
+                    <img id="LogoutButtonImage" src="images/client1.png" alt="Logout">
                 </button>
             </div>
             <div class="right-window">
@@ -177,6 +211,11 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Logout Menu -->
+    <div id="logoutMenu" class="logout-menu">
+        <button onclick="logout()">Log out</button>
     </div>
 
     <!-- Login Dialog -->
@@ -221,7 +260,6 @@
         function setCookieValue(cookieName, cookieValue) {
             document.cookie = cookieName + "=" + cookieValue + ";path=/";
         }
-
 
         function enableSend() {
             isRecording = false; 
@@ -392,6 +430,21 @@
         function validateEmail(email) {
             var re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
             return re.test(String(email).toLowerCase());
+        }
+
+        // Show the logout menu when the logout button is clicked
+        document.getElementById("ButtonLogout").addEventListener("click", function() {
+            var logoutMenu = document.getElementById("logoutMenu");
+            if (logoutMenu.style.display === "block") {
+                logoutMenu.style.display = "none";
+            } else {
+                logoutMenu.style.display = "block";
+            }
+        });
+
+        function logout() {
+            // Implement your logout logic here
+            alert("Logged out successfully!");
         }
 
         document.getElementById("ButtonNewChat").addEventListener("click", function() {
