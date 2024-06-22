@@ -340,12 +340,26 @@
 
         function sendPassword() {
             var username = document.getElementById("username").value;
-            var password = document.getElementById("password").value;
             if (!validateEmail(username)) {
                 alert("Please enter a valid email address.");
                 return;
             }
-            alert("Username: " + username + "\nPassword: " + password);
+            var sendpasswordUrl = "api/aicoderbot/sendpassword";
+            $.ajax({
+                url: sendpasswordUrl,
+                type: "POST",
+                data: JSON.stringify({session: username, userInput: ""}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    alert(data.message);
+                },
+                error: function(xhr, status, error) {
+                    alert(error);
+                },
+                complete: function() {
+                }
+            });
         }
 
         function login() {

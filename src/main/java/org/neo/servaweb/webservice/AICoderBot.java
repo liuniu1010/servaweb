@@ -64,10 +64,29 @@ public class AICoderBot extends AbsAIChat {
     }
 
     @POST
+    @Path("/sendpassword")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public WSModel.AIChatResponse sendPassword(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        String username = params.getSession();
+
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        try {
+            accountAgent.sendPassword(username);
+            WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, "The new password has been sent to your email address");
+            return chatResponse;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+        return null; 
+    }
+
+    @POST
     @Path("/login")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse send(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+    public WSModel.AIChatResponse login(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         String username = params.getSession();
         String password = params.getUserInput();
 
