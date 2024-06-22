@@ -110,6 +110,52 @@
         .button-send:hover {
             background-color: #0056b3;
         }
+        .login-dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            width: 300px;
+        }
+        .login-dialog h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .login-dialog label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .login-dialog input[type="text"], .login-dialog input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .login-dialog button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .login-dialog button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -132,6 +178,18 @@
             </div>
         </div>
     </div>
+
+    <!-- Login Dialog -->
+    <div id="loginDialog" class="login-dialog">
+        <h3>Login</h3>
+        <label for="username">Email address:</label>
+        <input id="username" type="text" placeholder="Email address">
+        <label for="password">Password:</label>
+        <input id="password" type="password" placeholder="Password">
+        <button onclick="sendPassword()">Send Password</button>
+        <button onclick="login()">Login</button>
+    </div>
+
     <script>
         window.onload = function() {
             streamrefresh();
@@ -251,9 +309,6 @@
                     document.getElementById("RichChatRecord").innerHTML = error;
                     document.getElementById("UserInput").value = "";
                     enableSend();
-                },
-                complete: function() {
-                    document.getElementById("UserInput").value = "";
                 }
             });
         }
@@ -267,8 +322,33 @@
             document.body.removeChild(link);
         }
 
+        function sendPassword() {
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+            if (!validateEmail(username)) {
+                alert("Please enter a valid email address.");
+                return;
+            }
+            alert("Username: " + username + "\nPassword: " + password);
+        }
+
+        function login() {
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+            if (!validateEmail(username)) {
+                alert("Please enter a valid email address.");
+                return;
+            }
+            alert("Login attempt with\nUsername: " + username + "\nPassword: " + password);
+        }
+
+        function validateEmail(email) {
+            var re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            return re.test(String(email).toLowerCase());
+        }
+
         document.getElementById("ButtonNewChat").addEventListener("click", function() {
-            newChat();
+            // document.getElementById("loginDialog").style.display = "block";
         });
     </script>
 </body>
