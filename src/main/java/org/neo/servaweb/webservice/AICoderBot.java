@@ -64,6 +64,40 @@ public class AICoderBot extends AbsAIChat {
     }
 
     @POST
+    @Path("/login")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public WSModel.AIChatResponse send(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        String username = params.getSession();
+        String password = params.getUserInput();
+
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        try {
+            String loginSession = accountAgent.login(username, password);
+            WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, loginSession);
+            return chatResponse;
+        }
+        catch(NeoAIException nex) {
+            logger.error(nex.getMessage(), nex);
+            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID
+                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL) {
+                try {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("Login fail or invalid session");
+                    response.flushBuffer();
+                }
+                catch(Exception ex) {
+                    logger.error(ex.getMessage(), ex);
+                }
+            }
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+        return null; 
+    }
+
+    @POST
     @Path("/streamsend")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.SERVER_SENT_EVENTS)
@@ -96,10 +130,11 @@ public class AICoderBot extends AbsAIChat {
         }
         catch(NeoAIException nex) {
             logger.error(nex.getMessage(), nex);
-            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID) {
+            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID
+                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL) {
                 try {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Invalid session");
+                    response.getWriter().write("Login fail or invalid session");
                     response.flushBuffer();
                     return;
                 }
@@ -183,10 +218,11 @@ public class AICoderBot extends AbsAIChat {
         }
         catch(NeoAIException nex) {
             logger.error(nex.getMessage(), nex);
-            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID) {
+            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID
+                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL) {
                 try {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Invalid session");
+                    response.getWriter().write("Login fail or invalid session");
                     response.flushBuffer();
                     return;
                 }

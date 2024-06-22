@@ -199,8 +199,12 @@
             location.reload();
         });
 
-        function getSession() {
-            return "coderbot";   // adjust later
+        function getLoginSession() {
+            return getCookieValue("loginSession");
+        }
+
+        function saveLoginSession(loginSession) {
+            setCookieValue("loginSession", loginSession); 
         }
 
         function getCookieValue(cookieName) {
@@ -211,8 +215,13 @@
                     return cookie.substring(cookieName.length + 1);
                 }
             }
-            return null;
+            return "";
         }
+
+        function setCookieValue(cookieName, cookieValue) {
+            document.cookie = cookieName + "=" + cookieValue + ";path=/";
+        }
+
 
         function enableSend() {
             isRecording = false; 
@@ -238,7 +247,7 @@
             $.ajax({
                 url: streamrefreshUrl,
                 type: "POST",
-                data: JSON.stringify({session: getSession(), userInput: userInput}),
+                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 xhrFields: {
@@ -256,6 +265,9 @@
                     enableSend();
                 },
                 error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
                     document.getElementById("RichChatRecord").innerHTML = error;
                     document.getElementById("UserInput").value = "";
                     enableSend();
@@ -289,7 +301,7 @@
             $.ajax({
                 url: streamsendUrl,
                 type: "POST",
-                data: JSON.stringify({session: getSession(), userInput: userInput}),
+                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 xhrFields: {
@@ -339,11 +351,28 @@
         function login() {
             var username = document.getElementById("username").value;
             var password = document.getElementById("password").value;
-            if (!validateEmail(username)) {
-                alert("Please enter a valid email address.");
-                return;
+
+            if(isStringEmptyOrWhitespace(username)) {
+                return false;
             }
-            alert("Login attempt with\nUsername: " + username + "\nPassword: " + password);
+            var loginUrl = "api/aicoderbot/login";
+            $.ajax({
+                url: loginUrl,
+                type: "POST",
+                data: JSON.stringify({session: username, userInput: password}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    saveLoginSession(data.message);
+                    document.getElementById("loginDialog").style.display = "None";
+                    streamfresh();
+                },
+                error: function(xhr, status, error) {
+                    alert("login fail!");
+                },
+                complete: function() {
+                }
+            });
         }
 
         function validateEmail(email) {
@@ -352,7 +381,6 @@
         }
 
         document.getElementById("ButtonNewChat").addEventListener("click", function() {
-            // document.getElementById("loginDialog").style.display = "block";
         });
     </script>
 </body>
