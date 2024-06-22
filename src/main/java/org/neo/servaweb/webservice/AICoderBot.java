@@ -97,10 +97,15 @@ public class AICoderBot extends AbsAIChat {
         catch(NeoAIException nex) {
             logger.error(nex.getMessage(), nex);
             if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid session");
-                response.flushBuffer();
-                return;
+                try {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("Invalid session");
+                    response.flushBuffer();
+                    return;
+                }
+                catch(Exception ex) {
+                    logger.error(ex.getMessage(), ex);
+                }
             }
         }
         catch (Exception ex) {
@@ -156,6 +161,8 @@ public class AICoderBot extends AbsAIChat {
         response.setHeader("Connection", "keep-alive");
 
         try {
+            checkSessionValid(params.getSession());
+
             OutputStream outputStream = response.getOutputStream();
             notifyHistory(params.getSession(), outputStream);
             StreamCallbackImpl streamCallback = StreamCache.getInstance().get(params.getSession());
@@ -171,6 +178,20 @@ public class AICoderBot extends AbsAIChat {
                 if(streamCallback == null) {
                     // finished, no need to wait, return directly
                     return;
+                }
+            }
+        }
+        catch(NeoAIException nex) {
+            logger.error(nex.getMessage(), nex);
+            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID) {
+                try {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("Invalid session");
+                    response.flushBuffer();
+                    return;
+                }
+                catch(Exception ex) {
+                    logger.error(ex.getMessage(), ex);
                 }
             }
         }
