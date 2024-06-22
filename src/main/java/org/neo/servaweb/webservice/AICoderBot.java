@@ -28,10 +28,13 @@ import org.neo.servaframe.ServiceFactory;
 import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.impl.StorageInDBImpl;
+import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
+import org.neo.servaaiagent.ifc.AccountAgentIFC;
 import org.neo.servaaiagent.impl.CoderBotForUIImpl;
+import org.neo.servaaiagent.impl.AccountAgentImpl;
 
 @Path("/aicoderbot")
 public class AICoderBot extends AbsAIChat {
@@ -73,6 +76,8 @@ public class AICoderBot extends AbsAIChat {
         ServletOutputStream outputStream = null;
         StreamCallbackImpl notifyCallback = null;
         try {
+            checkSessionValid(params.getSession());
+
             outputStream = response.getOutputStream();
             notifyHistory(params.getSession(), outputStream);
             notifyCallback = new AICoderBot.StreamCallbackImpl(params, outputStream);
@@ -89,12 +94,26 @@ public class AICoderBot extends AbsAIChat {
             notifyCallback.notify(information);
             // virtualStreamsend(notifyCallback);
         }
+        catch(NeoAIException nex) {
+            logger.error(nex.getMessage(), nex);
+            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Invalid session");
+                response.flushBuffer();
+                return;
+            }
+        }
         catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
         }
         finally {
             StreamCache.getInstance().remove(params.getSession()); // this will close the associated outputstream
         }
+    }
+
+    private void checkSessionValid(String session) {
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        accountAgent.checkLogin(session); 
     }
 
     private void virtualStreamsend(NotifyCallbackIFC notifyCallback) {
