@@ -290,7 +290,6 @@
         function disableSend() {
             document.getElementById("ButtonSend").disabled = true;
             document.getElementById("UserInput").disabled = true;
-            document.getElementById("UserInput").value = "Please wait...";
         }
 
         function refresh() {
@@ -436,10 +435,31 @@
                 success: function (data) {
                     saveLoginSession(data.message);
                     document.getElementById("loginDialog").style.display = "None";
-                    streamfresh();
+                    streamrefresh();
                 },
                 error: function(xhr, status, error) {
                     alert("login fail!");
+                },
+                complete: function() {
+                }
+            });
+        }
+
+        function logout() {
+            var logoutUrl = "api/aicoderbot/logout";
+            $.ajax({
+                url: logoutUrl,
+                type: "POST",
+                data: JSON.stringify({session: getLoginSession(), userInput: ""}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    saveLoginSession("");
+                    streamrefresh();
+                },
+                error: function(xhr, status, error) {
+                    saveLoginSession("");
+                    streamrefresh();
                 },
                 complete: function() {
                 }
@@ -460,12 +480,12 @@
                 logoutMenu.style.display = "block";
             }
         });
-
+/*
         function logout() {
             // Implement your logout logic here
             alert("Logged out successfully!");
         }
-
+*/
         document.getElementById("ButtonNewChat").addEventListener("click", function() {
         });
     </script>

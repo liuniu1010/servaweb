@@ -117,6 +117,25 @@ public class AICoderBot extends AbsAIChat {
     }
 
     @POST
+    @Path("/logout")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public WSModel.AIChatResponse logout(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        String loginSession = params.getSession();
+
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        try {
+            accountAgent.logout(loginSession);
+            WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, "");
+            return chatResponse;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+        return null; 
+    }
+
+    @POST
     @Path("/streamsend")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.SERVER_SENT_EVENTS)
