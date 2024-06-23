@@ -20,7 +20,7 @@ import javax.servlet.ServletOutputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
-import org.neo.servaframe.interfaces.DBSaveTaskIFC;
+import org.neo.servaframe.interfaces.DBAutoCommitSaveTaskIFC;
 import org.neo.servaframe.interfaces.DBQueryTaskIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
 import org.neo.servaframe.ServiceFactory;
@@ -385,9 +385,9 @@ public class AICoderBot extends AbsAIChat {
 
         private void innerSaveCodeRecord(AIModel.CodeRecord codeRecord) {
             DBServiceIFC dbService = ServiceFactory.getDBService();
-            dbService.executeSaveTask(new DBSaveTaskIFC() {
+            dbService.executeAutoCommitSaveTask(new DBAutoCommitSaveTaskIFC() {
                 @Override
-                public Object save(DBConnectionIFC dbConnection) {
+                public Object autoCommitSave(DBConnectionIFC dbConnection) {
                     StorageIFC storageIFC = StorageInDBImpl.getInstance(dbConnection);
                     storageIFC.addCodeRecord(codeRecord.getSession(), codeRecord);
                     return null;
