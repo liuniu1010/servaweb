@@ -29,7 +29,7 @@ insert into configs(id, version, configname, configvalue, comments) values(54, 1
 insert into configs(id, version, configname, configvalue, comments) values(55, 1, 'mail.smtp.host', 'smtp.gmail.com', '');
 insert into configs(id, version, configname, configvalue, comments) values(56, 1, 'mail.smtp.port', '587', '');
 
-insert into configs(id, version, configname, configvalue, comments) values(61, 1, 'sessionExpireMinutes', '30', '');
+insert into configs(id, version, configname, configvalue, comments) values(61, 1, 'sessionExpireMinutes', '60', '');
 insert into configs(id, version, configname, configvalue, comments) values(62, 1, 'creditsExpireMonths', '6', '');
 insert into configs(id, version, configname, configvalue, comments) values(63, 1, 'topupOnRegister', '200', '');
 insert into configs(id, version, configname, configvalue, comments) values(64, 1, 'retryTimesOnLLMException', '4', '');

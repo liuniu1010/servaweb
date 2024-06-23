@@ -346,6 +346,7 @@
             }
         }
 
+        var xhr;
         function streamsend() {
             disableSend();
             var streamsendUrl = "api/aicoderbot/streamsend";
@@ -354,7 +355,7 @@
                 enableSend();
                 return false;
             }
-            $.ajax({
+            xhr = $.ajax({
                 url: streamsendUrl,
                 type: "POST",
                 data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
@@ -454,6 +455,9 @@
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
+                    if (xhr && xhr.readyState !== 4) { // Check if the request is still in progress
+                        xhr.abort(); // Abort the ongoing AJAX request
+                    }
                     saveLoginSession("");
                     streamrefresh();
                 },
