@@ -38,7 +38,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between; /* This will space the buttons apart */
+            justify-content: space-between;
         }
         .leftpanel-button {
             width: 56px;
@@ -161,7 +161,7 @@
         .logout-menu {
             display: none;
             position: fixed;
-            bottom: 80px; /* Adjust this value to align with the logout button */
+            bottom: 100px; /* Adjust this value to align with the logout button */
             left: 70px; /* Adjust this value to align with the left panel */
             background-color: #fff;
             border: 1px solid #ddd;
@@ -169,6 +169,8 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             z-index: 1000;
             width: 200px;
+            display: flex;
+            align-items: center;
         }
         .logout-menu button {
             width: 100%;
@@ -178,6 +180,8 @@
             text-align: left;
             cursor: pointer;
             font-size: 16px;
+            display: flex;
+            align-items: center;
         }
         .logout-menu button:hover {
             background-color: #f7f7f7;
@@ -185,6 +189,16 @@
         .logout-menu hr {
             margin: 0;
             border: 0.5px solid #ddd;
+        }
+        .logout-menu img {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+        }
+        /* Adjust position of the logout button */
+        .left-panel .logout-button-container {
+            margin-top: auto;
+            margin-bottom: 20px; /* Adjust this value to set the button higher */
         }
     </style>
 </head>
@@ -195,10 +209,11 @@
                 <button id="ButtonNewChat" type="button" class="leftpanel-button">
                     <img id="NewButtonImage" src="images/newstart.webp" alt="New">
                 </button>
-                <!-- Add the logout button here -->
-                <button id="ButtonLogout" type="button" class="leftpanel-button">
-                    <img id="LogoutButtonImage" src="images/client1.png" alt="Logout">
-                </button>
+                <div class="logout-button-container">
+                    <button id="ButtonAccount" type="button" class="leftpanel-button">
+                        <img id="AccountButtonImage" src="images/client1.png" alt="Account">
+                    </button>
+                </div>
             </div>
             <div class="right-window">
                 <div id="RichChatRecord" contenteditable="false" class="chatRecordArea">
@@ -215,7 +230,10 @@
 
     <!-- Logout Menu -->
     <div id="logoutMenu" class="logout-menu">
-        <button onclick="logout()">Log out</button>
+        <button onclick="logout()">
+            <img src="images/logout-icon.webp" alt="Logout Icon">
+            Log out
+        </button>
     </div>
 
     <!-- Login Dialog -->
@@ -314,6 +332,7 @@
                     document.getElementById("UserInput").value = "";
                 }
             });
+            logoutMenu.style.display = "none";
         }
 
         function newChat() {
@@ -433,7 +452,7 @@
         }
 
         // Show the logout menu when the logout button is clicked
-        document.getElementById("ButtonLogout").addEventListener("click", function() {
+        document.getElementById("ButtonAccount").addEventListener("click", function() {
             var logoutMenu = document.getElementById("logoutMenu");
             if (logoutMenu.style.display === "block") {
                 logoutMenu.style.display = "none";
