@@ -36,6 +36,7 @@ insert into configs(id, version, configname, configvalue, comments) values(64, 1
 insert into configs(id, version, configname, configvalue, comments) values(65, 1, 'firstWaitSecondsOnLLMException', '10', '');
 insert into configs(id, version, configname, configvalue, comments) values(66, 1, 'codeIterationRounds', '2', '');
 insert into configs(id, version, configname, configvalue, comments) values(67, 1, 'codeInterationDeep', '20', '');
+insert into configs(id, version, configname, configvalue, comments) values(68, 1, 'consumedCreditsOnEach', '20', '');
 
 
 create table chatrecord(

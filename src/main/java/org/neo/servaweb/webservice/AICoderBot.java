@@ -103,7 +103,7 @@ public class AICoderBot extends AbsAIChat {
                 || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL) {
                 try {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Login fail or invalid session");
+                    response.getWriter().write("Login fail or invalid loginSession");
                     response.flushBuffer();
                 }
                 catch(Exception ex) {
@@ -149,7 +149,7 @@ public class AICoderBot extends AbsAIChat {
         ServletOutputStream outputStream = null;
         StreamCallbackImpl notifyCallback = null;
         try {
-            checkSessionValid(params.getSession());
+            checkPermissionOnStreamsend(params.getSession());
 
             outputStream = response.getOutputStream();
             notifyHistory(params.getSession(), outputStream);
@@ -173,7 +173,7 @@ public class AICoderBot extends AbsAIChat {
                 || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL) {
                 try {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Login fail or invalid session");
+                    response.getWriter().write("Login fail or invalid loginSession");
                     response.flushBuffer();
                     return;
                 }
@@ -190,9 +190,24 @@ public class AICoderBot extends AbsAIChat {
         }
     }
 
-    private void checkSessionValid(String session) {
+    private void checkPermissionOnStreamsend(String loginSession) {
+        checkSessionValid(loginSession);
+        updateSession(loginSession);
+    }
+
+    private void checkPermissionOnStreamrefresh(String loginSession) {
+        checkSessionValid(loginSession);
+        updateSession(loginSession);
+    }
+
+    private void checkSessionValid(String loginSession) {
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        accountAgent.checkLogin(session); 
+        accountAgent.checkSessionValid(loginSession); 
+    }
+
+    private void updateSession(String loginSession) {
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        accountAgent.updateSession(loginSession); 
     }
 
     private void virtualStreamsend(NotifyCallbackIFC notifyCallback) {
@@ -235,7 +250,7 @@ public class AICoderBot extends AbsAIChat {
         response.setHeader("Connection", "keep-alive");
 
         try {
-            checkSessionValid(params.getSession());
+            checkPermissionOnStreamrefresh(params.getSession());
 
             OutputStream outputStream = response.getOutputStream();
             notifyHistory(params.getSession(), outputStream);
@@ -261,7 +276,7 @@ public class AICoderBot extends AbsAIChat {
                 || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL) {
                 try {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Login fail or invalid session");
+                    response.getWriter().write("Login fail or invalid loginSession");
                     response.flushBuffer();
                     return;
                 }
@@ -283,23 +298,23 @@ public class AICoderBot extends AbsAIChat {
         return super.refresh(params);
     }
 
-    private void notifyHistory(String session, OutputStream inputOutputStream) {
+    private void notifyHistory(String loginSession, OutputStream inputOutputStream) {
         try {
-            // innerNotifyHistoryFromDB(session, inputOutputStream);
-            innerNotifyHistoryFromMemory(session, inputOutputStream);
+            // innerNotifyHistoryFromDB(loginSession, inputOutputStream);
+            innerNotifyHistoryFromMemory(loginSession, inputOutputStream);
         }
         catch(Exception ex) {
         }
     }
 
-    private void innerNotifyHistoryFromDB(String session, OutputStream outputStream) {
+    private void innerNotifyHistoryFromDB(String loginSession, OutputStream outputStream) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeQueryTask(new DBQueryTaskIFC() {
             @Override
             public Object query(DBConnectionIFC dbConnection) {
                 try {
                     StorageIFC storageIFC = StorageInDBImpl.getInstance(dbConnection);
-                    List<AIModel.CodeRecord> codeRecords = storageIFC.getCodeRecords(session);
+                    List<AIModel.CodeRecord> codeRecords = storageIFC.getCodeRecords(loginSession);
                     String information = "";
                     for(AIModel.CodeRecord codeRecord: codeRecords) {
                         if(codeRecord.getContent() == null || codeRecord.getContent().trim().equals("")) {
@@ -317,10 +332,10 @@ public class AICoderBot extends AbsAIChat {
         });
     }
 
-    private void innerNotifyHistoryFromMemory(String session, OutputStream outputStream) {
+    private void innerNotifyHistoryFromMemory(String loginSession, OutputStream outputStream) {
         try {
             StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
-            List<AIModel.CodeRecord> codeRecords = storageIFC.getCodeRecords(session);
+            List<AIModel.CodeRecord> codeRecords = storageIFC.getCodeRecords(loginSession);
             String information = "";
             for(AIModel.CodeRecord codeRecord: codeRecords) {
                 if(codeRecord.getContent() == null || codeRecord.getContent().trim().equals("")) {
@@ -355,24 +370,24 @@ public class AICoderBot extends AbsAIChat {
         }
 
         private Map<String, AICoderBot.StreamCallbackImpl> streamMap = new HashMap<String, AICoderBot.StreamCallbackImpl>();
-        public void put(String session, AICoderBot.StreamCallbackImpl streamCallback) {
-            streamMap.put(session, streamCallback);
+        public void put(String loginSession, AICoderBot.StreamCallbackImpl streamCallback) {
+            streamMap.put(loginSession, streamCallback);
         }
 
-        public AICoderBot.StreamCallbackImpl get(String session) {
-            if(streamMap.containsKey(session)) {
-                return streamMap.get(session);
+        public AICoderBot.StreamCallbackImpl get(String loginSession) {
+            if(streamMap.containsKey(loginSession)) {
+                return streamMap.get(loginSession);
             }
             else {
                 return null;
             }
         }
 
-        public void remove(String session) {
-            if(streamMap.containsKey(session)) {
-                StreamCallbackImpl streamCallback = streamMap.get(session);
+        public void remove(String loginSession) {
+            if(streamMap.containsKey(loginSession)) {
+                StreamCallbackImpl streamCallback = streamMap.get(loginSession);
                 streamCallback.closeOutputStream(); // make sure the output stream was closed to release resource
-                streamMap.remove(session);
+                streamMap.remove(loginSession);
             } 
         }
     }
