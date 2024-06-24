@@ -72,7 +72,8 @@ version          int             not null,
 session          varchar(20)     not null unique,
 accountid        int             not null,
 expiretime       datetime        not null,
-ip               varchar(20)
+ip               varchar(20),
+isdeleted        tinyint(1)      not null default 0,
 foreign key (accountid) references useraccount(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
