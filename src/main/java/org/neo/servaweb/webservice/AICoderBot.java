@@ -28,12 +28,13 @@ import org.neo.servaframe.ServiceFactory;
 import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.impl.StorageInDBImpl;
+import org.neo.servaaibase.impl.StorageInMemoryImpl;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.ifc.AccountAgentIFC;
-import org.neo.servaaiagent.impl.CoderBotForUIImpl;
+import org.neo.servaaiagent.impl.CoderBotInMemoryForUIImpl;
 import org.neo.servaaiagent.impl.AccountAgentImpl;
 
 @Path("/aicoderbot")
@@ -52,7 +53,7 @@ public class AICoderBot extends AbsAIChat {
 
     @Override
     protected ChatForUIIFC getChatForUIInstance() {
-        return CoderBotForUIImpl.getInstance(getOnlineFileAbsolutePath(), getRelevantVisitPath());
+        return CoderBotInMemoryForUIImpl.getInstance(getOnlineFileAbsolutePath(), getRelevantVisitPath());
     }
 
     @POST
@@ -284,13 +285,14 @@ public class AICoderBot extends AbsAIChat {
 
     private void notifyHistory(String session, OutputStream inputOutputStream) {
         try {
-            innerNotifyHistory(session, inputOutputStream);
+            // innerNotifyHistoryFromDB(session, inputOutputStream);
+            innerNotifyHistoryFromMemory(session, inputOutputStream);
         }
         catch(Exception ex) {
         }
     }
 
-    private void innerNotifyHistory(String session, OutputStream outputStream) {
+    private void innerNotifyHistoryFromDB(String session, OutputStream outputStream) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeQueryTask(new DBQueryTaskIFC() {
             @Override
@@ -313,6 +315,24 @@ public class AICoderBot extends AbsAIChat {
                 return null;
             }
         });
+    }
+
+    private void innerNotifyHistoryFromMemory(String session, OutputStream outputStream) {
+        try {
+            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
+            List<AIModel.CodeRecord> codeRecords = storageIFC.getCodeRecords(session);
+            String information = "";
+            for(AIModel.CodeRecord codeRecord: codeRecords) {
+                if(codeRecord.getContent() == null || codeRecord.getContent().trim().equals("")) {
+                    continue;
+                }
+                information += "\n\n" + codeRecord.getContent();
+            }
+            flushInformation(information, outputStream);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
     }
 
     private static void flushInformation(String information, OutputStream outputStream) throws Exception {
@@ -377,13 +397,19 @@ public class AICoderBot extends AbsAIChat {
 
         private void saveCodeRecord(AIModel.CodeRecord codeRecord) {
             try {
-                innerSaveCodeRecord(codeRecord);
+                // innerSaveCodeRecordInDB(codeRecord);
+                innerSaveCodeRecordInMemory(codeRecord);
             }
             catch(Exception ex) {
             }
         }
 
-        private void innerSaveCodeRecord(AIModel.CodeRecord codeRecord) {
+        private void innerSaveCodeRecordInMemory(AIModel.CodeRecord codeRecord) {
+            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
+            storageIFC.addCodeRecord(codeRecord.getSession(), codeRecord);
+        }
+
+        private void innerSaveCodeRecordInDB(AIModel.CodeRecord codeRecord) {
             DBServiceIFC dbService = ServiceFactory.getDBService();
             dbService.executeAutoCommitSaveTask(new DBAutoCommitSaveTaskIFC() {
                 @Override
