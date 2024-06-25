@@ -15,6 +15,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -68,12 +69,13 @@ public class AICoderBot extends AbsAIChat {
     @Path("/sendpassword")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse sendPassword(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+    public WSModel.AIChatResponse sendPassword(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
         String username = params.getSession();
+        String sourceIP = request.getRemoteAddr();
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         try {
-            accountAgent.sendPassword(username);
+            accountAgent.sendPassword(username, sourceIP);
             WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, "The new password has been sent to your email address");
             return chatResponse;
         }
@@ -87,13 +89,14 @@ public class AICoderBot extends AbsAIChat {
     @Path("/login")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse login(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+    public WSModel.AIChatResponse login(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
         String username = params.getSession();
         String password = params.getUserInput();
+        String sourceIP = request.getRemoteAddr();
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         try {
-            String loginSession = accountAgent.login(username, password);
+            String loginSession = accountAgent.login(username, password, sourceIP);
             WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, loginSession);
             return chatResponse;
         }
