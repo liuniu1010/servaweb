@@ -81,7 +81,7 @@ public class AICoderBot extends AbsAIChat {
             return chatResponse;
         }
         catch(Exception ex) {
-            logger.error(ex.getMessage(), ex);
+            logger.error(ex.getMessage());
             standardHandleException(ex, response);
         }
         return null; 
@@ -104,7 +104,7 @@ public class AICoderBot extends AbsAIChat {
             return chatResponse;
         }
         catch(Exception ex) {
-            logger.error(ex.getMessage(), ex);
+            logger.error(ex.getMessage());
             standardHandleException(ex, response);
         }
         return null; 
@@ -161,7 +161,7 @@ public class AICoderBot extends AbsAIChat {
             // virtualStreamsend(notifyCallback);
         }
         catch(Exception ex) {
-            logger.error(ex.getMessage(), ex);
+            logger.error(ex.getMessage());
             standardHandleException(ex, response);
         }
         finally {
@@ -292,7 +292,7 @@ public class AICoderBot extends AbsAIChat {
             }
         }
         catch(Exception ex) {
-            logger.error(ex.getMessage(), ex);
+            logger.error(ex.getMessage());
             standardHandleException(ex, response);
         }
     }
