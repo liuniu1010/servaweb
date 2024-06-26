@@ -243,8 +243,8 @@
         <input id="username" type="text" placeholder="Email address">
         <label for="password">Password:</label>
         <input id="password" type="password" placeholder="Password">
-        <button onclick="sendPassword()">Send Password</button>
-        <button onclick="login()">Login</button>
+        <button id="sendPasswordBtn" onclick="sendPassword()">Send Password</button>
+        <button id="loginBtn" onclick="login()">Login</button>
     </div>
 
     <script>
@@ -395,12 +395,28 @@
             document.body.removeChild(link);
         }
 
+        function disableSendPasswordButton() {
+            var sendPasswordBtn = document.getElementById("sendPasswordBtn");
+            var loginBtn = document.getElementById("loginBtn");
+            sendPasswordBtn.disabled = true;
+            loginBtn.disable = true;
+        }
+
+        function enableSendPasswordButton() {
+            var sendPasswordBtn = document.getElementById("sendPasswordBtn");
+            var loginBtn = document.getElementById("loginBtn");
+            sendPasswordBtn.disabled = false;
+            loginBtn.disable = false;
+        }
+
         function sendPassword() {
             var username = document.getElementById("username").value;
             if (!validateEmail(username)) {
                 alert("Please enter a valid email address.");
                 return;
             }
+            disableSendPasswordButton();
+
             var sendpasswordUrl = "api/aicoderbot/sendpassword";
             $.ajax({
                 url: sendpasswordUrl,
@@ -410,11 +426,14 @@
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
                     alert(data.message);
+                    enableSendPasswordButton();
                 },
                 error: function(xhr, status, error) {
-                    alert(error);
+                    alertError(xhr, status, error);
+                    enableSendPasswordButton();
                 },
                 complete: function() {
+                    enableSendPasswordButton();
                 }
             });
         }
@@ -439,11 +458,22 @@
                     streamrefresh();
                 },
                 error: function(xhr, status, error) {
-                    alert("login fail!");
+                    alertError(xhr, status, error);
                 },
                 complete: function() {
                 }
             });
+        }
+
+        function alertError(xhr, status, error) {
+            var message = xhr.responseText;
+            try {
+                var jsonResponse = JSON.parse(xhr.responseText);
+                message = jsonResponse.message || jsonResponse.error;
+            } 
+            catch(e) {
+            }
+            alert(message);
         }
 
         function logout() {

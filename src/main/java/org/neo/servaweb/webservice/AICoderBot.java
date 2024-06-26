@@ -75,12 +75,14 @@ public class AICoderBot extends AbsAIChat {
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         try {
+            checkAccessibilityOnSendPassword(username);
             accountAgent.sendPassword(username, sourceIP);
             WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, "The new password has been sent to your email address");
             return chatResponse;
         }
         catch(Exception ex) {
             logger.error(ex.getMessage(), ex);
+            standardHandleException(ex, response);
         }
         return null; 
     }
@@ -96,26 +98,14 @@ public class AICoderBot extends AbsAIChat {
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         try {
+            checkAccessibilityOnLogin(username, password);
             String loginSession = accountAgent.login(username, password, sourceIP);
             WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, loginSession);
             return chatResponse;
         }
-        catch(NeoAIException nex) {
-            logger.error(nex.getMessage(), nex);
-            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID
-                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL) {
-                try {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Login fail or invalid loginSession");
-                    response.flushBuffer();
-                }
-                catch(Exception ex) {
-                    logger.error(ex.getMessage(), ex);
-                }
-            }
-        }
         catch(Exception ex) {
             logger.error(ex.getMessage(), ex);
+            standardHandleException(ex, response);
         }
         return null; 
     }
@@ -152,7 +142,7 @@ public class AICoderBot extends AbsAIChat {
         ServletOutputStream outputStream = null;
         StreamCallbackImpl notifyCallback = null;
         try {
-            checkPermissionOnStreamsend(params.getSession());
+            checkAccessibilityOnStreamsend(params.getSession());
 
             outputStream = response.getOutputStream();
             notifyHistory(params.getSession(), outputStream);
@@ -170,40 +160,63 @@ public class AICoderBot extends AbsAIChat {
             notifyCallback.notify(information);
             // virtualStreamsend(notifyCallback);
         }
-        catch(NeoAIException nex) {
-            logger.error(nex.getMessage(), nex);
-            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID
-                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL) {
-                try {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Login fail or invalid loginSession");
-                    response.flushBuffer();
-                    return;
-                }
-                catch(Exception ex) {
-                    logger.error(ex.getMessage(), ex);
-                }
-            }
-        }
-        catch (Exception ex) {
+        catch(Exception ex) {
             logger.error(ex.getMessage(), ex);
+            standardHandleException(ex, response);
         }
         finally {
             StreamCache.getInstance().remove(params.getSession()); // this will close the associated outputstream
         }
     }
 
-    private void checkPermissionOnStreamsend(String loginSession) {
-        checkSessionValid(loginSession);
+    private void standardHandleException(Exception ex, HttpServletResponse response) {
+        terminateConnection(decideHttpResponseStatus(ex), ex.getMessage(), response);
+    }
+
+    private int decideHttpResponseStatus(Exception ex) {
+        if(ex instanceof NeoAIException) {
+            NeoAIException nex = (NeoAIException)ex;
+            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID
+                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL) {
+                return HttpServletResponse.SC_UNAUTHORIZED;
+            }
+            else if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_NOCREDITS_LEFT) {
+                return HttpServletResponse.SC_PAYMENT_REQUIRED;
+            }
+        }
+        return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+    }
+
+    private void terminateConnection(int httpStatus, String message, HttpServletResponse response) {
+        try {
+            response.setStatus(httpStatus);
+            response.getWriter().write(message);
+            response.flushBuffer();
+            return;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+    }
+
+    private void checkAccessibilityOnSendPassword(String username) {
+    }
+
+    private void checkAccessibilityOnLogin(String username, String password) {
+    }
+
+    private void checkAccessibilityOnStreamsend(String loginSession) {
+        verifySessionValid(loginSession);
+        updateSession(loginSession);
+        verifyCredits(loginSession);
+    }
+
+    private void checkAccessibilityOnStreamrefresh(String loginSession) {
+        verifySessionValid(loginSession);
         updateSession(loginSession);
     }
 
-    private void checkPermissionOnStreamrefresh(String loginSession) {
-        checkSessionValid(loginSession);
-        updateSession(loginSession);
-    }
-
-    private void checkSessionValid(String loginSession) {
+    private void verifySessionValid(String loginSession) {
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         accountAgent.checkSessionValid(loginSession); 
     }
@@ -211,6 +224,11 @@ public class AICoderBot extends AbsAIChat {
     private void updateSession(String loginSession) {
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         accountAgent.updateSession(loginSession); 
+    }
+
+    private void verifyCredits(String loginSession) {
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        accountAgent.checkCredits(loginSession); 
     }
 
     private void virtualStreamsend(NotifyCallbackIFC notifyCallback) {
@@ -253,7 +271,7 @@ public class AICoderBot extends AbsAIChat {
         response.setHeader("Connection", "keep-alive");
 
         try {
-            checkPermissionOnStreamrefresh(params.getSession());
+            checkAccessibilityOnStreamrefresh(params.getSession());
 
             OutputStream outputStream = response.getOutputStream();
             notifyHistory(params.getSession(), outputStream);
@@ -273,23 +291,9 @@ public class AICoderBot extends AbsAIChat {
                 }
             }
         }
-        catch(NeoAIException nex) {
-            logger.error(nex.getMessage(), nex);
-            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID
-                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL) {
-                try {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Login fail or invalid loginSession");
-                    response.flushBuffer();
-                    return;
-                }
-                catch(Exception ex) {
-                    logger.error(ex.getMessage(), ex);
-                }
-            }
-        }
         catch(Exception ex) {
             logger.error(ex.getMessage(), ex);
+            standardHandleException(ex, response);
         }
     }
 
