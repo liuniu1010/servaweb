@@ -280,7 +280,6 @@
         }
 
         function enableSend() {
-            isRecording = false; 
             document.getElementById("ButtonSend").disabled = false;
             document.getElementById("UserInput").disabled = false;
             document.getElementById("UserInput").value = "";
@@ -397,16 +396,14 @@
 
         function disableSendPasswordButton() {
             var sendPasswordBtn = document.getElementById("sendPasswordBtn");
-            var loginBtn = document.getElementById("loginBtn");
             sendPasswordBtn.disabled = true;
-            loginBtn.disable = true;
+            sendPasswordBtn.innerText = "Sending...";
         }
 
         function enableSendPasswordButton() {
             var sendPasswordBtn = document.getElementById("sendPasswordBtn");
-            var loginBtn = document.getElementById("loginBtn");
             sendPasswordBtn.disabled = false;
-            loginBtn.disable = false;
+            sendPasswordBtn.innerText = "Send Password";
         }
 
         function sendPassword() {
