@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBAutoCommitSaveTaskIFC;
 import org.neo.servaframe.interfaces.DBQueryTaskIFC;
+import org.neo.servaframe.interfaces.DBSaveTaskIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
 import org.neo.servaframe.ServiceFactory;
 
@@ -35,8 +36,10 @@ import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.ifc.AccountAgentIFC;
+import org.neo.servaaiagent.ifc.AccessAgentIFC;
 import org.neo.servaaiagent.impl.CoderBotInMemoryForUIImpl;
 import org.neo.servaaiagent.impl.AccountAgentImpl;
+import org.neo.servaaiagent.impl.AccessAgentImpl;
 
 @Path("/aicoderbot")
 public class AICoderBot extends AbsAIChat {
@@ -75,7 +78,7 @@ public class AICoderBot extends AbsAIChat {
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         try {
-            checkAccessibilityOnSendPassword(username);
+            checkAccessibilityOnSendPassword(username, sourceIP);
             accountAgent.sendPassword(username, sourceIP);
             WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, "The new password has been sent to your email address");
             return chatResponse;
@@ -98,7 +101,7 @@ public class AICoderBot extends AbsAIChat {
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         try {
-            checkAccessibilityOnLogin(username, password);
+            checkAccessibilityOnLogin(username, sourceIP);
             String loginSession = accountAgent.login(username, password, sourceIP);
             WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, loginSession);
             return chatResponse;
@@ -199,36 +202,121 @@ public class AICoderBot extends AbsAIChat {
         }
     }
 
-    private void checkAccessibilityOnSendPassword(String username) {
+    private void checkAccessibilityOnSendPassword(String username, String sourceIP) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeQueryTask(new DBQueryTaskIFC() {
+            @Override
+            public Object query(DBConnectionIFC dbConnection) {
+                try {
+                    innerCheckAccessibilityOnSendPassword(dbConnection, username, sourceIP);
+                }
+                catch(NeoAIException nex) {
+                    throw nex;
+                }
+                catch(Exception ex) {
+                    throw new NeoAIException(ex.getMessage(), ex);
+                }
+                return null;
+            }
+        }); 
     }
 
-    private void checkAccessibilityOnLogin(String username, String password) {
+    private void innerCheckAccessibilityOnSendPassword(DBConnectionIFC dbConnection, String username, String sourceIP) {
+        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
+        if(accessAgent.verifyMaintenance(dbConnection)) {
+            return;
+        }
+        if(accessAgent.verifyUsername(dbConnection, username)) {
+            return;
+        }
+        if(accessAgent.verifyIP(dbConnection, sourceIP)) {
+            return;
+        }
+        accessAgent.verifyRegion(dbConnection, sourceIP);
+    }
+
+    private void checkAccessibilityOnLogin(String username, String sourceIP) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeQueryTask(new DBQueryTaskIFC() {
+            @Override
+            public Object query(DBConnectionIFC dbConnection) {
+                try {
+                    innerCheckAccessibilityOnLogin(dbConnection, username, sourceIP);
+                }
+                catch(NeoAIException nex) {
+                    throw nex;
+                }
+                catch(Exception ex) {
+                    throw new NeoAIException(ex.getMessage(), ex);
+                }
+                return null;
+            }
+        }); 
+    }
+
+    private void innerCheckAccessibilityOnLogin(DBConnectionIFC dbConnection, String username, String sourceIP) {
+        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
+        if(accessAgent.verifyMaintenance(dbConnection)) {
+            return;
+        }
+        if(accessAgent.verifyUsername(dbConnection, username)) {
+            return;
+        }
+        if(accessAgent.verifyIP(dbConnection, sourceIP)) {
+            return;
+        }
+        accessAgent.verifyRegion(dbConnection, sourceIP);
     }
 
     private void checkAccessibilityOnStreamsend(String loginSession) {
-        verifySessionValid(loginSession);
-        updateSession(loginSession);
-        verifyCredits(loginSession);
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                try {
+                    innerCheckAccessibilityOnStreamsend(dbConnection, loginSession);
+                }
+                catch(NeoAIException nex) {
+                    throw nex;
+                }
+                catch(Exception ex) {
+                    throw new NeoAIException(ex.getMessage(), ex);
+                }
+                return null;
+            }
+        }); 
+    }
+
+    private void innerCheckAccessibilityOnStreamsend(DBConnectionIFC dbConnection, String loginSession) {
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        accountAgent.checkSessionValid(dbConnection, loginSession);
+        accountAgent.updateSession(dbConnection, loginSession);
+        accountAgent.checkCredits(dbConnection, loginSession);
     }
 
     private void checkAccessibilityOnStreamrefresh(String loginSession) {
-        verifySessionValid(loginSession);
-        updateSession(loginSession);
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                try {
+                    innerCheckAccessibilityOnStreamrefresh(dbConnection, loginSession);
+                }
+                catch(NeoAIException nex) {
+                    throw nex;
+                }
+                catch(Exception ex) {
+                    throw new NeoAIException(ex.getMessage(), ex);
+                }
+                return null;
+            }
+        }); 
     }
 
-    private void verifySessionValid(String loginSession) {
+    private void innerCheckAccessibilityOnStreamrefresh(DBConnectionIFC dbConnection, String loginSession) {
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        accountAgent.checkSessionValid(loginSession); 
-    }
-
-    private void updateSession(String loginSession) {
-        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        accountAgent.updateSession(loginSession); 
-    }
-
-    private void verifyCredits(String loginSession) {
-        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        accountAgent.checkCredits(loginSession); 
+        accountAgent.checkSessionValid(dbConnection, loginSession);
+        accountAgent.updateSession(dbConnection, loginSession);
     }
 
     private void virtualStreamsend(NotifyCallbackIFC notifyCallback) {
@@ -271,7 +359,8 @@ public class AICoderBot extends AbsAIChat {
         response.setHeader("Connection", "keep-alive");
 
         try {
-            checkAccessibilityOnStreamrefresh(params.getSession());
+            String loginSession = params.getSession();
+            checkAccessibilityOnStreamrefresh(loginSession);
 
             OutputStream outputStream = response.getOutputStream();
             notifyHistory(params.getSession(), outputStream);

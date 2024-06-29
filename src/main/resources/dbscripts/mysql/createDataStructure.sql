@@ -38,7 +38,7 @@ insert into configs(id, version, configname, configvalue, comments) values(66, 1
 insert into configs(id, version, configname, configvalue, comments) values(67, 1, 'codeInterationDeep', '20', '');
 insert into configs(id, version, configname, configvalue, comments) values(68, 1, 'consumedCreditsOnEach', '20', '');
 insert into configs(id, version, configname, configvalue, comments) values(81, 1, 'verifyMaintenance', '0', '');
-insert into configs(id, version, configname, configvalue, comments) values(82, 1, 'verifyUserName', '1', '');
+insert into configs(id, version, configname, configvalue, comments) values(82, 1, 'verifyUsername', '1', '');
 insert into configs(id, version, configname, configvalue, comments) values(83, 1, 'verifyIP', '1', '');
 insert into configs(id, version, configname, configvalue, comments) values(84, 1, 'verifyRegion', '0', '');
 
