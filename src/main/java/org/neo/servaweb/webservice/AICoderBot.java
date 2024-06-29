@@ -61,20 +61,14 @@ public class AICoderBot extends AbsAIChat {
     }
 
     @POST
-    @Path("/send")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse send(WSModel.AIChatParams params) {
-        return super.send(params);
-    }
-
-    @POST
     @Path("/sendpassword")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse sendPassword(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
         String username = params.getSession();
         String sourceIP = request.getRemoteAddr();
+
+        logger.info("User: " + username + " from " + sourceIP + " try to sendpassword");
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         try {
@@ -98,6 +92,8 @@ public class AICoderBot extends AbsAIChat {
         String username = params.getSession();
         String password = params.getUserInput();
         String sourceIP = request.getRemoteAddr();
+
+        logger.info("User: " + username + " from " + sourceIP + " try to login");
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         try {
@@ -144,8 +140,11 @@ public class AICoderBot extends AbsAIChat {
 
         ServletOutputStream outputStream = null;
         StreamCallbackImpl notifyCallback = null;
+        String loginSession = params.getSession();
+        String requirement = params.getUserInput();
+        logger.info("loginSession: " + loginSession + " try to streamsend with requirement: " + requirement);
         try {
-            checkAccessibilityOnStreamsend(params.getSession());
+            checkAccessibilityOnStreamsend(loginSession);
 
             outputStream = response.getOutputStream();
             notifyHistory(params.getSession(), outputStream);
@@ -288,6 +287,9 @@ public class AICoderBot extends AbsAIChat {
     }
 
     private void innerCheckAccessibilityOnStreamsend(DBConnectionIFC dbConnection, String loginSession) {
+        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
+        accessAgent.verifyMaintenance(dbConnection);
+
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         accountAgent.checkSessionValid(dbConnection, loginSession);
         accountAgent.updateSession(dbConnection, loginSession);
@@ -358,8 +360,9 @@ public class AICoderBot extends AbsAIChat {
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Connection", "keep-alive");
 
+        String loginSession = params.getSession();
+        logger.info("loginSession: " + loginSession + " try to streamrefresh");
         try {
-            String loginSession = params.getSession();
             checkAccessibilityOnStreamrefresh(loginSession);
 
             OutputStream outputStream = response.getOutputStream();
