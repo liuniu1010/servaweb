@@ -1,4 +1,4 @@
-FROM tomcat:9.0.64-jre8
+FROM tomcat:9.0.90-jre8
 
 RUN rm -rf /usr/local/tomcat/webapps/*
 
