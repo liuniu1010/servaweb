@@ -25,7 +25,8 @@ In case you encounter any exceptions in previous steps, please adjust the code a
   1) Function description
   2) Suggested environment requirements including OS, Java version, Gradle version
   3) Unit test steps
-  4) To generate README.md, please execute the following commands:
+  4) In README.md, please DONOT use <projectFolder> directly, use <ProjectFolder> instead
+  5) To generate README.md, please execute the following commands:
     'uname -a'
     'java -version'
     'gradle --version'

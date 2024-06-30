@@ -29,7 +29,8 @@ In case you encounter any exceptions in previous steps, please adjust the code a
    1) Function description
    2) Suggestd environment requirements including OS, .NET version
    3) Unit test steps
-   To generate README.md, please execute the following commands:
+   4) In README.md, please DONOT use <projectFolder> directly, use <ProjectFolder> instead
+   5) To generate README.md, please execute the following commands:
    'uname -a'
    'dotnet --version'
    You also need to call the function 'executeCommand' to generate README.md.
