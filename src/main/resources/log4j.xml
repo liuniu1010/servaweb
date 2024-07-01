@@ -20,7 +20,7 @@
     </appender>
 
     <logger name="org.neo" additivity="false">
-        <level value="DEBUG" />
+        <level value="INFO" />
         <appender-ref ref="file" />
     </logger>
 

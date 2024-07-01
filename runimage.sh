@@ -1,1 +1,1 @@
-docker run -d -p 8080:8080 --add-host=mydb:<dbip> --name servaweb <imageid>
+docker run -d -p 443:8443 --add-host=mydb:<dbip> --name servaweb servaweb:0.1
