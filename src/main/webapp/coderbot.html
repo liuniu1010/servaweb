@@ -157,7 +157,6 @@
         .login-dialog button:hover {
             background-color: #0056b3;
         }
-        /* Add styles for the logout menu */
         .logout-menu {
             display: none;
             position: fixed;
@@ -206,9 +205,11 @@
     <div class="background">
         <div class="container">
             <div class="left-panel">
+<!--
                 <button id="ButtonNewChat" type="button" class="leftpanel-button">
                     <img id="NewButtonImage" src="images/newstart.webp" alt="New">
                 </button>
+-->
                 <div class="logout-button-container">
                     <button id="ButtonAccount" type="button" class="leftpanel-button">
                         <img id="AccountButtonImage" src="images/client1.png" alt="Account">
@@ -228,7 +229,6 @@
         </div>
     </div>
 
-    <!-- Logout Menu -->
     <div id="logoutMenu" class="logout-menu">
         <button onclick="logout()">
             <img src="images/logout-icon.webp" alt="Logout Icon">
@@ -236,7 +236,6 @@
         </button>
     </div>
 
-    <!-- Login Dialog -->
     <div id="loginDialog" class="login-dialog">
         <h3>Login</h3>
         <label for="username">Email address:</label>
@@ -505,7 +504,6 @@
             return re.test(String(email).toLowerCase());
         }
 
-        // Show the logout menu when the logout button is clicked
         document.getElementById("ButtonAccount").addEventListener("click", function() {
             var logoutMenu = document.getElementById("logoutMenu");
             if (logoutMenu.style.display === "block") {
@@ -514,12 +512,6 @@
                 logoutMenu.style.display = "block";
             }
         });
-/*
-        function logout() {
-            // Implement your logout logic here
-            alert("Logged out successfully!");
-        }
-*/
         document.getElementById("ButtonNewChat").addEventListener("click", function() {
         });
     </script>
