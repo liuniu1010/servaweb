@@ -91,11 +91,12 @@
                maxThreads="150" SSLEnabled="true"
                maxParameterCount="1000"
                >
-        <SSLHostConfig>
-            <Certificate certificateKeystoreFile="conf/keystore.jks"
-                         certificateKeystorePassword="<password>"
-                         type="RSA" />
-        </SSLHostConfig>
+    <SSLHostConfig>
+        <Certificate certificateFile="conf/fullchain.cer"
+                     certificateKeyFile="conf/neoai.bot.key"
+                     certificateChainFile="conf/ca.cer"
+	             type="RSA" />
+    </SSLHostConfig>
     </Connector>
     <!-- Define an SSL/TLS HTTP/1.1 Connector on port 8443 with HTTP/2
          This connector uses the APR/native implementation which always uses

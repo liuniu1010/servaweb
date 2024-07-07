@@ -1,1 +1,1 @@
-docker build -t servaweb:0.1 .
+docker build -f Dockerfile -t servaweb:0.1 .

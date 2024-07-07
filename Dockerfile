@@ -4,7 +4,9 @@ RUN rm -rf /usr/local/tomcat/webapps/*
 
 COPY ./target/ServaWeb.war /usr/local/tomcat/webapps/ROOT.war
 
-COPY keystore.jks /usr/local/tomcat/conf/keystore.jks
+COPY fullchain.cer /usr/local/tomcat/conf/
+COPY neoai.bot.key /usr/local/tomcat/conf/
+COPY ca.cer /usr/local/tomcat/conf/
 COPY server.xml /usr/local/tomcat/conf/server.xml
 
 EXPOSE 8443
