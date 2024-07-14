@@ -163,9 +163,17 @@ public class AICoderBot extends AbsAIChat {
             // virtualStreamsend(notifyCallback);
         }
         catch(Exception ex) {
-            logger.error(ex.getMessage());
+            logger.error(ex.getMessage(), ex);
             standardHandleException(ex, response);
         }
+	catch(Error er) {
+	    logger.error(er.getMessage(), er);
+	    throw er;
+	}
+	catch(Throwable th) {
+	    logger.error(th.getMessage(), th);
+	    throw new Error(th.getMessage(), th);
+	}
         finally {
             StreamCache.getInstance().remove(params.getSession()); // this will close the associated outputstream
         }
@@ -387,6 +395,14 @@ public class AICoderBot extends AbsAIChat {
             logger.error(ex.getMessage());
             standardHandleException(ex, response);
         }
+	catch(Error er) {
+	    logger.error(er.getMessage(), er);
+	    throw er;
+	}
+	catch(Throwable th) {
+	    logger.error(th.getMessage(), th);
+	    throw new Error(th.getMessage(), th);
+	}
     }
 
     @POST
@@ -559,6 +575,14 @@ public class AICoderBot extends AbsAIChat {
             catch(Exception ex) {
                 logger.error(ex.getMessage());
             }
+	    catch(Error er) {
+	        logger.error(er.getMessage(), er);
+	        throw er;
+	    }
+	    catch(Throwable th) {
+	        logger.error(th.getMessage(), th);
+	        throw new Error(th.getMessage(), th);
+	    }
         }
     }
 }
