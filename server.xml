@@ -90,6 +90,7 @@
     <Connector port="8443" protocol="org.apache.coyote.http11.Http11NioProtocol"
                maxThreads="150" SSLEnabled="true"
                maxParameterCount="1000"
+               socket.soTimeout="1200000"
                >
     <SSLHostConfig>
         <Certificate certificateFile="conf/fullchain.cer"
