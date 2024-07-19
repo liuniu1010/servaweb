@@ -8,13 +8,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
-import org.neo.servaaiagent.impl.ChatWithAdminForUIImpl;
+import org.neo.servaaiagent.impl.ChatWithAdminInMemoryForUIImpl;
 
 @Path("/aichatwithadmin")
 public class AIChatWithAdmin extends AbsAIChat {
     @Override
     protected ChatForUIIFC getChatForUIInstance() {
-        return ChatWithAdminForUIImpl.getInstance();
+        return ChatWithAdminInMemoryForUIImpl.getInstance();
     }
 
     @POST
