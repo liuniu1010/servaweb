@@ -42,40 +42,68 @@ public class AIChatWithAdmin extends AbsAIChat {
     @Path("/send")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse send(WSModel.AIChatParams params) {
-        String loginSession = params.getSession();
-        checkAccessibilityOnAction(loginSession);
-        return super.send(params);
+    public WSModel.AIChatResponse send(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        try {
+            String loginSession = params.getSession();
+            checkAccessibilityOnAction(loginSession);
+            return super.send(params);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null;
     }
 
     @POST
     @Path("/echo")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse echo(WSModel.AIChatParams params) {
-        String loginSession = params.getSession();
-        checkAccessibilityOnAction(loginSession);
-        return super.echo(params);
+    public WSModel.AIChatResponse echo(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        try {
+            String loginSession = params.getSession();
+            checkAccessibilityOnAction(loginSession);
+            return super.echo(params);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null;
     }
 
     @POST
     @Path("/newchat")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse newchat(WSModel.AIChatParams params) {
-        String loginSession = params.getSession();
-        checkAccessibilityOnAction(loginSession);
-        return super.newchat(params);
+    public WSModel.AIChatResponse newchat(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        try {
+            String loginSession = params.getSession();
+            checkAccessibilityOnAction(loginSession);
+            return super.newchat(params);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null;
     }
 
     @POST
     @Path("/refresh")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse refresh(WSModel.AIChatParams params) {
-        String loginSession = params.getSession();
-        checkAccessibilityOnAction(loginSession);
-        return super.refresh(params);
+    public WSModel.AIChatResponse refresh(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        try {
+            String loginSession = params.getSession();
+            checkAccessibilityOnAction(loginSession);
+            return super.refresh(params);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null;
     }
 
     @POST

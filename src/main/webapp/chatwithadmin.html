@@ -229,6 +229,10 @@
             return null;
         }
 
+        function setCookieValue(cookieName, cookieValue) {
+            document.cookie = cookieName + "=" + cookieValue + ";path=/";
+        }
+
         function enableSend() {
             document.getElementById("ButtonSend").disabled = false;
             document.getElementById("UserInput").disabled = false;
