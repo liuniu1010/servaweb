@@ -176,7 +176,7 @@ public class AIChatWithAdmin extends AbsAIChat {
 
     private void innerCheckAccessibilityOnSendPassword(DBConnectionIFC dbConnection, String username, String sourceIP) {
         AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
-        if(accessAgent.verifyAdmin(dbConnection, username)) {
+        if(accessAgent.verifyAdminByUsername(dbConnection, username)) {
             return;
         }
     }
@@ -202,7 +202,7 @@ public class AIChatWithAdmin extends AbsAIChat {
 
     private void innerCheckAccessibilityOnLogin(DBConnectionIFC dbConnection, String username, String sourceIP) {
         AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
-        if(accessAgent.verifyAdmin(dbConnection, username)) {
+        if(accessAgent.verifyAdminByUsername(dbConnection, username)) {
             return;
         }
     }
@@ -227,6 +227,11 @@ public class AIChatWithAdmin extends AbsAIChat {
     }
 
     private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String loginSession) {
+        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
+        if(accessAgent.verifyAdminByLoginSession(dbConnection, loginSession)) {
+            return;
+        }
+
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         accountAgent.checkSessionValid(dbConnection, loginSession);
         accountAgent.updateSession(dbConnection, loginSession);
@@ -240,7 +245,8 @@ public class AIChatWithAdmin extends AbsAIChat {
         if(ex instanceof NeoAIException) {
             NeoAIException nex = (NeoAIException)ex;
             if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID
-                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL) {
+                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL
+                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_ADMIN_NOTIN_WHITELIST) {
                 return HttpServletResponse.SC_UNAUTHORIZED;
             }
         }
