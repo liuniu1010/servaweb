@@ -12,8 +12,9 @@ insert into configs(id, version, configname, configvalue) values(2, 1, 'DateForm
 insert into configs(id, version, configname, configvalue) values(3, 1, 'TimeFormat', 'HH:mm:ss');
 insert into configs(id, version, configname, configvalue) values(4, 1, 'DateTimeFormat', 'dd/MM/yyyy HH:mm:ss');
 insert into configs(id, version, configname, configvalue) values(5, 1, 'GoogleApiKey', '<apiKey>');
-insert into configs(id, version, configname, configvalue, comments) values(6, 1, 'AIInstance', 'GoogleAIImpl', 'option of GoogleAIImpl/OpenAIImpl');
-insert into configs(id, version, configname, configvalue, comments) values(7, 1, 'codeModel', 'gemini-1.5-pro-latest', '');
+insert into configs(id, version, configname, configvalue, comments) values(6, 1, 'AIInstance', 'OpenAIImpl', 'option of GoogleAIImpl/OpenAIImpl');
+insert into configs(id, version, configname, configvalue, comments) values(7, 1, 'codeModel', 'gpt-4o', '');
+insert into configs(id, version, configname, configvalue, comments) values(8, 1, 'adminModel', 'gpt-4o', '');
 
 
 insert into configs(id, version, configname, configvalue, comments) values(11, 1, 'javamavenlinuxSandBoxUrl', 'http://localhost:8081/api/aisandbox', '');
