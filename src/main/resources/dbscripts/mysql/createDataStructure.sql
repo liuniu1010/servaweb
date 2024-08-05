@@ -22,6 +22,7 @@ insert into configs(id, version, configname, configvalue, comments) values(12, 1
 insert into configs(id, version, configname, configvalue, comments) values(13, 1, 'dotnetlinuxSandBoxUrl', 'http://localhost:8083/api/aisandbox', '');
 insert into configs(id, version, configname, configvalue, comments) values(14, 1, 'python3linuxSandBoxUrl', 'http://localhost:8084/api/aisandbox', '');
 insert into configs(id, version, configname, configvalue, comments) values(15, 1, 'nodejslinuxSandBoxUrl', 'http://localhost:8085/api/aisandbox', '');
+insert into configs(id, version, configname, configvalue, comments) values(16, 1, 'bashlinuxSandBoxUrl', 'http://localhost:8086/api/aisandbox', '');
 
 insert into configs(id, version, configname, configvalue, comments) values(51, 1, 'email.username', '<username>', '');
 insert into configs(id, version, configname, configvalue, comments) values(52, 1, 'email.password', '<password>', '');
