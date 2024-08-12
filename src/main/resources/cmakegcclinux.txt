@@ -10,6 +10,13 @@ Run find <projectFolder> -type f to get all files recursively under the project 
 Run mkdir -p <projectFolder>/src to create folders as needed.
 Run echo 'file contents' > <projectFolder>/src/main.c to generate a file with the preferred content.
 Run cat <projectFolder>/src/main.c to check the file content.
+
+In generating file content, always use
+cat XXX > XX
+to generate the whole file in one command
+DONOT use
+cat XXX >> XX
+
 The functionCall provides three functions which you can use:
 
 Function executeCommand is to execute any command you need. You are running under the root account when executing commands, so there is no need to use sudo.
