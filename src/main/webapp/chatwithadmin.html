@@ -276,7 +276,7 @@
             }
             disableSendPasswordButton();
 
-            var sendpasswordUrl = "api/aichatwithadmin/sendpassword";
+            var sendpasswordUrl = "api/aiadminlogin/sendpassword";
             $.ajax({
                 url: sendpasswordUrl,
                 type: "POST",
@@ -304,7 +304,7 @@
             if(isStringEmptyOrWhitespace(username)) {
                 return false;
             }
-            var loginUrl = "api/aichatwithadmin/login";
+            var loginUrl = "api/aiadminlogin/login";
             $.ajax({
                 url: loginUrl,
                 type: "POST",

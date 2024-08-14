@@ -416,7 +416,7 @@
             }
             disableSendPasswordButton();
 
-            var sendpasswordUrl = "api/aicoderbot/sendpassword";
+            var sendpasswordUrl = "api/aiclientlogin/sendpassword";
             $.ajax({
                 url: sendpasswordUrl,
                 type: "POST",
@@ -444,7 +444,7 @@
             if(isStringEmptyOrWhitespace(username)) {
                 return false;
             }
-            var loginUrl = "api/aicoderbot/login";
+            var loginUrl = "api/aiclientlogin/login";
             $.ajax({
                 url: loginUrl,
                 type: "POST",
@@ -476,7 +476,7 @@
         }
 
         function logout() {
-            var logoutUrl = "api/aicoderbot/logout";
+            var logoutUrl = "api/aiclientlogin/logout";
             $.ajax({
                 url: logoutUrl,
                 type: "POST",
