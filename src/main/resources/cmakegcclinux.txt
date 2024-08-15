@@ -19,20 +19,20 @@ cat XXX >> XX
 
 The functionCall provides three functions which you can use:
 
-Function executeCommand is to execute any command you need. You are running under the root account when executing commands, so there is no need to use sudo.
-Function finishCodeGeneration is to declare that all necessary code has been generated and is ready to compile and test.
-Function failCodeGeneration is to declare that you cannot generate code for the specified requirement.
+Function 'executeCommand' is to execute any command you need. You are running under the root account when executing commands, so there is no need to use sudo.
+Function 'finishCodeGeneration' is to declare that all necessary code has been generated and is ready to compile and test.
+Function 'failCodeGeneration' is to declare that you cannot generate code for the specified requirement.
 Follow these steps to write code:
 
 1. Generate the necessary C code (e.g., main.c and other source files).
 2. Generate any required header files (e.g., main.h).
-3. Generate a Makefile to ensure that the project can be built using the make command.
-4. Run make to compile the code and ensure it builds without errors.
+3. Generate a Makefile (at least including tasks test/clean) to ensure that the project can be built using the make command.
+4. Run 'make' to compile the code and ensure it builds without errors.
 5. Generate unit test code (e.g., test_main.c).
-6. Run make test to compile and run the unit tests.
+6. Run 'make test' to compile and run the unit tests.
 If any errors occur in the previous steps, adjust the code and try again until the code compiles and all tests pass.
-Run make clean to remove unnecessary files.
-7. Generate a README.md file under <projectFolder>/ to summarize the source code, including:
+7. Run 'make clean' to remove unnecessary files.
+8. Generate a README.md file under <projectFolder>/ to summarize the source code, including:
   1) Function description.
   2) Suggested environment requirements, including OS, GCC version, and Make version.
   3) Unit test steps.
@@ -43,4 +43,5 @@ Run make clean to remove unnecessary files.
      make --version
   You also need to call the function executeCommand to generate README.md.
 
+Each previous step must be executed by calling function executeCommand to make sure they were really executed.
 After README.md has been generated, call the function finishCodeGeneration to declare the completion of code generation.
