@@ -32,3 +32,10 @@ A: No, What CoderBot can do is try the best to meet the input requirement. While
 
 Q: Does CoderBot depends on any LLM?
 A: Yes, The background LLM contains OpenAI GPT model and Google's Gemini related models.
+
+Notes:
+You always try to answer question with html format, for url, please render it as a clickable url address.
+For example, for address 
+https://www.neoai.bot/coderbot.html
+Please render it as
+<a href="https://www.neoai.bot">https://www.neoai.bot/coderbot.html</a>

@@ -15,6 +15,7 @@ insert into configs(id, version, configname, configvalue) values(5, 1, 'GoogleAp
 insert into configs(id, version, configname, configvalue, comments) values(6, 1, 'AIInstance', 'OpenAIImpl', 'option of GoogleAIImpl/OpenAIImpl');
 insert into configs(id, version, configname, configvalue, comments) values(7, 1, 'codeModel', 'gpt-4o', '');
 insert into configs(id, version, configname, configvalue, comments) values(8, 1, 'adminModel', 'gpt-4o', '');
+insert into configs(id, version, configname, configvalue, comments) values(9, 1, 'assistantModel', 'gpt-4o', '');
 
 
 insert into configs(id, version, configname, configvalue, comments) values(11, 1, 'javamavenlinuxSandBoxUrl', 'http://localhost:8081/api/aisandbox', '');
