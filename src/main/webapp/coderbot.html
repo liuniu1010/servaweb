@@ -160,8 +160,8 @@
         .logout-menu {
             display: none;
             position: fixed;
-            bottom: 100px; /* Adjust this value to align with the logout button */
-            left: 70px; /* Adjust this value to align with the left panel */
+            bottom: 100px;
+            left: 70px;
             background-color: #fff;
             border: 1px solid #ddd;
             border-radius: 8px;
@@ -194,10 +194,9 @@
             height: 24px;
             margin-right: 10px;
         }
-        /* Adjust position of the logout button */
         .left-panel .logout-button-container {
             margin-top: auto;
-            margin-bottom: 20px; /* Adjust this value to set the button higher */
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -205,11 +204,9 @@
     <div class="background">
         <div class="container">
             <div class="left-panel">
-<!--
-                <button id="ButtonNewChat" type="button" class="leftpanel-button">
-                    <img id="NewButtonImage" src="images/newstart.webp" alt="New">
+                <button id="ButtonHelp" type="button" class="leftpanel-button">
+                    <img id="NewButtonImage" src="images/help.webp" alt="Help">
                 </button>
--->
                 <div class="logout-button-container">
                     <button id="ButtonAccount" type="button" class="leftpanel-button">
                         <img id="AccountButtonImage" src="images/robot4.webp" alt="Account">
@@ -512,7 +509,8 @@
                 logoutMenu.style.display = "block";
             }
         });
-        document.getElementById("ButtonNewChat").addEventListener("click", function() {
+        document.getElementById("ButtonHelp").addEventListener("click", function() {
+            window.open("chatwithassistant.html", "_blank");
         });
     </script>
 </body>
