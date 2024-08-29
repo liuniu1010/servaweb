@@ -23,7 +23,6 @@ to chat with administrator ( only administrators have the permission to login )
 - **Maven Version**: 3.6.3
 - **Database**: mysql5.7.26
 - **Container**: docker 26.1.0
-- **Web Container**: apache-tomcat-9.0.86
 
 ## Source dependents
 https://github.com/liuniu1010/servaframe.git
@@ -33,13 +32,10 @@ https://github.com/liuniu1010/servaweb.git
 
 ## Local Deploy steps
 
-### step1: Install Tomcat
-Please refer to https://tomcat.apache.org/tomcat-9.0-doc/index.html for details
-
-### step2: Install Mysql
+### step1: Install Mysql
 Please refer to https://dev.mysql.com/doc for details
 
-### step3: Building source code
+### step2: Building source code
 <!-- setup project folder -->
 mkdir <projectFolder>
 
@@ -68,7 +64,7 @@ cd servaweb
 
 <!-- 
     edit createDatabase.sql for specified database name and privilege
-    edit createDataStructure.sql to setup your own OpenAI api key, google api key and email configuration
+    edit createDataStructure.sql to setup your own OpenAI api key, google api key and email configurations
     execute the two dbscripts to setup mysql
 -->
 - ./src/main/resources/dbscripts/mysql/createDatabase.sql
@@ -83,6 +79,11 @@ cd servaweb
     edit WhiteListAdmin.txt to set the administrators
 -->
 - ./src/main/resources/WhiteListAdmin.txt
+
+<!--
+    edit runimage_local.sh, modify <dbIP> to the database ip
+-->
+- ./runimage_local.sh
 
 <!-- build servaweb -->
 mvn clean package -DskipTests
@@ -109,7 +110,7 @@ mvn clean package -DskipTests
 ./runsandbox_bashlinux.sh
 ./runsandbox_cmakegcclinux.sh
 
-### step4: Visit Local Deployment
+### step3: Visit Local Deployment
 visit
 http://localhost:8080/coderbot.html
 to try the Auto Coding function
