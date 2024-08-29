@@ -25,10 +25,10 @@ to chat with administrator ( only administrators have the permission to login )
 - **Container**: docker 26.1.0
 
 ## Source dependents
-https://github.com/liuniu1010/servaframe.git
-https://github.com/liuniu1010/servaaibase.git
-https://github.com/liuniu1010/servaaiagent.git
-https://github.com/liuniu1010/servaweb.git
+- https://github.com/liuniu1010/servaframe.git
+- https://github.com/liuniu1010/servaaibase.git
+- https://github.com/liuniu1010/servaaiagent.git
+- https://github.com/liuniu1010/servaweb.git
 
 ## Local Deploy steps
 
@@ -37,30 +37,40 @@ Please refer to https://dev.mysql.com/doc for details
 
 ### step2: Building source code
 <!-- setup project folder -->
-mkdir <projectFolder>
+```shell
+mkdir projectFolder
+```
 
 <!-- build servaframe -->
-cd <projectFolder>
+```shell
+cd projectFolder
 git clone https://github.com/liuniu1010/servaframe.git
 cd servaframe
 mvn clean install -DskipTests
+```
 
 <!-- build servaaibase -->
+```shell
 cd ..
 git clone https://github.com/liuniu1010/servaaibase.git
 cd servaaibase
 mvn clean install -DskipTests
+```
 
 <!-- build servaaiagent -->
+```shell
 cd ..
 git clone https://github.com/liuniu1010/servaaiagent.git
 cd servaaiagent
 mvn clean install -DskipTests
+```
 
 <!-- build servaweb and setup mysql and tomcat -->
+```shell
 cd ..
 git clone https://github.com/liuniu1010/servaweb.git
 cd servaweb
+```
 
 <!-- 
     edit createDatabase.sql for specified database name and privilege
@@ -71,7 +81,7 @@ cd servaweb
 - ./src/main/resources/dbscripts/mysql/createDataStructure.sql
 
 <!-- 
-   edit database.conf to point the the database
+   edit database.conf to point to the database
 -->
 - ./src/main/resources/database.conf
 
@@ -86,12 +96,13 @@ cd servaweb
 - ./runimage_local.sh
 
 <!-- build servaweb -->
+```shell
 mvn clean package -DskipTests
+```
 
-<!-- build local image -->
+<!-- build local image  and all sandbox imags -->
+```shell
 ./buildimage_local.sh
-
-<!-- build local sandbox images -->
 ./buildsandbox_javamavenlinux.sh
 ./buildsandbox_javagradlelinux.sh
 ./buildsandbox_dotnetlinux.sh
@@ -99,8 +110,10 @@ mvn clean package -DskipTests
 ./buildsandbox_nodejslinux.sh
 ./buildsandbox_bashlinux.sh
 ./buildsandbox_cmakegcclinux.sh
+```
 
 <!-- start all images -->
+```shell
 ./runimage_local.sh
 ./runsandbox_javamavenlinux.sh
 ./runsandbox_javagradlelinux.sh
@@ -109,6 +122,7 @@ mvn clean package -DskipTests
 ./runsandbox_nodejslinux.sh
 ./runsandbox_bashlinux.sh
 ./runsandbox_cmakegcclinux.sh
+```
 
 ### step3: Visit Local Deployment
 visit
