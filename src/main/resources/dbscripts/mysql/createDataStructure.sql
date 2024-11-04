@@ -16,6 +16,7 @@ insert into configs(id, version, configname, configvalue, comments) values(6, 1,
 insert into configs(id, version, configname, configvalue, comments) values(7, 1, 'codeModel', 'gpt-4o', '');
 insert into configs(id, version, configname, configvalue, comments) values(8, 1, 'adminModel', 'gpt-4o', '');
 insert into configs(id, version, configname, configvalue, comments) values(9, 1, 'assistantModel', 'gpt-4o', '');
+insert into configs(id, version, configname, configvalue, comments) values(10, 1, 'taskModel', 'gpt-4o', '');
 
 
 insert into configs(id, version, configname, configvalue, comments) values(11, 1, 'javamavenlinuxSandBoxUrl', 'http://localhost:8081/api/aisandbox', '');
@@ -25,6 +26,8 @@ insert into configs(id, version, configname, configvalue, comments) values(14, 1
 insert into configs(id, version, configname, configvalue, comments) values(15, 1, 'nodejslinuxSandBoxUrl', 'http://localhost:8085/api/aisandbox', '');
 insert into configs(id, version, configname, configvalue, comments) values(16, 1, 'bashlinuxSandBoxUrl', 'http://localhost:8086/api/aisandbox', '');
 insert into configs(id, version, configname, configvalue, comments) values(17, 1, 'cmakegcclinuxSandBoxUrl', 'http://localhost:8087/api/aisandbox', '');
+
+insert into configs(id, version, configname, configvalue, comments) values(31, 1, 'taskSandBoxUrl', 'http://localhost:9011/api/aisandbox', '');
 
 insert into configs(id, version, configname, configvalue, comments) values(51, 1, 'email.username', '<username>', '');
 insert into configs(id, version, configname, configvalue, comments) values(52, 1, 'email.password', '<password>', '');
