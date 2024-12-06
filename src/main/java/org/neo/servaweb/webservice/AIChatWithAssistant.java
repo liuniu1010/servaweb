@@ -132,7 +132,7 @@ public class AIChatWithAssistant extends AbsAIChat {
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         accountAgent.checkSessionValid(dbConnection, loginSession);
         accountAgent.updateSession(dbConnection, loginSession);
-        accountAgent.checkCredits(dbConnection, loginSession);
+        accountAgent.checkCreditsWithSession(dbConnection, loginSession);
     }
 
     private void standardHandleException(Exception ex, HttpServletResponse response) {

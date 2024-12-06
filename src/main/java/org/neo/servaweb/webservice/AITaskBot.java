@@ -149,7 +149,7 @@ public class AITaskBot extends AbsAIChat {
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         accountAgent.checkSessionValid(dbConnection, loginSession);
         accountAgent.updateSession(dbConnection, loginSession);
-        accountAgent.checkCredits(dbConnection, loginSession);
+        accountAgent.checkCreditsWithSession(dbConnection, loginSession);
     }
 
     private void checkAccessibilityOnStreamrefresh(String loginSession) {
