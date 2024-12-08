@@ -44,6 +44,7 @@ import org.neo.servaaiagent.impl.AccessAgentImpl;
 @Path("/aitaskbot")
 public class AITaskBot extends AbsAIChat {
     final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AITaskBot.class);
+    final static String HOOK = "aitaskbot";
 
     @Override
     protected ChatForUIIFC getChatForUIInstance() {
@@ -52,7 +53,7 @@ public class AITaskBot extends AbsAIChat {
 
     @Override
     protected String getHook() {
-        return "aitaskbot";
+        return HOOK;
     }
 
     @POST
@@ -68,15 +69,16 @@ public class AITaskBot extends AbsAIChat {
         ServletOutputStream outputStream = null;
         StreamCallbackImpl notifyCallback = null;
         String loginSession = params.getSession();
+        String alignedSession = super.alignSession(loginSession);
         String requirement = params.getUserInput();
         logger.info("loginSession: " + loginSession + " try to streamsend with task requirement: " + requirement);
         try {
             checkAccessibilityOnStreamsend(loginSession);
 
             outputStream = response.getOutputStream();
-            notifyHistory(params.getSession(), outputStream);
+            notifyHistory(alignedSession, outputStream);
             notifyCallback = new AITaskBot.StreamCallbackImpl(params, outputStream);
-            StreamCache.getInstance().put(params.getSession(), notifyCallback);
+            StreamCache.getInstance().put(alignedSession, notifyCallback);
             WSModel.AIChatResponse chatResponse = super.streamsend(params, notifyCallback);
 
             String information = "";
@@ -93,7 +95,7 @@ public class AITaskBot extends AbsAIChat {
             standardHandleException(ex, response);
         }
         finally {
-            StreamCache.getInstance().remove(params.getSession()); // this will close the associated outputstream
+            StreamCache.getInstance().remove(alignedSession); // this will close the associated outputstream
         }
     }
 
@@ -208,13 +210,14 @@ public class AITaskBot extends AbsAIChat {
         response.setHeader("Connection", "keep-alive");
 
         String loginSession = params.getSession();
+        String alignedSession = super.alignSession(loginSession);
         logger.info("loginSession: " + loginSession + " try to streamrefresh");
         try {
             checkAccessibilityOnStreamrefresh(loginSession);
 
             OutputStream outputStream = response.getOutputStream();
-            notifyHistory(params.getSession(), outputStream);
-            StreamCallbackImpl streamCallback = StreamCache.getInstance().get(params.getSession());
+            notifyHistory(alignedSession, outputStream);
+            StreamCallbackImpl streamCallback = StreamCache.getInstance().get(alignedSession);
             if(streamCallback == null) {
                 return;
             }
@@ -223,7 +226,7 @@ public class AITaskBot extends AbsAIChat {
             // wait 30 minutes, every 1 minute, check if the project was finished
             for(int i = 0;i < 30;i++) {
                 Thread.sleep(60*1000);
-                streamCallback = StreamCache.getInstance().get(params.getSession());
+                streamCallback = StreamCache.getInstance().get(alignedSession);
                 if(streamCallback == null) {
                     // finished, no need to wait, return directly
                     return;
@@ -345,7 +348,9 @@ public class AITaskBot extends AbsAIChat {
             params = inputParams; 
             outputStream = inputOutputStream;
 
-            AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(params.getSession());
+            String loginSession = params.getSession();
+            String alignedSession = this.alignSession(loginSession);
+            AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(alignedSession);
             codeRecord.setCreateTime(new Date());
             codeRecord.setRequirement(params.getUserInput());
             saveCodeRecord(codeRecord);
@@ -354,6 +359,10 @@ public class AITaskBot extends AbsAIChat {
         public void changeOutputStream(OutputStream inputOutputStream) {
             closeOutputStream(); // close original output stream before switch to new one
             outputStream = inputOutputStream;
+        }
+
+        private String alignSession(String loginSession) {
+            return HOOK + loginSession;
         }
 
         private void saveCodeRecord(AIModel.CodeRecord codeRecord) {
@@ -397,7 +406,9 @@ public class AITaskBot extends AbsAIChat {
         @Override
         public void notify(String information) {
             try {
-                AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(params.getSession());
+                String loginSession = params.getSession();
+                String alignedSession = this.alignSession(loginSession);
+                AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(alignedSession);
                 codeRecord.setCreateTime(new Date());
                 codeRecord.setContent(information);
                 saveCodeRecord(codeRecord);
