@@ -50,6 +50,10 @@ public class AITaskBot extends AbsAIChat {
         return TaskBotInMemoryForUIImpl.getInstance();
     }
 
+    @Override
+    protected String getHook() {
+        return "aitaskbot";
+    }
 
     @POST
     @Path("/streamsend")

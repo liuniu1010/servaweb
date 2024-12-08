@@ -60,6 +60,10 @@ public class AICoderBot extends AbsAIChat {
         return CoderBotInMemoryForUIImpl.getInstance(getOnlineFileAbsolutePath(), getRelevantVisitPath());
     }
 
+    @Override
+    protected String getHook() {
+        return "aicoderbot";
+    }
 
     @POST
     @Path("/streamsend")

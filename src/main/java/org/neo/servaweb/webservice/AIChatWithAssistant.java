@@ -38,6 +38,11 @@ public class AIChatWithAssistant extends AbsAIChat {
         return ChatWithAssistantInMemoryForUIImpl.getInstance();
     }
 
+    @Override
+    protected String getHook() {
+        return "aichatwithassistant";
+    }
+
     @POST
     @Path("/send")
     @Consumes(MediaType.APPLICATION_JSON)

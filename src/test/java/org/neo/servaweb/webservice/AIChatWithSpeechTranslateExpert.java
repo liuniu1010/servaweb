@@ -29,6 +29,11 @@ public class AIChatWithSpeechTranslateExpert extends AbsAIChat {
         return ChatWithSpeechTranslateForUIImpl.getInstance(getOnlineFileAbsolutePath(), getRelevantVisitPath());
     }
 
+    @Override
+    protected String getHook() {
+        return "aichatwithspeechtranslateexpert";
+    }
+
     @POST
     @Path("/send")
     @Consumes(MediaType.APPLICATION_JSON)

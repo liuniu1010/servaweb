@@ -17,6 +17,11 @@ public class AIChatWithCommandExecutor extends AbsAIChat {
         return ChatWithCommandExecutorForUIImpl.getInstance();
     }
 
+    @Override
+    protected String getHook() {
+        return "aichatwithcommandexecutor";
+    }
+
     @POST
     @Path("/send")
     @Consumes(MediaType.APPLICATION_JSON)

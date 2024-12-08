@@ -38,6 +38,11 @@ public class AIChatWithAdmin extends AbsAIChat {
         return ChatWithAdminInMemoryForUIImpl.getInstance();
     }
 
+    @Override
+    protected String getHook() {
+        return "aichatwithadmin";
+    }
+
     @POST
     @Path("/send")
     @Consumes(MediaType.APPLICATION_JSON)

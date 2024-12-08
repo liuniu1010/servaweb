@@ -17,6 +17,11 @@ public class AIChatWithCommandExpert extends AbsAIChat {
         return ChatWithCommandExpertForUIImpl.getInstance();
     }
 
+    @Override
+    protected String getHook() {
+        return "aichatwithcommandexpert";
+    }
+
     @POST
     @Path("/send")
     @Consumes(MediaType.APPLICATION_JSON)

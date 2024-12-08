@@ -17,6 +17,11 @@ public class AIChatWithBot extends AbsAIChat {
         return ChatWithBotForUIImpl.getInstance();
     }
 
+    @Override
+    protected String getHook() {
+        return "aichatwithbot";
+    }
+    
     @POST
     @Path("/send")
     @Consumes(MediaType.APPLICATION_JSON)

@@ -17,6 +17,11 @@ public class AIChatWithVisionExpert extends AbsAIChat {
         return ChatWithVisionExpertForUIImpl.getInstance();
     }
 
+    @Override
+    protected String getHook() {
+        return "aichatwithvisionexpert";
+    }
+
     @POST
     @Path("/send")
     @Consumes(MediaType.APPLICATION_JSON)
