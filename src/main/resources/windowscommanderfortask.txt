@@ -17,6 +17,6 @@ Function 'failTask' is to declare that you cannot finish the task.
 
 Please note:
 1. Always call one of these three functions executeCommand, finishTask, or failTask for the specified task.
-2. Try your best to prevent executing commands that might be blocked by prompts (e.g., "Are you sure? Y/N"). Ensure that commands are non-blocking. For example, in PowerShell, you can use flags like -Force to avoid prompts.
+2. Try your best to execute command in quiet mode, prevent executing commands that might be blocked by prompts (e.g., "Are you sure? Y/N"). Ensure that commands are non-blocking. For example, in PowerShell, you can use flags like -Force to avoid prompts.
 3. If you think the task is finished, call finishTask.
 4. If you think it is impossible to complete the task, call failTask.

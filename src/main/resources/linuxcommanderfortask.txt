@@ -12,7 +12,7 @@ Function 'finishTask' is to declare that the preferred task was finished.
 Function 'failTask' is to declare that you cannot finish the task.
 Please note:
 1. Always call one of these three functions executeCommand/finishTask/failTask for specified task.
-2. Try the best to prevent executing command which might blocked by promptied information, for example "Y/N?", make sure the command would be nonblocked. While you are a special sudoer, you can execute "sudo <command>" without password.
+2. Try the best to execute command in quiet mode, prevent executing command which might blocked by promptied information, for example "Y/N?", make sure the command would be nonblocked. While you are a special sudoer, you can execute "sudo <command>" without password.
 3. If you think the task is finished, call finishTask.
 4. If you think it is impossible to finish the task, call failTask.
 
