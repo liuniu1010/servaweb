@@ -8,7 +8,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.neo.servaframe.util.IOUtil;
-import org.neo.servaaibase.util.CommonUtil;
+import org.neo.servaaiagent.ifc.ShellAgentIFC;
+import org.neo.servaaiagent.impl.ShellAgentInMemoryImpl;
 
 @Path("/aisandbox")
 public class AISandBox {
@@ -16,13 +17,34 @@ public class AISandBox {
     @Path("/executecommand")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse executecommand(WSModel.AIChatParams params) {
+    public WSModel.AIChatResponse executeCommand(WSModel.AIChatParams params) {
+        String session = params.getSession();
         String command = params.getUserInput();
         WSModel.AIChatResponse chatResponse = null;
 
         try {
-            String result = CommonUtil.executeCommand(command);
+            ShellAgentIFC shellAgent = ShellAgentInMemoryImpl.getInstance();
+            String result = shellAgent.execute(session, command);
             chatResponse = new WSModel.AIChatResponse(true, result);
+        }
+        catch(Exception ex) {
+            chatResponse = new WSModel.AIChatResponse(false, ex.getMessage());
+        }
+        return chatResponse;
+    }
+
+    @POST
+    @Path("/terminateshell")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public WSModel.AIChatResponse terminateShell(WSModel.AIChatParams params) {
+        String session = params.getSession();
+        WSModel.AIChatResponse chatResponse = null;
+
+        try {
+            ShellAgentIFC shellAgent = ShellAgentInMemoryImpl.getInstance();
+            shellAgent.terminateShell(session);
+            chatResponse = new WSModel.AIChatResponse(true, "shell closed success");
         }
         catch(Exception ex) {
             chatResponse = new WSModel.AIChatResponse(false, ex.getMessage());
@@ -40,9 +62,10 @@ public class AISandBox {
         WSModel.AIChatResponse chatResponse = null;
 
         try {
+            ShellAgentIFC shellAgent = ShellAgentInMemoryImpl.getInstance();
             String tarFilePath = "/tmp/" + session + ".tar.gz"; 
             String command = "cd " + projectPath + "/../ && tar -zcvf " + tarFilePath + " myProject/";
-            CommonUtil.executeCommand(command);
+            shellAgent.execute(session, command);
 
             String base64 = IOUtil.fileToRawBase64(tarFilePath);
             chatResponse = new WSModel.AIChatResponse(true, base64);
