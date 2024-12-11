@@ -53,10 +53,10 @@ public class AISandBox {
     }
 
     @POST
-    @Path("/download")
+    @Path("/downloadproject")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse download(WSModel.AIChatParams params) {
+    public WSModel.AIChatResponse downloadProject(WSModel.AIChatParams params) {
         String session = params.getSession();
         String projectPath = params.getUserInput();
         WSModel.AIChatResponse chatResponse = null;
