@@ -247,23 +247,23 @@ public class AITaskBot extends AbsAIChat {
         return super.refresh(params);
     }
 
-    private void notifyHistory(String loginSession, OutputStream inputOutputStream) {
+    private void notifyHistory(String alignedSession, OutputStream inputOutputStream) {
         try {
-            // innerNotifyHistoryFromDB(loginSession, inputOutputStream);
-            innerNotifyHistoryFromMemory(loginSession, inputOutputStream);
+            // innerNotifyHistoryFromDB(alignedSession, inputOutputStream);
+            innerNotifyHistoryFromMemory(alignedSession, inputOutputStream);
         }
         catch(Exception ex) {
         }
     }
 
-    private void innerNotifyHistoryFromDB(String loginSession, OutputStream outputStream) {
+    private void innerNotifyHistoryFromDB(String alignedSession, OutputStream outputStream) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeQueryTask(new DBQueryTaskIFC() {
             @Override
             public Object query(DBConnectionIFC dbConnection) {
                 try {
                     StorageIFC storageIFC = StorageInDBImpl.getInstance(dbConnection);
-                    List<AIModel.CodeRecord> codeRecords = storageIFC.getCodeRecords(loginSession);
+                    List<AIModel.CodeRecord> codeRecords = storageIFC.getCodeRecords(alignedSession);
                     String information = "";
                     for(AIModel.CodeRecord codeRecord: codeRecords) {
                         if(codeRecord.getContent() == null || codeRecord.getContent().trim().equals("")) {
@@ -281,10 +281,10 @@ public class AITaskBot extends AbsAIChat {
         });
     }
 
-    private void innerNotifyHistoryFromMemory(String loginSession, OutputStream outputStream) {
+    private void innerNotifyHistoryFromMemory(String alignedSession, OutputStream outputStream) {
         try {
             StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
-            List<AIModel.CodeRecord> codeRecords = storageIFC.getCodeRecords(loginSession);
+            List<AIModel.CodeRecord> codeRecords = storageIFC.getCodeRecords(alignedSession);
             String information = "";
             for(AIModel.CodeRecord codeRecord: codeRecords) {
                 if(codeRecord.getContent() == null || codeRecord.getContent().trim().equals("")) {
@@ -319,24 +319,24 @@ public class AITaskBot extends AbsAIChat {
         }
 
         private Map<String, AITaskBot.StreamCallbackImpl> streamMap = new HashMap<String, AITaskBot.StreamCallbackImpl>();
-        public void put(String loginSession, AITaskBot.StreamCallbackImpl streamCallback) {
-            streamMap.put(loginSession, streamCallback);
+        public void put(String alignedSession, AITaskBot.StreamCallbackImpl streamCallback) {
+            streamMap.put(alignedSession, streamCallback);
         }
 
-        public AITaskBot.StreamCallbackImpl get(String loginSession) {
-            if(streamMap.containsKey(loginSession)) {
-                return streamMap.get(loginSession);
+        public AITaskBot.StreamCallbackImpl get(String alignedSession) {
+            if(streamMap.containsKey(alignedSession)) {
+                return streamMap.get(alignedSession);
             }
             else {
                 return null;
             }
         }
 
-        public void remove(String loginSession) {
-            if(streamMap.containsKey(loginSession)) {
-                StreamCallbackImpl streamCallback = streamMap.get(loginSession);
+        public void remove(String alignedSession) {
+            if(streamMap.containsKey(alignedSession)) {
+                StreamCallbackImpl streamCallback = streamMap.get(alignedSession);
                 streamCallback.closeOutputStream(); // make sure the output stream was closed to release resource
-                streamMap.remove(loginSession);
+                streamMap.remove(alignedSession);
             } 
         }
     }

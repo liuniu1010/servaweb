@@ -31,6 +31,7 @@ import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.impl.StorageInDBImpl;
 import org.neo.servaaibase.impl.StorageInMemoryImpl;
+import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
@@ -94,6 +95,7 @@ public class AICoderBot extends AbsAIChat {
             String information = "";
             if(chatResponse.getIsSuccess()) {
                 information = "Code generated success, " + chatResponse.getMessage();
+                consume(loginSession);
             }
             else {
                 information = "Failed to generate code due to: " + chatResponse.getMessage();
@@ -347,6 +349,28 @@ public class AICoderBot extends AbsAIChat {
         toFlush = toFlush.replace("\n", "<br>");
         outputStream.write(toFlush.getBytes(StandardCharsets.UTF_8));
         outputStream.flush();
+    }
+
+    private void consume(String loginSession) {
+        try {
+            innerConsume(loginSession);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+    }
+
+    private void innerConsume(String loginSession) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                int consumedCreditsOnEach = CommonUtil.getConfigValueAsInt(dbConnection, "consumedCreditsOnEach");
+                AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+                accountAgent.consumeCreditsWithSession(dbConnection, loginSession, consumedCreditsOnEach);
+                return null;
+            }
+        });
     }
 
     public static class StreamCache {
