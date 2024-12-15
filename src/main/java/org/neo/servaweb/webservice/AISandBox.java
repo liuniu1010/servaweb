@@ -53,6 +53,25 @@ public class AISandBox {
     }
 
     @POST
+    @Path("/isunix")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public WSModel.AIChatResponse isUnix(WSModel.AIChatParams params) {
+        String session = params.getSession();
+        WSModel.AIChatResponse chatResponse = null;
+
+        try {
+            ShellAgentIFC shellAgent = ShellAgentInMemoryImpl.getInstance();
+            boolean isUnix = shellAgent.isUnix(session);
+            chatResponse = new WSModel.AIChatResponse(true, isUnix?"yes":"no");
+        }
+        catch(Exception ex) {
+            chatResponse = new WSModel.AIChatResponse(false, ex.getMessage());
+        }
+        return chatResponse;
+    }
+
+    @POST
     @Path("/downloadproject")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
