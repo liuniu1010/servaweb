@@ -2,7 +2,7 @@ package org.neo.servaweb.webservice;
 
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Date;
 
 import java.io.File;
@@ -318,9 +318,11 @@ public class AITaskBot extends AbsAIChat {
             return instance; 
         }
 
-        private Map<String, AITaskBot.StreamCallbackImpl> streamMap = new HashMap<String, AITaskBot.StreamCallbackImpl>();
+        private Map<String, AITaskBot.StreamCallbackImpl> streamMap = new ConcurrentHashMap<String, AITaskBot.StreamCallbackImpl>();
         public void put(String alignedSession, AITaskBot.StreamCallbackImpl streamCallback) {
-            streamMap.put(alignedSession, streamCallback);
+            if(streamCallback != null) {
+                streamMap.put(alignedSession, streamCallback);
+            }
         }
 
         public AITaskBot.StreamCallbackImpl get(String alignedSession) {
