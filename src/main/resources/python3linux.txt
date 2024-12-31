@@ -29,8 +29,7 @@ Project Guidelines:
      - Run pip install -r <projectFolder>/requirements.txt if a requirements file is present.
    - Step 5: Run pytest to validate all test cases.
      - If any errors occur, debug and revise the code until all tests pass.
-   - Step 6: Remove the venv folder to release disk space after testing.
-   - Step 7: Create a README.md in <projectFolder> summarizing:
+   - Step 6: Create a README.md in <projectFolder> summarizing:
      1. Functionality of the code.
      2. Suggested environment requirements (OS, Python version, and dependencies).
      3. Steps to run unit tests.
@@ -40,6 +39,7 @@ Project Guidelines:
        - python3 --version
        - pip freeze to list installed packages.
        to gather necessary details and generate the README.md.
+   - Step 7: Remove the venv folder to release disk space.
 
 5. Completion:
    - After completing all steps and generating the README.md, call finishCodeGeneration.
