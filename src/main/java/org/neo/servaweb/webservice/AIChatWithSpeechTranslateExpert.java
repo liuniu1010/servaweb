@@ -12,7 +12,7 @@ import javax.ws.rs.core.MediaType;
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.impl.ChatWithSpeechTranslateForUIImpl;
 
-@Path("/aichatwithspeechtranslateexpert")
+@Path("/speechtranslate")
 public class AIChatWithSpeechTranslateExpert extends AbsAIChat {
     private String audiosFolder = "audios";
 
@@ -31,7 +31,7 @@ public class AIChatWithSpeechTranslateExpert extends AbsAIChat {
 
     @Override
     protected String getHook() {
-        return "aichatwithspeechtranslateexpert";
+        return "speechtranslate";
     }
 
     @POST
