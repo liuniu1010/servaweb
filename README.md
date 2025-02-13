@@ -73,7 +73,7 @@ mvn clean package -DskipTests
 ### step2: Install and start DB
 <!--
 edit initservamysql57.sql
-setup your own OpenAI api key, google api key and email configurations in the script
+setup your own OpenAI api key, google api key, email configurations and sandboxip in the script
 -->
 - ./initservamysql57.sql
 

@@ -25,14 +25,14 @@ insert into configs(id, version, configname, configvalue, comments) values(uuid(
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'assistantModel', 'gpt-4o', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'taskModel', 'gpt-4o', '');
 
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'javamavenlinuxSandBoxUrl', 'http://localhost:8081/api/aisandbox', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'javagradlelinuxSandBoxUrl', 'http://localhost:8082/api/aisandbox', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'dotnetlinuxSandBoxUrl', 'http://localhost:8083/api/aisandbox', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'python3linuxSandBoxUrl', 'http://localhost:8084/api/aisandbox', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'nodejslinuxSandBoxUrl', 'http://localhost:8085/api/aisandbox', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'bashlinuxSandBoxUrl', 'http://localhost:8086/api/aisandbox', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'cmakegcclinuxSandBoxUrl', 'http://localhost:8087/api/aisandbox', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'taskSandBoxUrl', 'http://localhost:9011/api/aisandbox', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'javamavenlinuxSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'javagradlelinuxSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'dotnetlinuxSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'python3linuxSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'nodejslinuxSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'bashlinuxSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'cmakegcclinuxSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'taskSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
 
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'email.username', '<username>', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'email.password', '<password>', '');
