@@ -32,18 +32,15 @@ to chat with administrator ( only administrators have the permission to login )
 
 ## Local Deploy steps
 
-### step1: Install Mysql
-Please refer to https://dev.mysql.com/doc for details
-
-### step2: Building source code
+### step1: Building source code
 <!-- setup project folder -->
 ```shell
-mkdir projectFolder
+mkdir <YourPreferredprojectFolder>
 ```
 
 <!-- build servaframe -->
 ```shell
-cd projectFolder
+cd <YourPreferredProjectFolder>
 git clone https://github.com/liuniu1010/servaframe.git
 cd servaframe
 mvn clean install -DskipTests
@@ -51,7 +48,7 @@ mvn clean install -DskipTests
 
 <!-- build servaaibase -->
 ```shell
-cd ..
+cd <YourPreferredProjectFolder>
 git clone https://github.com/liuniu1010/servaaibase.git
 cd servaaibase
 mvn clean install -DskipTests
@@ -59,27 +56,40 @@ mvn clean install -DskipTests
 
 <!-- build servaaiagent -->
 ```shell
-cd ..
+cd <YourPreferredProjectFolder>
 git clone https://github.com/liuniu1010/servaaiagent.git
 cd servaaiagent
 mvn clean install -DskipTests
 ```
 
-<!-- build servaweb and setup mysql and tomcat -->
+<!-- build servaweb -->
 ```shell
-cd ..
+cd <YourPreferredProjectFolder>
 git clone https://github.com/liuniu1010/servaweb.git
 cd servaweb
+mvn clean package -DskipTests
 ```
 
-<!-- 
-    edit createDatabase.sql for specified database name and privilege
-    edit createDataStructure.sql to setup your own OpenAI api key, google api key and email configurations
-    execute the two dbscripts to setup mysql
+### step2: Install and start DB
+<!--
+edit initservamysql57.sql
+setup your own OpenAI api key, google api key and email configurations in the script
 -->
-- ./src/main/resources/dbscripts/mysql/createDatabase.sql
-- ./src/main/resources/dbscripts/mysql/createDataStructure.sql
+- ./initservamysql57.sql
 
+<!--
+edit runservermysql57.sh
+update <dbip> to the ip of the database, update <pathonhost> to your preferred data folder on the host
+-->
+- ./runservamysql57.sh
+
+<!-- build and start db image -->
+```shell
+./buildservamysql57.sh
+./runservamysql57.sh
+```
+
+### step3: Edit configuration files
 <!-- 
    edit database.conf to point to the database
 -->
@@ -100,31 +110,19 @@ cd servaweb
 mvn clean package -DskipTests
 ```
 
-<!-- build local image  and all sandbox imags -->
+<!-- build local image  and common sandbox imags -->
 ```shell
 ./buildimage_local.sh
-./buildsandbox_javamavenlinux.sh
-./buildsandbox_javagradlelinux.sh
-./buildsandbox_dotnetlinux.sh
-./buildsandbox_python3linux.sh
-./buildsandbox_nodejslinux.sh
-./buildsandbox_bashlinux.sh
-./buildsandbox_cmakegcclinux.sh
+./buildsandbox_commonlinux.sh
 ```
 
 <!-- start all images -->
 ```shell
 ./runimage_local.sh
-./runsandbox_javamavenlinux.sh
-./runsandbox_javagradlelinux.sh
-./runsandbox_dotnetlinux.sh
-./runsandbox_python3linux.sh
-./runsandbox_nodejslinux.sh
-./runsandbox_bashlinux.sh
-./runsandbox_cmakegcclinux.sh
+./runsandbox_commonlinux.sh
 ```
 
-### step3: Visit Local Deployment
+### step4: Visit Local Deployment
 visit
 http://localhost:8080/coderbot.html
 to try the Auto Coding function
