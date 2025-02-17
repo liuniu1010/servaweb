@@ -21,7 +21,7 @@ to chat with administrator ( only administrators have the permission to login )
 - **Operating System**: Linux
 - **Java Version**: 1.8.0_412 (OpenJDK)
 - **Maven Version**: 3.6.3
-- **Database**: mysql5.7.26
+- **Database**: mysql5.7
 - **Container**: docker 26.1.0
 
 ## Source dependents
@@ -79,7 +79,9 @@ setup your own OpenAI api key, google api key, email configurations and sandboxi
 
 <!--
 edit runservermysql57.sh
-update <dbip> to the ip of the database, update <pathonhost> to your preferred data folder on the host
+update <dbip> to the ip of the database
+update <datapathonhost> to the preferred data folder on the host
+update <initpathonhost> to the folder contains initservamysql57.sql
 -->
 - ./runservamysql57.sh
 
