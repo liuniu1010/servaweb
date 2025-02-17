@@ -103,9 +103,12 @@ update <initpathonhost> to the folder contains initservamysql57.sql
 - ./src/main/resources/WhiteListAdmin.txt
 
 <!--
-    edit runimage_local.sh, modify <dbIP> to the database ip
+    edit runimage_local.sh, modify <dbip> to the database ip
+    edit runimage_local.sh, modify <serverip> to the server ip
+    edit runsandbox_commonlinux.sh, modify <sandboxip> to the sandbox ip
 -->
 - ./runimage_local.sh
+- ./runsandbox_commonlinux.sh
 
 <!-- build servaweb -->
 ```shell
@@ -118,7 +121,7 @@ mvn clean package -DskipTests
 ./buildsandbox_commonlinux.sh
 ```
 
-<!-- start all images -->
+<!-- start server and common sandbox -->
 ```shell
 ./runimage_local.sh
 ./runsandbox_commonlinux.sh
