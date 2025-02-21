@@ -404,7 +404,7 @@
             }
             disableSendPasswordButton();
 
-            var sendpasswordUrl = "api/aiclientlogin/sendpassword";
+            var sendpasswordUrl = "api/aiadminlogin/sendpassword";
             $.ajax({
                 url: sendpasswordUrl,
                 type: "POST",
@@ -432,7 +432,7 @@
             if(isStringEmptyOrWhitespace(username)) {
                 return false;
             }
-            var loginUrl = "api/aiclientlogin/login";
+            var loginUrl = "api/aiadminlogin/login";
             $.ajax({
                 url: loginUrl,
                 type: "POST",
@@ -464,7 +464,7 @@
         }
 
         function logout() {
-            var logoutUrl = "api/aiclientlogin/logout";
+            var logoutUrl = "api/aiadminlogin/logout";
             $.ajax({
                 url: logoutUrl,
                 type: "POST",

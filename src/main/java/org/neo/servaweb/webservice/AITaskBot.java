@@ -150,6 +150,10 @@ public class AITaskBot extends AbsAIChat {
 
     private void innerCheckAccessibilityOnStreamsend(DBConnectionIFC dbConnection, String loginSession) {
         AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
+        if(accessAgent.verifyAdminByLoginSession(dbConnection, loginSession)) {
+            return;
+        }
+
         accessAgent.verifyMaintenance(dbConnection);
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
@@ -178,6 +182,11 @@ public class AITaskBot extends AbsAIChat {
     }
 
     private void innerCheckAccessibilityOnStreamrefresh(DBConnectionIFC dbConnection, String loginSession) {
+        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
+        if(accessAgent.verifyAdminByLoginSession(dbConnection, loginSession)) {
+            return;
+        }
+
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         accountAgent.checkSessionValid(dbConnection, loginSession);
         accountAgent.updateSession(dbConnection, loginSession);
