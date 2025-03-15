@@ -97,7 +97,7 @@
                         </div>
                     </tr>
                     <tr>
-                        <input type="file" id="fileInput" name="file" style="color: #ffffff;">
+                        <input type="file" id="fileInput" name="file" style="color: #ffffff;" accept=".mp3">
                     </tr>
                     <tr>
                         <td>
@@ -314,6 +314,17 @@
 
         document.getElementById("ButtonNewChat").addEventListener("click", function() {
             newChat();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function() {
+            var file = this.files[0];
+            if (file) {
+                var fileType = file.name.split('.').pop().toLowerCase();
+                if (fileType !== 'mp3') {
+                    alert('Only MP3 files are allowed.');
+                    this.value = '';
+                }
+            }
         });
     </script>
 </body>
