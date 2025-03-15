@@ -12,7 +12,7 @@
             padding: 0;
         }
         .background {
-            background-color: #ffffff;
+            background-color: #300A24;
             width: calc(100% - 20px);
             height: calc(100% - 20px);
             margin: 10px;
@@ -36,6 +36,7 @@
             padding: 20px;
         }
         .leftpanel-button {
+            color: #ffffff;
             background: none;
             padding: 0;
             cursor: pointer;
@@ -59,12 +60,19 @@
             width: calc(100vw - 380px);
         }
         .button-send {
-            border: none;
-            background: none;
-            padding: 0;
-            cursor: pointer;
             width: 56px;
             height: 56px;
+            border-radius: 50%;
+            overflow: hidden;
+            padding: 0;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s;
         }
         .button-send img {
             width: 100%;
@@ -89,7 +97,7 @@
                         </div>
                     </tr>
                     <tr>
-                        <input type="file" id="fileInput" name="file">
+                        <input type="file" id="fileInput" name="file" style="color: #ffffff;">
                     </tr>
                     <tr>
                         <td>
