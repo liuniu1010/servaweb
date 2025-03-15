@@ -324,6 +324,9 @@
                     alert('Only MP3 files are allowed.');
                     this.value = '';
                 }
+                else {
+                    document.getElementById("UserInput").value = file.name;
+                }
             }
         });
     </script>
