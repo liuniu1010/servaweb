@@ -2,15 +2,37 @@ package org.neo.servaweb.webservice;
 
 import java.io.File;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletOutputStream;
+import java.nio.charset.StandardCharsets;
+
+import org.neo.servaframe.interfaces.DBConnectionIFC;
+import org.neo.servaframe.interfaces.DBAutoCommitSaveTaskIFC;
+import org.neo.servaframe.interfaces.DBQueryTaskIFC;
+import org.neo.servaframe.interfaces.DBSaveTaskIFC;
+import org.neo.servaframe.interfaces.DBServiceIFC;
+import org.neo.servaframe.ServiceFactory;
+
+import org.neo.servaaibase.model.AIModel;
+import org.neo.servaaibase.ifc.StorageIFC;
+import org.neo.servaaibase.impl.StorageInDBImpl;
+import org.neo.servaaibase.impl.StorageInMemoryImpl;
+import org.neo.servaaibase.util.CommonUtil;
+import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.impl.ChatWithSpeechSplitForUIImpl;
+import org.neo.servaaiagent.ifc.AccountAgentIFC;
+import org.neo.servaaiagent.ifc.AccessAgentIFC;
+import org.neo.servaaiagent.impl.AccountAgentImpl;
+import org.neo.servaaiagent.impl.AccessAgentImpl;
 
 @Path("/speechsplit")
 public class AIChatWithSpeechSplitExpert extends AbsAIChat {
@@ -34,35 +56,161 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
         return "speechsplit";
     }
 
+    @Override
+    protected String alignSession(String session) {
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        return getHook() + accountAgent.getUserNameWithSession(session);
+    }
+
     @POST
     @Path("/send")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse send(WSModel.AIChatParams params) {
-        return super.send(params);
+    public WSModel.AIChatResponse send(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        try {
+            String loginSession = params.getSession();
+            checkAccessibilityOnAction(loginSession);
+            WSModel.AIChatResponse chatResponse = super.send(params);
+            consume(loginSession);
+            return chatResponse;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null;
     }
 
     @POST
     @Path("/echo")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse echo(WSModel.AIChatParams params) {
-        return super.echo(params);
+    public WSModel.AIChatResponse echo(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        try {
+            String loginSession = params.getSession();
+            checkAccessibilityOnAction(loginSession);
+            return super.echo(params);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null;
     }
 
     @POST
     @Path("/newchat")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse newchat(WSModel.AIChatParams params) {
-        return super.newchat(params);
+    public WSModel.AIChatResponse newchat(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        try {
+            String loginSession = params.getSession();
+            checkAccessibilityOnAction(loginSession);
+            return super.newchat(params);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null;
     }
 
     @POST
     @Path("/refresh")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse refresh(WSModel.AIChatParams params) {
-        return super.refresh(params);
+    public WSModel.AIChatResponse refresh(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        try {
+            String loginSession = params.getSession();
+            checkAccessibilityOnAction(loginSession);
+            return super.refresh(params);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null;
+    }
+
+    private void checkAccessibilityOnAction(String loginSession) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                try {
+                    innerCheckAccessibilityOnAction(dbConnection, loginSession);
+                }
+                catch(NeoAIException nex) {
+                    throw nex;
+                }
+                catch(Exception ex) {
+                    throw new NeoAIException(ex.getMessage(), ex);
+                }
+                return null;
+            }
+        });
+    }
+
+    private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String loginSession) {
+        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
+        accessAgent.verifyMaintenance(dbConnection);
+
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        accountAgent.checkSessionValid(dbConnection, loginSession);
+        accountAgent.updateSession(dbConnection, loginSession);
+        accountAgent.checkCreditsWithSession(dbConnection, loginSession);
+    }
+
+    private void standardHandleException(Exception ex, HttpServletResponse response) {
+        terminateConnection(decideHttpResponseStatus(ex), ex.getMessage(), response);
+    }
+
+    private int decideHttpResponseStatus(Exception ex) {
+        if(ex instanceof NeoAIException) {
+            NeoAIException nex = (NeoAIException)ex;
+            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID
+                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL) {
+                return HttpServletResponse.SC_UNAUTHORIZED;
+            }
+            else if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_NOCREDITS_LEFT) {
+                return HttpServletResponse.SC_PAYMENT_REQUIRED;
+            }
+        }
+        return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+    }
+
+    private void terminateConnection(int httpStatus, String message, HttpServletResponse response) {
+        try {
+            response.setStatus(httpStatus);
+            response.getWriter().write(message);
+            response.flushBuffer();
+            return;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+    }
+
+    private void consume(String loginSession) {
+        try {
+            innerConsume(loginSession);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+    }       
+            
+    private void innerConsume(String loginSession) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                int consumedCreditsOnSpeechSplit = CommonUtil.getConfigValueAsInt(dbConnection, "consumedCreditsOnSpeechSplit");
+                String consumeFunction = "speechsplit";
+                AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+                accountAgent.consumeCreditsWithSession(dbConnection, loginSession, consumedCreditsOnSpeechSplit, consumeFunction);       
+                return null;
+            }
+        });
     }
 }

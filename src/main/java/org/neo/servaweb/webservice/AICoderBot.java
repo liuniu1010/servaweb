@@ -365,9 +365,10 @@ public class AICoderBot extends AbsAIChat {
         dbService.executeSaveTask(new DBSaveTaskIFC() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
-                int consumedCreditsOnEach = CommonUtil.getConfigValueAsInt(dbConnection, "consumedCreditsOnEach");
+                int consumedCreditsOnCoderBot = CommonUtil.getConfigValueAsInt(dbConnection, "consumedCreditsOnCoderBot");
+                String consumeFunction = "coderbot";
                 AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-                accountAgent.consumeCreditsWithSession(dbConnection, loginSession, consumedCreditsOnEach);
+                accountAgent.consumeCreditsWithSession(dbConnection, loginSession, consumedCreditsOnCoderBot, consumeFunction);
                 return null;
             }
         });
