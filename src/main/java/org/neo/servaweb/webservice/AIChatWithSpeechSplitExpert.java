@@ -58,8 +58,13 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
 
     @Override
     protected String alignSession(String session) {
-        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        return getHook() + accountAgent.getUserNameWithSession(session);
+        if(isAdmin(session)) {
+            AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+            return getHook() + accountAgent.getUserNameWithSession(session);
+        }
+        else {
+            return super.alignSession(session);
+        }
     }
 
     @POST
@@ -212,5 +217,16 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
                 return null;
             }
         });
+    }
+
+    private boolean isAdmin(String session) {
+        try {
+            AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
+            accessAgent.verifyAdminByLoginSession(session);
+            return true;
+        }
+        catch(NeoAIException nex) {
+            return false;
+        }
     }
 }
