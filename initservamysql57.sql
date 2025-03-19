@@ -58,6 +58,7 @@ insert into configs(id, version, configname, configvalue, comments) values(uuid(
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyMaxOnlineNumber', '1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'maxRegisterNumber', '1000', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'maxOnlineNumber', '100', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'maxFileSizeForUpload', '10', 'unit M');
 
 
 create table chatrecord(

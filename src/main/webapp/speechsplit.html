@@ -474,7 +474,7 @@
                 });
             } 
             else {
-                sendChat("");
+                alert("Please select a valid mp3 file");
             }
         }
 
@@ -525,6 +525,10 @@
                 var fileType = file.name.split('.').pop().toLowerCase();
                 if (fileType !== 'mp3') {
                     alert('Only MP3 files are allowed.');
+                    this.value = '';
+                }
+                else if (file.size > 10 * 1024 * 1024) {
+                    alert("The selected MP3 file exceeds the 10MB limit. Please choose a smaller file.");
                     this.value = '';
                 }
                 else {
