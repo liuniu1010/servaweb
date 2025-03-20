@@ -107,10 +107,15 @@ abstract public class AbsAIChat {
     }
 
     public WSModel.AIChatResponse newchat(WSModel.AIChatParams params) {
+        String defaultSayHello = "Hello, how can I help you?";
+        return newchat(params, defaultSayHello);
+    }
+
+    public WSModel.AIChatResponse newchat(WSModel.AIChatParams params, String sayHello) {
         try {
             String session = params.getSession();
             String alignedSession = alignSession(session);
-            String renderedResponse = getChatForUIInstance().initNewChat(alignedSession);
+            String renderedResponse = getChatForUIInstance().initNewChat(alignedSession, sayHello);
 
             WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
             return response;

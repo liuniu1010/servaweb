@@ -112,7 +112,7 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
     public WSModel.AIChatResponse newchat(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            return super.newchat(params);
+            return super.newchat(params, "Please select an mp3 file and click send");
         }
         catch(Exception ex) {
             logger.error(ex.getMessage());
