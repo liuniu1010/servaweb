@@ -74,7 +74,7 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
     public WSModel.AIChatResponse send(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnSend(loginSession);
             if(!super.isBase64SizeValid(params.getFileAsBase64())) {
                 throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_FILESIZE_EXCEED_UPPERLIMIT);
             }
@@ -96,7 +96,6 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
     public WSModel.AIChatResponse echo(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnAction(loginSession);
             return super.echo(params);
         }
         catch(Exception ex) {
@@ -113,7 +112,6 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
     public WSModel.AIChatResponse newchat(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnAction(loginSession);
             return super.newchat(params);
         }
         catch(Exception ex) {
@@ -130,7 +128,7 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
     public WSModel.AIChatResponse refresh(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnRefresh(loginSession);
             return super.refresh(params);
         }
         catch(Exception ex) {
@@ -140,13 +138,13 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
         return null;
     }
 
-    private void checkAccessibilityOnAction(String loginSession) {
+    private void checkAccessibilityOnSend(String loginSession) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeSaveTask(new DBSaveTaskIFC() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
                 try {
-                    innerCheckAccessibilityOnAction(dbConnection, loginSession);
+                    innerCheckAccessibilityOnSend(dbConnection, loginSession);
                 }
                 catch(NeoAIException nex) {
                     throw nex;
@@ -159,7 +157,7 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
         });
     }
 
-    private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String loginSession) {
+    private void innerCheckAccessibilityOnSend(DBConnectionIFC dbConnection, String loginSession) {
         AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
         accessAgent.verifyMaintenance(dbConnection);
 
@@ -167,6 +165,31 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
         accountAgent.checkSessionValid(dbConnection, loginSession);
         accountAgent.updateSession(dbConnection, loginSession);
         accountAgent.checkCreditsWithSession(dbConnection, loginSession);
+    }
+
+    private void checkAccessibilityOnRefresh(String loginSession) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                try {
+                    innerCheckAccessibilityOnRefresh(dbConnection, loginSession);
+                }
+                catch(NeoAIException nex) {
+                    throw nex;
+                }
+                catch(Exception ex) {
+                    throw new NeoAIException(ex.getMessage(), ex);
+                }
+                return null;
+            }
+        });
+    }
+
+    private void innerCheckAccessibilityOnRefresh(DBConnectionIFC dbConnection, String loginSession) {
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        accountAgent.checkSessionValid(dbConnection, loginSession);
+        accountAgent.updateSession(dbConnection, loginSession);
     }
 
     private void standardHandleException(Exception ex, HttpServletResponse response) {
