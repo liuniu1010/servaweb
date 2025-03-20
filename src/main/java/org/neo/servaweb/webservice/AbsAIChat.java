@@ -14,6 +14,9 @@ import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
+import org.neo.servaaibase.NeoAIException;
+import org.neo.servaaibase.util.CommonUtil;
+
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
@@ -131,5 +134,23 @@ abstract public class AbsAIChat {
             logger.error(ex.getMessage(), ex);
             return new WSModel.AIChatResponse(false, ex.getMessage());
         }
+    }
+
+    protected boolean isBase64SizeValid(String base64String) {
+        if (base64String == null) {
+            return true;
+        }
+
+        // Remove Base64 metadata if present (e.g., "data:audio/mp3;base64,")
+        if (base64String.contains(",")) {
+            base64String = base64String.split(",")[1];
+        }
+
+        // Calculate approximate decoded size
+        long decodedSize = (long) (base64String.length() * (3.0 / 4.0));
+
+        // Validate the file size
+        long maxSize = CommonUtil.getConfigValueAsInt("maxFileSizeForUpload") * 1024 * 1024;
+        return decodedSize <= maxSize;
     }
 }

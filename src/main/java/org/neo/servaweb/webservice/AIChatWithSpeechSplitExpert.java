@@ -75,6 +75,9 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
         try {
             String loginSession = params.getSession();
             checkAccessibilityOnAction(loginSession);
+            if(!super.isBase64SizeValid(params.getFileAsBase64())) {
+                throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_FILESIZE_EXCEED_UPPERLIMIT);
+            }
             WSModel.AIChatResponse chatResponse = super.send(params);
             consume(loginSession);
             return chatResponse;

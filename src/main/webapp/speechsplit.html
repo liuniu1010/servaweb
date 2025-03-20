@@ -504,7 +504,10 @@
                     if (xhr.status === 401) {
                         document.getElementById("loginDialog").style.display = "block";
                     }
-                    document.getElementById("RichChatRecord").innerHTML = error;
+                    else {
+                        alertError(xhr, status, error);
+                        refresh();
+                    }
                     document.getElementById("UserInput").value = "";
                     enableSend();
                 },
