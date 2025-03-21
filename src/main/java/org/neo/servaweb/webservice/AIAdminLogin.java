@@ -37,7 +37,7 @@ public class AIAdminLogin {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse sendPassword(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
         String username = params.getSession();
-        String sourceIP = request.getRemoteAddr();
+        String sourceIP = getSourceIP(request);
 
         logger.info("User: " + username + " from " + sourceIP + " try to sendpassword");
 
@@ -62,7 +62,7 @@ public class AIAdminLogin {
     public WSModel.AIChatResponse login(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
         String username = params.getSession();
         String password = params.getUserInput();
-        String sourceIP = request.getRemoteAddr();
+        String sourceIP = getSourceIP(request);
 
         logger.info("User: " + username + " from " + sourceIP + " try to login");
 
@@ -97,6 +97,18 @@ public class AIAdminLogin {
             logger.error(ex.getMessage(), ex);
         }
         return null; 
+    }
+
+    private String getSourceIP(HttpServletRequest request) {
+        String sourceIP = request.getHeader("X-Forwarded-For");
+        if (sourceIP == null || sourceIP.isEmpty()) {
+            sourceIP = request.getRemoteAddr(); // fallback
+        } 
+        else {
+            // In case there are multiple IPs (comma-separated), take the first one
+            sourceIP = sourceIP.split(",")[0].trim();
+        }   
+        return sourceIP;
     }
 
     private void standardHandleException(Exception ex, HttpServletResponse response) {
