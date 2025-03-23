@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Game Bot</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f7f7f7;
+        }
+        .background {
+            background-color: #ffffff;
+            width: calc(100% - 20px);
+            height: calc(100% - 20px);
+            margin: 10px;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .left-panel {
+            width: 60px;
+            height: 100%;
+            padding: 10px;
+            background-color: #343a40;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .leftpanel-button {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            overflow: hidden;
+            padding: 0;
+            border: none;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .leftpanel-button img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .leftpanel-button:hover {
+            background-color: #495057;
+        }
+        .right-window {
+            width: calc(100% - 60px);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chatRecordArea {
+            border: none;
+            padding: 10px;
+            flex: 1;
+            overflow-y: auto;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        #UserInput {
+            height: 135px;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .button-send {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            overflow: hidden;
+            padding: 0;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .button-send img {
+            width: 100%;
+            height: 100%;
+        }
+        .button-send:hover {
+            background-color: #0056b3;
+        }
+        .login-dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            width: 300px;
+        }
+        .login-dialog h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .login-dialog label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .login-dialog input[type="text"], .login-dialog input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .login-dialog button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .login-dialog button:hover {
+            background-color: #0056b3;
+        }
+        .logout-menu {
+            display: none;
+            position: fixed;
+            bottom: 100px;
+            left: 70px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            width: 200px;
+            display: flex;
+            align-items: center;
+        }
+        .logout-menu button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+        .logout-menu button:hover {
+            background-color: #f7f7f7;
+        }
+        .logout-menu hr {
+            margin: 0;
+            border: 0.5px solid #ddd;
+        }
+        .logout-menu img {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+        }
+        .left-panel .logout-button-container {
+            margin-top: auto;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="background">
+        <div class="container">
+            <div class="left-panel">
+                <button id="ButtonHelp" type="button" class="leftpanel-button">
+                    <img id="HelpButtonImage" src="images/help.webp" alt="Help" draggable="false">
+                </button>
+                <div class="logout-button-container">
+                    <button id="ButtonAccount" type="button" class="leftpanel-button">
+                        <img id="AccountButtonImage" src="images/robot4.webp" alt="Account" draggable="false">
+                    </button>
+                </div>
+            </div>
+            <div class="right-window">
+                <div id="RichChatRecord" contenteditable="false" class="chatRecordArea">
+                </div>
+                <div style="display: flex;">
+                    <textarea id="UserInput" placeholder="Type your game requirement here..."></textarea>
+                    <button id="ButtonSend" type="button" class="button-send" onclick="sendEcho()">
+                        <img src="images/send.png" alt="Send" draggable="false">
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="logoutMenu" class="logout-menu">
+        <button onclick="logout()">
+            <img src="images/logout-icon.webp" alt="Logout Icon">
+            Log out
+        </button>
+    </div>
+
+    <div id="loginDialog" class="login-dialog">
+        <h3>Login</h3>
+        <label for="username">Email address:</label>
+        <input id="username" type="text" placeholder="Email address">
+        <label for="password">Password:</label>
+        <input id="password" type="password" placeholder="Password">
+        <button id="sendPasswordBtn" onclick="sendPassword()">Send Password</button>
+        <button id="loginBtn" onclick="login()">Login</button>
+    </div>
+
+    <script>
+        window.onload = function() {
+            refresh();
+        }
+
+        window.addEventListener('resize', function(){
+            location.reload();
+        });
+
+        function getLoginSession() {
+            return getCookieValue("loginSession");
+        }
+
+        function saveLoginSession(loginSession) {
+            setCookieValue("loginSession", loginSession); 
+        }
+
+        function getCookieValue(cookieName) {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.indexOf(cookieName + '=') === 0) {
+                    return cookie.substring(cookieName.length + 1);
+                }
+            }
+            return "";
+        }
+
+        function setCookieValue(cookieName, cookieValue) {
+            document.cookie = cookieName + "=" + cookieValue + ";path=/";
+        }
+
+        function enableSend() {
+            document.getElementById("ButtonSend").disabled = false;
+            document.getElementById("UserInput").disabled = false;
+            document.getElementById("UserInput").value = "";
+            document.getElementById("UserInput").focus();
+        }
+
+        function disableSend() {
+            document.getElementById("ButtonSend").disabled = true;
+            document.getElementById("UserInput").disabled = true;
+        }
+
+        function refresh() {
+            var refreshUrl = "api/aigamebot/refresh";
+            var userInput = document.getElementById("UserInput").value;
+            $.ajax({
+                url: refreshUrl,
+                type: "POST",
+                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    document.getElementById('RichChatRecord').innerHTML = data.message;
+                    // Delay the scrolling code by 100ms to ensure that the content is fully loaded
+                    setTimeout(function() {
+                        chatRecordEditor = document.getElementById("RichChatRecord");
+                        chatRecordEditor.scrollTop = chatRecordEditor.scrollHeight;
+                        enableSend();
+                    }, 100);
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    document.getElementById('RichChatRecord').innerHTML = error;
+                    enableSend();
+                }
+            });
+            logoutMenu.style.display = "none";
+        }
+
+        function newChat() {
+            var newChatUrl = "api/aigamebot/newchat";
+            var userInput = document.getElementById("UserInput").value;
+            $.ajax({
+                url: newChatUrl,
+                type: "POST",
+                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    document.getElementById('RichChatRecord').innerHTML = data.message;
+                    enableSend();
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    document.getElementById('RichChatRecord').innerHTML = error;
+                    enableSend();
+                }
+            });
+        }
+
+        function isStringEmptyOrWhitespace(str) {
+            if(str) {
+                return (str.trim() == "");
+            }
+            else {
+                return true;
+            }
+        }
+
+        var xhr;
+        function sendEcho() {
+            disableSend();
+            var echoUrl = "api/aigamebot/echo";
+            var userInput = document.getElementById("UserInput").value;
+            if(isStringEmptyOrWhitespace(userInput)) {
+                enableSend();
+                return false;
+            }
+            $.ajax({
+                url: echoUrl,
+                type: "POST",
+                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    document.getElementById("RichChatRecord").innerHTML = data.message;
+                    // Delay the scrolling code by 100ms to ensure that the content is fully loaded
+                    setTimeout(function() {
+                        chatRecordEditor = document.getElementById("RichChatRecord");
+                        chatRecordEditor.scrollTop = chatRecordEditor.scrollHeight;
+                        sendChat();
+                    }, 100);
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    document.getElementById("RichChatRecord").innerHTML = error;
+                    document.getElementById("UserInput").value = "";
+                    enableSend();
+                }
+            });
+        }
+
+        function sendChat() {
+            var sendUrl = "api/aigamebot/send";
+            var userInput = document.getElementById("UserInput").value;
+            if(isStringEmptyOrWhitespace(userInput)) {
+                enableSend();
+                return false;
+            }
+            $.ajax({
+                url: sendUrl,
+                type: "POST",
+                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    document.getElementById("RichChatRecord").innerHTML = data.message;
+                    // Delay the scrolling code by 100ms to ensure that the content is fully loaded
+                    setTimeout(function() {
+                        chatRecordEditor = document.getElementById("RichChatRecord");
+                        chatRecordEditor.scrollTop = chatRecordEditor.scrollHeight;
+                        enableSend();
+                    }, 100);
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    document.getElementById("RichChatRecord").innerHTML = error;
+                    document.getElementById("UserInput").value = "";
+                    enableSend();
+                },
+                complete: function() {
+                    document.getElementById("UserInput").value = "";
+                }
+            });
+            document.getElementById("UserInput").value = "Please wait...";
+        }
+
+        function disableSendPasswordButton() {
+            var sendPasswordBtn = document.getElementById("sendPasswordBtn");
+            sendPasswordBtn.disabled = true;
+            sendPasswordBtn.innerText = "Sending...";
+        }
+
+        function enableSendPasswordButton() {
+            var sendPasswordBtn = document.getElementById("sendPasswordBtn");
+            sendPasswordBtn.disabled = false;
+            sendPasswordBtn.innerText = "Send Password";
+        }
+
+        function sendPassword() {
+            var username = document.getElementById("username").value;
+            if (!validateEmail(username)) {
+                alert("Please enter a valid email address.");
+                return;
+            }
+            disableSendPasswordButton();
+
+            var sendpasswordUrl = "api/aiclientlogin/sendpassword";
+            $.ajax({
+                url: sendpasswordUrl,
+                type: "POST",
+                data: JSON.stringify({session: username, userInput: ""}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    alert(data.message);
+                    enableSendPasswordButton();
+                },
+                error: function(xhr, status, error) {
+                    alertError(xhr, status, error);
+                    enableSendPasswordButton();
+                },
+                complete: function() {
+                    enableSendPasswordButton();
+                }
+            });
+        }
+
+        function login() {
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+
+            if(isStringEmptyOrWhitespace(username)) {
+                return false;
+            }
+            var loginUrl = "api/aiclientlogin/login";
+            $.ajax({
+                url: loginUrl,
+                type: "POST",
+                data: JSON.stringify({session: username, userInput: password}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    saveLoginSession(data.message);
+                    document.getElementById("loginDialog").style.display = "None";
+                    refresh();
+                },
+                error: function(xhr, status, error) {
+                    alertError(xhr, status, error);
+                },
+                complete: function() {
+                }
+            });
+        }
+
+        function alertError(xhr, status, error) {
+            var message = xhr.responseText;
+            try {
+                var jsonResponse = JSON.parse(xhr.responseText);
+                message = jsonResponse.message || jsonResponse.error;
+            } 
+            catch(e) {
+            }
+            alert(message + "\nFor more information, please contact niuliu285@gmail.com");
+        }
+
+        function logout() {
+            var logoutUrl = "api/aiclientlogin/logout";
+            $.ajax({
+                url: logoutUrl,
+                type: "POST",
+                data: JSON.stringify({session: getLoginSession(), userInput: ""}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    if (xhr && xhr.readyState !== 4) { // Check if the request is still in progress
+                        xhr.abort(); // Abort the ongoing AJAX request
+                    }
+                    saveLoginSession("");
+                    refresh();
+                },
+                error: function(xhr, status, error) {
+                    saveLoginSession("");
+                    refresh();
+                },
+                complete: function() {
+                }
+            });
+        }
+
+        function validateEmail(email) {
+            var re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            return re.test(String(email).toLowerCase());
+        }
+
+        document.getElementById("ButtonAccount").addEventListener("click", function() {
+            var logoutMenu = document.getElementById("logoutMenu");
+            if (logoutMenu.style.display === "block") {
+                logoutMenu.style.display = "none";
+            } else {
+                logoutMenu.style.display = "block";
+            }
+        });
+        document.getElementById("ButtonHelp").addEventListener("click", function() {
+          //  window.open("chatwithassistant.html", "_blank");
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Tic Tac Toe</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      grid-gap: 5px;
+      margin: 0 auto;
+    }
+
+    .cell {
+      width: 80px;
+      height: 80px;
+      font-size: 2em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #000;
+    }
+
+    .winner {
+      color: green;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    #reset {
+      margin-top: 20px;
+      padding: 8px 16px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simple Tic Tac Toe</h1>
+  <div id="board">
+    <div class="cell" data-index="0"></div>
+    <div class="cell" data-index="1"></div>
+    <div class="cell" data-index="2"></div>
+    <div class="cell" data-index="3"></div>
+    <div class="cell" data-index="4"></div>
+    <div class="cell" data-index="5"></div>
+    <div class="cell" data-index="6"></div>
+    <div class="cell" data-index="7"></div>
+    <div class="cell" data-index="8"></div>
+  </div>
+
+  <div id="status" class="winner"></div>
+  <button id="reset">Reset Game</button>
+
+  <script>
+    const board = document.getElementById("board");
+    const cells = document.querySelectorAll(".cell");
+    const statusEl = document.getElementById("status");
+    const resetBtn = document.getElementById("reset");
+
+    let currentPlayer = "X";
+    let gameActive = true;
+    // Array to track board state. Empty strings mean no move at that index.
+    let boardState = ["","","","","","","","",""];
+
+    // Winning positions: each sub-array has the indices of the cells that form a winning line.
+    const winningConditions = [
+      [0,1,2], [3,4,5], [6,7,8], // rows
+      [0,3,6], [1,4,7], [2,5,8], // columns
+      [0,4,8], [2,4,6]           // diagonals
+    ];
+
+    function handleCellClick(e) {
+      const cellIndex = e.target.getAttribute("data-index");
+
+      // If cell is already used or game is over, ignore.
+      if (boardState[cellIndex] !== "" || !gameActive) return;
+
+      // Update board state and UI
+      boardState[cellIndex] = currentPlayer;
+      e.target.textContent = currentPlayer;
+
+      checkResult();
+      switchPlayer();
+    }
+
+    function checkResult() {
+      for (let i = 0; i < winningConditions.length; i++) {
+        const [a, b, c] = winningConditions[i];
+        if (boardState[a] && boardState[a] === boardState[b] && boardState[b] === boardState[c]) {
+          // We have a winner
+          gameActive = false;
+          statusEl.textContent = `Player ${currentPlayer} wins!`;
+          return;
+        }
+      }
+
+      // If no winner yet, check for draw
+      if (!boardState.includes("")) {
+        statusEl.textContent = "It's a draw!";
+        gameActive = false;
+      }
+    }
+
+    function switchPlayer() {
+      if (gameActive) {
+        currentPlayer = currentPlayer === "X" ? "O" : "X";
+      }
+    }
+
+    function resetGame() {
+      boardState = ["","","","","","","","",""];
+      currentPlayer = "X";
+      gameActive = true;
+      cells.forEach(cell => cell.textContent = "");
+      statusEl.textContent = "";
+    }
+
+    cells.forEach(cell => cell.addEventListener("click", handleCellClick));
+    resetBtn.addEventListener("click", resetGame);
+  </script>
+</body>
+</html>
+
