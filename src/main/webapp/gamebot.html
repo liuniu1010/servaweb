@@ -287,6 +287,18 @@
             document.getElementById("UserInput").disabled = true;
         }
 
+        function showEmbeddedContent(content) {
+            const iframe = document.createElement('iframe');
+            iframe.style.width = "100%";
+            iframe.style.height = "100%";
+            iframe.style.border = "none";
+            iframe.srcdoc = content;
+            iframe.setAttribute("sandbox", "allow-scripts allow-same-origin");
+            const container = document.getElementById("RichChatRecord");
+            container.innerHTML = "";
+            container.appendChild(iframe);
+        }
+
         function refresh() {
             var refreshUrl = "api/aigamebot/refresh";
             var userInput = document.getElementById("UserInput").value;
@@ -297,7 +309,8 @@
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
-                    document.getElementById('RichChatRecord').innerHTML = data.message;
+                    showEmbeddedContent(data.message); 
+    
                     // Delay the scrolling code by 100ms to ensure that the content is fully loaded
                     setTimeout(function() {
                         chatRecordEditor = document.getElementById("RichChatRecord");
@@ -326,7 +339,7 @@
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
-                    document.getElementById('RichChatRecord').innerHTML = data.message;
+                    showEmbeddedContent(data.message); 
                     enableSend();
                 },
                 error: function(xhr, status, error) {
@@ -397,7 +410,8 @@
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
-                    document.getElementById("RichChatRecord").innerHTML = data.message;
+                    showEmbeddedContent(data.message); 
+
                     // Delay the scrolling code by 100ms to ensure that the content is fully loaded
                     setTimeout(function() {
                         chatRecordEditor = document.getElementById("RichChatRecord");
