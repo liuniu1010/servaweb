@@ -24,6 +24,7 @@ insert into configs(id, version, configname, configvalue, comments) values(uuid(
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'adminModel', 'gpt-4o', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'assistantModel', 'gpt-4o', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'taskModel', 'gpt-4o', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'gameModel', 'gpt-4o', '');
 
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'javamavenlinuxSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'javagradlelinuxSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
