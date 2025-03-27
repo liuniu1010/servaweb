@@ -22,6 +22,7 @@ import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.impl.StorageInDBImpl;
 import org.neo.servaaibase.impl.StorageInMemoryImpl;
+import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
@@ -51,7 +52,9 @@ public class AIGameBot extends AbsAIChat {
         try {
             String loginSession = params.getSession();
             checkAccessibilityOnAction(loginSession);
-            return super.send(params);
+            WSModel.AIChatResponse chatResponse = super.send(params);
+            consume(loginSession);
+            return chatResponse;
         }
         catch(Exception ex) {
             logger.error(ex.getMessage());
@@ -168,5 +171,28 @@ public class AIGameBot extends AbsAIChat {
         catch(Exception ex) {
             logger.error(ex.getMessage(), ex);
         }
+    }
+
+    private void consume(String loginSession) {
+        try {
+            innerConsume(loginSession);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+    }
+
+    private void innerConsume(String loginSession) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                int consumedCreditsOnGameBot = CommonUtil.getConfigValueAsInt(dbConnection, "consumedCreditsOnGameBot");
+                String consumeFunction = "gamebot";
+                AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+                accountAgent.consumeCreditsWithSession(dbConnection, loginSession, consumedCreditsOnGameBot, consumeFunction);
+                return null;
+            }
+        });
     }
 }

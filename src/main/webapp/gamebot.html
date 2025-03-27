@@ -389,6 +389,10 @@
                     if (xhr.status === 401) {
                         document.getElementById("loginDialog").style.display = "block";
                     }
+                    else {
+                        alertError(xhr, status, error);
+                        refresh();
+                    }
                     document.getElementById("RichChatRecord").innerHTML = error;
                     document.getElementById("UserInput").value = "";
                     enableSend();
@@ -422,6 +426,10 @@
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {
                         document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
+                        refresh();
                     }
                     document.getElementById("RichChatRecord").innerHTML = error;
                     document.getElementById("UserInput").value = "";
