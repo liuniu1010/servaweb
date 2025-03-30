@@ -224,7 +224,7 @@
                 </div>
                 <div style="display: flex;">
                     <textarea id="UserInput" placeholder="Type your game requirement here..."></textarea>
-                    <button id="ButtonSend" type="button" class="button-send" onclick="sendEcho()">
+                    <button id="ButtonSend" type="button" class="button-send" onclick="streamsend()">
                         <img src="images/send.png" alt="Send" draggable="false">
                     </button>
                 </div>
@@ -251,7 +251,7 @@
 
     <script>
         window.onload = function() {
-            refresh();
+            streamrefresh();
         }
 
         window.addEventListener('resize', function(){
@@ -367,7 +367,114 @@
             }
         }
 
+        function removePartText(wholeText, partText) {
+            const index = wholeText.indexOf(partText);
+            if (index === -1) {
+                return wholeText; // partText not found, return original wholeText
+            }
+            return wholeText.slice(0, index) + wholeText.slice(index + partText.length);
+        }
+
+        var historyContent;
+        function handleOnProcessText(newText) {
+            if(isStringEmptyOrWhitespace(newText)) {
+                historyContent = newText;
+                enableSend();
+                return;
+            }
+
+            var incrementalText = removePartText(newText, historyContent); 
+            showEmbeddedContent(incrementalText);
+            historyContent = newText;
+            if(isCompleteHTML(incrementalText)) {
+                enableSend();
+            }
+        }
+
         var xhr;
+        function streamsend() {
+            disableSend();
+            var streamsendUrl = "api/aigamebot/streamsend";
+            var userInput = document.getElementById("UserInput").value;
+            if(isStringEmptyOrWhitespace(userInput)) {
+                enableSend();
+                return false;
+            }
+            xhr = $.ajax({
+                url: streamsendUrl,
+                type: "POST",
+                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                xhrFields: {
+                    onprogress: function(e) {
+                        var newText = e.target.responseText;
+                        handleOnProcessText(newText);
+
+                        // Delay the scrolling code by 100ms to ensure that the content is fully loaded
+                        setTimeout(function() {
+                            chatRecordEditor = document.getElementById("RichChatRecord");
+                            chatRecordEditor.scrollTop = chatRecordEditor.scrollHeight;
+                        }, 100);
+                    }
+                },
+                success: function (data) {
+                    enableSend();
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
+                    }
+                    document.getElementById("RichChatRecord").innerHTML = error;
+                    document.getElementById("UserInput").value = "";
+                    enableSend();
+                }
+            });
+        }
+
+        function streamrefresh() {
+            disableSend();
+            var streamrefreshUrl = "api/aigamebot/streamrefresh";
+            var userInput = "";
+            $.ajax({
+                url: streamrefreshUrl,
+                type: "POST",
+                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                xhrFields: {
+                    onprogress: function(e) {
+                        var newText = e.target.responseText;
+                        handleOnProcessText(newText);
+                        
+                        // Delay the scrolling code by 100ms to ensure that the content is fully loaded
+                        setTimeout(function() {
+                            chatRecordEditor = document.getElementById("RichChatRecord");
+                            chatRecordEditor.scrollTop = chatRecordEditor.scrollHeight;
+                        }, 100);
+                    }
+                },
+                success: function (data) {
+                    enableSend();
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    document.getElementById("RichChatRecord").innerHTML = error;
+                    document.getElementById("UserInput").value = "";
+                    enableSend();
+                },
+                complete: function() {
+                    document.getElementById("UserInput").value = "";
+                }
+            });
+            logoutMenu.style.display = "none";
+        }
+
         function sendEcho() {
             disableSend();
             var echoUrl = "api/aigamebot/echo";
@@ -397,7 +504,7 @@
                     }
                     else {
                         alertError(xhr, status, error);
-                        refresh();
+                        streamrefresh();
                     }
                     document.getElementById("RichChatRecord").innerHTML = error;
                     document.getElementById("UserInput").value = "";
@@ -435,7 +542,7 @@
                     }
                     else {
                         alertError(xhr, status, error);
-                        refresh();
+                        streamrefresh();
                     }
                     document.getElementById("RichChatRecord").innerHTML = error;
                     document.getElementById("UserInput").value = "";
@@ -506,7 +613,7 @@
                 success: function (data) {
                     saveLoginSession(data.message);
                     document.getElementById("loginDialog").style.display = "None";
-                    refresh();
+                    streamrefresh();
                 },
                 error: function(xhr, status, error) {
                     alertError(xhr, status, error);
@@ -540,11 +647,11 @@
                         xhr.abort(); // Abort the ongoing AJAX request
                     }
                     saveLoginSession("");
-                    refresh();
+                    streamrefresh();
                 },
                 error: function(xhr, status, error) {
                     saveLoginSession("");
-                    refresh();
+                    streamrefresh();
                 },
                 complete: function() {
                 }
@@ -589,6 +696,20 @@
             URL.revokeObjectURL(url);
         }
 
+        function isCompleteHTML(inputText) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(inputText, "text/html");
+
+            // Check if the parsed document has any HTML tags (other than <html><head><body>)
+            const hasHtmlTags = Array.from(doc.body.children).length > 0;
+
+            // Check if input contains typical HTML tags explicitly
+            const htmlTagPattern = /<\/?[a-z][\s\S]*>/i;
+            const explicitlyHtml = htmlTagPattern.test(inputText);
+
+            // Consider it complete HTML if explicitly HTML tags exist and successfully parsed
+            return hasHtmlTags && explicitlyHtml;
+        }
     </script>
 </body>
 </html>
