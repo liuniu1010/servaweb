@@ -114,8 +114,8 @@ public class AIGameBot extends AbsAIChat {
             streamCallback.changeOutputStream(outputStream); // this output stream would be closed when streamCallback are finished
             streamCallback.notifyHistory();
 
-            // wait 30 minutes, every 1 minute, check if the project was finished
-            for(int i = 0;i < 30;i++) {
+            // wait 5 minutes, every 1 minute, check if the project was finished
+            for(int i = 0;i < 5;i++) {
                 Thread.sleep(60*1000);
                 streamCallback = StreamCache.getInstance().get(alignedSession);
                 if(streamCallback == null) {
