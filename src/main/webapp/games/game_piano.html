@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Clickable Piano</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .piano {
+      position: relative;
+      user-select: none;
+    }
+    .white-keys {
+      display: flex;
+      position: relative;
+    }
+    .white-key {
+      width: 60px;
+      height: 240px;
+      background: #fff;
+      border: 1px solid #999;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      font-weight: bold;
+      cursor: pointer;
+      position: relative;
+      box-sizing: border-box;
+    }
+    .white-key span {
+      margin-bottom: 5px;
+    }
+    .black-key {
+      width: 40px;
+      height: 150px;
+      background: #000;
+      border: 1px solid #444;
+      position: absolute;
+      z-index: 2;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      box-sizing: border-box;
+      color: #fff;
+      font-weight: bold;
+    }
+    .black-key span {
+      margin-bottom: 5px;
+    }
+    .black-key:hover {
+      background: #333;
+    }
+    .white-key:hover {
+      background: #f1f1f1;
+    }
+  </style>
+</head>
+<body>
+  <div class="piano">
+    <div class="white-keys" id="white-keys"></div>
+  </div>
+
+  <script>
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+
+    const whiteNotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+    const blackNotes = ['C#', 'D#', '', 'F#', 'G#', 'A#', ''];
+    const keyFreqMap = {
+      'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13,
+      'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00, 'G#4': 415.30,
+      'A4': 440.00, 'A#4': 466.16, 'B4': 493.88, 'C5': 523.25, 'C#5': 554.37,
+      'D5': 587.33, 'D#5': 622.25, 'E5': 659.25, 'F5': 698.46, 'F#5': 739.99,
+      'G5': 783.99, 'G#5': 830.61, 'A5': 880.00, 'A#5': 932.33, 'B5': 987.77
+    };
+
+    const whiteKeysContainer = document.getElementById('white-keys');
+
+    const octaves = [4, 5]; // two octaves
+
+    let whiteKeyIndex = 0;
+    octaves.forEach(oct => {
+      for (let i = 0; i < whiteNotes.length; i++) {
+        const note = whiteNotes[i] + oct;
+        const wKey = document.createElement('div');
+        wKey.className = 'white-key';
+        wKey.dataset.freq = keyFreqMap[note];
+        const label = document.createElement('span');
+        label.textContent = note;
+        wKey.appendChild(label);
+        wKey.addEventListener('click', () => playNote(keyFreqMap[note]));
+        whiteKeysContainer.appendChild(wKey);
+
+        // Black keys (not after E or B)
+        const blackNote = blackNotes[i];
+        if (blackNote !== '') {
+          const fullBlackNote = blackNote + oct;
+          const bKey = document.createElement('div');
+          bKey.className = 'black-key';
+          bKey.dataset.freq = keyFreqMap[fullBlackNote];
+          bKey.style.left = (whiteKeyIndex * 60 + 45) + 'px';
+          const label = document.createElement('span');
+          label.textContent = fullBlackNote;
+          bKey.appendChild(label);
+          bKey.addEventListener('click', () => playNote(keyFreqMap[fullBlackNote]));
+          whiteKeysContainer.appendChild(bKey);
+        }
+        whiteKeyIndex++;
+      }
+    });
+
+    function playNote(freq) {
+      const oscillator = audioCtx.createOscillator();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+      const gainNode = audioCtx.createGain();
+      gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.01);
+      gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 1);
+    }
+
+    // Key-to-note map
+    const keyBindings = {
+        '1': 'C4', '2': 'D4', '3': 'E4', '4': 'F4',
+        '5': 'G4', '6': 'A4', '7': 'B4', '8': 'C5',
+        '9': 'D5', '0': 'E5', "-": 'F5', '=': 'G5', 'backspace': 'A5',
+        'q': 'C#4', 'w': 'D#4',
+        'r': 'F#4', 't': 'G#4', 'y': 'A#4',
+        'i': 'C#5', 'o': 'D#5',
+        '[': 'F#5', ']': 'G#5', '\\': 'A#5'
+    };
+
+    // Handle keydown event
+    document.addEventListener('keydown', (e) => {
+        const key = e.key.toLowerCase();
+        if (keyBindings[key]) {
+            const note = keyBindings[key];
+            const freq = keyFreqMap[note];
+            if (freq) {
+                playNote(freq);
+
+                // Optional visual effect
+                const keys = document.querySelectorAll('[data-freq]');
+                keys.forEach(el => {
+                    if (parseFloat(el.dataset.freq) === freq) {
+                        el.style.transform = 'scaleY(0.95)';
+                        setTimeout(() => el.style.transform = '', 100);
+                    }
+                });
+            }
+        }
+    });
+
+  </script>
+</body>
+</html>

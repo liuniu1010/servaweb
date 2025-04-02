@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Billiard</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #1e1e2f;
+    }
+    button {
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 1px 1px 5px black;
+    }
+    canvas {
+      background-color: #388e3c;
+      box-shadow: 0 0 20px #000;
+      border-radius: 15px;
+    }
+  </style>
+</head>
+<body>
+
+<button onclick="restartGame()">Restart</button>
+
+<audio id="collisionSound" preload="auto">
+  <source src="data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAwF0AAIC7AAACABAAZGF0Yf///38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD//38AAP//fwD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD//38AAP//fwD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD///8=" type="audio/wav">
+</audio>
+
+<canvas id="billiardTable" width="600" height="300"></canvas>
+
+<script>
+const canvas = document.getElementById('billiardTable');
+const ctx = canvas.getContext('2d');
+
+let balls = [
+  { x: 100, y: 150, radius: 10, color: 'white', vx: 0, vy: 0 },
+  { x: 150, y: 150, radius: 10, color: 'red', vx: 0, vy: 0 },
+  { x: 200, y: 200, radius: 10, color: 'blue', vx: 0, vy: 0 },
+  { x: 250, y: 100, radius: 10, color: 'yellow', vx: 0, vy: 0 },
+  { x: 300, y: 250, radius: 10, color: 'purple', vx: 0, vy: 0 },
+  { x: 350, y: 50, radius: 10, color: 'orange', vx: 0, vy: 0 },
+  { x: 400, y: 200, radius: 10, color: 'green', vx: 0, vy: 0 },
+];
+
+let cue = {
+  x: balls[0].x,
+  y: balls[0].y,
+  length: 100,
+  angle: 0,
+  visible: true
+};
+
+function drawBilliardTable() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let ball of balls) {
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fillStyle = ball.color;
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  if (cue.visible) {
+    ctx.save();
+    ctx.translate(balls[0].x, balls[0].y);
+    ctx.rotate(cue.angle);
+    ctx.beginPath();
+    ctx.moveTo(-cue.length, 0);
+    ctx.lineTo(10, 0);
+    ctx.strokeStyle = 'tan';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.closePath();
+    ctx.restore();
+  }
+}
+
+function updateBalls() {
+  let moving = false;
+  for (let ball of balls) {
+    if (Math.abs(ball.vx) > 0.01 || Math.abs(ball.vy) > 0.01) {
+      moving = true;
+    }
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+    ball.vx *= 0.99;
+    ball.vy *= 0.99;
+
+    if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+      ball.vx = -ball.vx;
+    }
+    if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+      ball.vy = -ball.vy;
+    }
+  }
+  if (!moving) {
+    cue.visible = true;
+  }
+  handleCollisions();
+}
+
+function handleCollisions() {
+  for (let i = 0; i < balls.length; i++) {
+    for (let j = i + 1; j < balls.length; j++) {
+      let dx = balls[j].x - balls[i].x;
+      let dy = balls[j].y - balls[i].y;
+      let distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance < balls[i].radius + balls[j].radius) {
+        let angle = Math.atan2(dy, dx);
+        let totalMass = 2;
+
+        const resolve = (ball1, ball2) => {
+          const v1 = { x: ball1.vx, y: ball1.vy };
+          const v2 = { x: ball2.vx, y: ball2.vy };
+          const collision_vel = { x: v1.x - v2.x, y: v1.y - v2.y };
+          const dot_product = collision_vel.x * dx + collision_vel.y * dy;
+          const collision_scale = dot_product / (dx * dx + dy * dy);
+          const collision_vector = { x: dx * collision_scale, y: dy * collision_scale };
+          ball1.vx -= 2 * collision_vector.x / totalMass;
+          ball1.vy -= 2 * collision_vector.y / totalMass;
+          ball2.vx += 2 * collision_vector.x / totalMass;
+          ball2.vy += 2 * collision_vector.y / totalMass;
+        };
+
+        const collisionSound = document.getElementById('collisionSound');
+        if (collisionSound) {
+          collisionSound.currentTime = 0;
+          collisionSound.play().catch(e => console.warn("Sound play blocked:", e));
+        }
+
+        resolve(balls[i], balls[j]);
+
+        const overlap = (balls[i].radius + balls[j].radius - distance) / 2;
+        const adjustX = overlap * Math.cos(angle);
+        const adjustY = overlap * Math.sin(angle);
+        balls[i].x -= adjustX;
+        balls[i].y -= adjustY;
+        balls[j].x += adjustX;
+        balls[j].y += adjustY;
+      }
+    }
+  }
+}
+
+function onMouseMove(event) {
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
+  cue.angle = Math.atan2(mouseY - balls[0].y, mouseX - balls[0].x);
+}
+
+function onMouseClick() {
+  const strength = 10;
+  balls[0].vx = Math.cos(cue.angle) * strength;
+  balls[0].vy = Math.sin(cue.angle) * strength;
+  cue.visible = false;
+}
+
+canvas.addEventListener('mousemove', onMouseMove);
+canvas.addEventListener('click', onMouseClick);
+
+function gameLoop() {
+  drawBilliardTable();
+  updateBalls();
+  requestAnimationFrame(gameLoop);
+}
+
+function restartGame() {
+  balls = [];
+  const colors = ['white', 'red', 'blue', 'yellow', 'purple', 'orange', 'green'];
+  for (let i = 0; i < colors.length; i++) {
+    let placed = false;
+    while (!placed) {
+      let x = Math.random() * (canvas.width - 20) + 10;
+      let y = Math.random() * (canvas.height - 20) + 10;
+      let overlapping = balls.some(ball => {
+        let dx = ball.x - x;
+        let dy = ball.y - y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        return distance < 20;
+      });
+      if (!overlapping) {
+        balls.push({ x: x, y: y, radius: 10, color: colors[i], vx: 0, vy: 0 });
+        placed = true;
+      }
+    }
+  }
+  cue.x = balls[0].x;
+  cue.y = balls[0].y;
+  cue.visible = true;
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
