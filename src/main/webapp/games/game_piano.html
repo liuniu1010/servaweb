@@ -13,6 +13,7 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
+      overflow-x: auto;
     }
     .piano {
       position: relative;
@@ -75,22 +76,106 @@
 
     const whiteNotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
     const blackNotes = ['C#', 'D#', '', 'F#', 'G#', 'A#', ''];
+
     const keyFreqMap = {
-      'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13,
-      'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00, 'G#4': 415.30,
-      'A4': 440.00, 'A#4': 466.16, 'B4': 493.88, 'C5': 523.25, 'C#5': 554.37,
-      'D5': 587.33, 'D#5': 622.25, 'E5': 659.25, 'F5': 698.46, 'F#5': 739.99,
-      'G5': 783.99, 'G#5': 830.61, 'A5': 880.00, 'A#5': 932.33, 'B5': 987.77
-    };
+  'A0': 27.5,
+  'A#0': 29.1352,
+  'B0': 30.8677,
+  'C1': 32.7032,
+  'C#1': 34.6478,
+  'D1': 36.7081,
+  'D#1': 38.8909,
+  'E1': 41.2034,
+  'F1': 43.6535,
+  'F#1': 46.2493,
+  'G1': 48.9994,
+  'G#1': 51.9131,
+  'A1': 55.0,
+  'A#1': 58.2705,
+  'B1': 61.7354,
+  'C2': 65.4064,
+  'C#2': 69.2957,
+  'D2': 73.4162,
+  'D#2': 77.7817,
+  'E2': 82.4069,
+  'F2': 87.3071,
+  'F#2': 92.4986,
+  'G2': 97.9989,
+  'G#2': 103.8262,
+  'A2': 110.0,
+  'A#2': 116.5409,
+  'B2': 123.4708,
+  'C3': 130.8128,
+  'C#3': 138.5913,
+  'D3': 146.8324,
+  'D#3': 155.5635,
+  'E3': 164.8138,
+  'F3': 174.6141,
+  'F#3': 184.9972,
+  'G3': 195.9977,
+  'G#3': 207.6523,
+  'A3': 220.0,
+  'A#3': 233.0819,
+  'B3': 246.9417,
+  'C4': 261.6256,
+  'C#4': 277.1826,
+  'D4': 293.6648,
+  'D#4': 311.127,
+  'E4': 329.6276,
+  'F4': 349.2282,
+  'F#4': 369.9944,
+  'G4': 391.9954,
+  'G#4': 415.3047,
+  'A4': 440.0,
+  'A#4': 466.1638,
+  'B4': 493.8833,
+  'C5': 523.2511,
+  'C#5': 554.3653,
+  'D5': 587.3295,
+  'D#5': 622.254,
+  'E5': 659.2551,
+  'F5': 698.4565,
+  'F#5': 739.9888,
+  'G5': 783.9909,
+  'G#5': 830.6094,
+  'A5': 880.0,
+  'A#5': 932.3275,
+  'B5': 987.7666,
+  'C6': 1046.5023,
+  'C#6': 1108.7305,
+  'D6': 1174.6591,
+  'D#6': 1244.5079,
+  'E6': 1318.5102,
+  'F6': 1396.9129,
+  'F#6': 1479.9777,
+  'G6': 1567.9817,
+  'G#6': 1661.2188,
+  'A6': 1760.0,
+  'A#6': 1864.655,
+  'B6': 1975.5332,
+  'C7': 2093.0045,
+  'C#7': 2217.461,
+  'D7': 2349.3181,
+  'D#7': 2489.0159,
+  'E7': 2637.0205,
+  'F7': 2793.8259,
+  'F#7': 2959.9554,
+  'G7': 3135.9635,
+  'G#7': 3322.4376,
+  'A7': 3520.0,
+  'A#7': 3729.3101,
+  'B7': 3951.0664,
+  'C8': 4186.009,
+};
 
     const whiteKeysContainer = document.getElementById('white-keys');
-
-    const octaves = [4, 5]; // two octaves
-
     let whiteKeyIndex = 0;
-    octaves.forEach(oct => {
+
+    for (let oct = 3; oct <= 5; oct++) {
       for (let i = 0; i < whiteNotes.length; i++) {
         const note = whiteNotes[i] + oct;
+        if (!keyFreqMap[note]) continue;
+
         const wKey = document.createElement('div');
         wKey.className = 'white-key';
         wKey.dataset.freq = keyFreqMap[note];
@@ -100,23 +185,24 @@
         wKey.addEventListener('click', () => playNote(keyFreqMap[note]));
         whiteKeysContainer.appendChild(wKey);
 
-        // Black keys (not after E or B)
         const blackNote = blackNotes[i];
         if (blackNote !== '') {
           const fullBlackNote = blackNote + oct;
-          const bKey = document.createElement('div');
-          bKey.className = 'black-key';
-          bKey.dataset.freq = keyFreqMap[fullBlackNote];
-          bKey.style.left = (whiteKeyIndex * 60 + 45) + 'px';
-          const label = document.createElement('span');
-          label.textContent = fullBlackNote;
-          bKey.appendChild(label);
-          bKey.addEventListener('click', () => playNote(keyFreqMap[fullBlackNote]));
-          whiteKeysContainer.appendChild(bKey);
+          if (keyFreqMap[fullBlackNote]) {
+            const bKey = document.createElement('div');
+            bKey.className = 'black-key';
+            bKey.dataset.freq = keyFreqMap[fullBlackNote];
+            bKey.style.left = (whiteKeyIndex * 60 + 45) + 'px';
+            const label = document.createElement('span');
+            label.textContent = fullBlackNote;
+            bKey.appendChild(label);
+            bKey.addEventListener('click', () => playNote(keyFreqMap[fullBlackNote]));
+            whiteKeysContainer.appendChild(bKey);
+          }
         }
         whiteKeyIndex++;
       }
-    });
+    }
 
     function playNote(freq) {
       const oscillator = audioCtx.createOscillator();
@@ -135,7 +221,6 @@
       oscillator.stop(audioCtx.currentTime + 1);
     }
 
-    // Key-to-note map
     const keyBindings = {
         '1': 'C4', '2': 'D4', '3': 'E4', '4': 'F4',
         '5': 'G4', '6': 'A4', '7': 'B4', '8': 'C5',
@@ -146,16 +231,14 @@
         '[': 'F#5', ']': 'G#5', '\\': 'A#5'
     };
 
-    // Handle keydown event
     document.addEventListener('keydown', (e) => {
         const key = e.key.toLowerCase();
-        if (keyBindings[key]) {
-            const note = keyBindings[key];
+        const mappedKey = key === 'backspace' ? 'backspace' : key;
+        if (keyBindings[mappedKey]) {
+            const note = keyBindings[mappedKey];
             const freq = keyFreqMap[note];
             if (freq) {
                 playNote(freq);
-
-                // Optional visual effect
                 const keys = document.querySelectorAll('[data-freq]');
                 keys.forEach(el => {
                     if (parseFloat(el.dataset.freq) === freq) {
@@ -166,7 +249,6 @@
             }
         }
     });
-
   </script>
 </body>
 </html>
