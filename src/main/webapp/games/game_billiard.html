@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Billiard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Play Billiard</title>
   <style>
     body {
       margin: 0;
@@ -25,10 +25,16 @@
       cursor: pointer;
       box-shadow: 1px 1px 5px black;
     }
-    canvas {
-      background-color: #388e3c;
+    .table-wrapper {
+      background: #8B4513; /* Wooden border */
+      padding: 20px;
+      border-radius: 20px;
       box-shadow: 0 0 20px #000;
+    }
+    canvas {
+      background-color: #388e3c; /* Green felt */
       border-radius: 15px;
+      display: block;
     }
   </style>
 </head>
@@ -37,175 +43,352 @@
 <button onclick="restartGame()">Restart</button>
 
 <audio id="collisionSound" preload="auto">
-  <source src="data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAwF0AAIC7AAACABAAZGF0Yf///38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD//38AAP//fwD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD//38AAP//fwD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD///8=" type="audio/wav">
+  <!-- Replace this data URI with a real .wav/.mp3 if desired -->
+  <source src="data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAwF0AAIC7AAACABAAZGF0Yf///38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD//38AAP//fwD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD//38AAP//fwD//38AAP//fwD//38AAP//fwD///9/AAD//38AAP//fwD//38AAP//fwD///8="
+          type="audio/wav">
 </audio>
 
-<canvas id="billiardTable" width="600" height="300"></canvas>
+<div class="table-wrapper">
+  <canvas id="billiardTable" width="600" height="300"></canvas>
+</div>
 
 <script>
-const canvas = document.getElementById('billiardTable');
-const ctx = canvas.getContext('2d');
+  const canvas = document.getElementById('billiardTable');
+  const ctx = canvas.getContext('2d');
 
-let balls = [
-  { x: 100, y: 150, radius: 10, color: 'white', vx: 0, vy: 0 },
-  { x: 150, y: 150, radius: 10, color: 'red', vx: 0, vy: 0 },
-  { x: 200, y: 200, radius: 10, color: 'blue', vx: 0, vy: 0 },
-  { x: 250, y: 100, radius: 10, color: 'yellow', vx: 0, vy: 0 },
-  { x: 300, y: 250, radius: 10, color: 'purple', vx: 0, vy: 0 },
-  { x: 350, y: 50, radius: 10, color: 'orange', vx: 0, vy: 0 },
-  { x: 400, y: 200, radius: 10, color: 'green', vx: 0, vy: 0 },
-];
+  // Six pockets: corners and mid-sides
+  const pockets = [
+    { x: 0,              y: 0,               radius: 20 },
+    { x: canvas.width/2, y: 0,               radius: 20 },
+    { x: canvas.width,   y: 0,               radius: 20 },
+    { x: 0,              y: canvas.height,   radius: 20 },
+    { x: canvas.width/2, y: canvas.height,   radius: 20 },
+    { x: canvas.width,   y: canvas.height,   radius: 20 }
+  ];
 
-let cue = {
-  x: balls[0].x,
-  y: balls[0].y,
-  length: 100,
-  angle: 0,
-  visible: true
-};
+  // Flags controlling collision sounds
+  // hasTakenShot => user actually clicked to shoot
+  // hasHadCueBallCollision => after the cue ball first collides with any ball
+  let hasTakenShot = false;
+  let hasHadCueBallCollision = false;
 
-function drawBilliardTable() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  for (let ball of balls) {
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-    ctx.fillStyle = ball.color;
-    ctx.fill();
-    ctx.closePath();
+  // Ball data
+  let balls = [];
+
+  // Cue properties
+  const cue = {
+    x: 0,
+    y: 0,
+    length: 100,
+    angle: 0,
+    visible: true
+  };
+
+  const BALL_RADIUS = 10;
+
+  // 8-ball color set
+  const standardColors = [
+    'white',       // cue ball
+    '#FCD702',     // 1  (yellow)
+    '#2B65EC',     // 2  (blue)
+    '#FF0000',     // 3  (red)
+    '#A020F0',     // 4  (purple)
+    '#FFA500',     // 5  (orange)
+    '#008000',     // 6  (green)
+    '#800000',     // 7  (maroon)
+    '#000000',     // 8  (black)
+    '#FCD702',     // 9  (yellow stripe)
+    '#2B65EC',     // 10 (blue stripe)
+    '#FF0000',     // 11 (red stripe)
+    '#A020F0',     // 12 (purple stripe)
+    '#FFA500',     // 13 (orange stripe)
+    '#008000',     // 14 (green stripe)
+    '#800000'      // 15 (maroon stripe)
+  ];
+
+  function gameLoop() {
+    drawBilliardTable();
+    updateBalls();
+    requestAnimationFrame(gameLoop);
   }
 
-  if (cue.visible) {
-    ctx.save();
-    ctx.translate(balls[0].x, balls[0].y);
-    ctx.rotate(cue.angle);
-    ctx.beginPath();
-    ctx.moveTo(-cue.length, 0);
-    ctx.lineTo(10, 0);
-    ctx.strokeStyle = 'tan';
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    ctx.closePath();
-    ctx.restore();
-  }
-}
+  function drawBilliardTable() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-function updateBalls() {
-  let moving = false;
-  for (let ball of balls) {
-    if (Math.abs(ball.vx) > 0.01 || Math.abs(ball.vy) > 0.01) {
-      moving = true;
+    // Pockets
+    for (const p of pockets) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'black';
+      ctx.fill();
+      ctx.closePath();
     }
-    ball.x += ball.vx;
-    ball.y += ball.vy;
-    ball.vx *= 0.99;
-    ball.vy *= 0.99;
 
-    if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
-      ball.vx = -ball.vx;
+    // Balls
+    for (let ball of balls) {
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+      ctx.fillStyle = ball.color;
+      ctx.fill();
+      ctx.closePath();
     }
-    if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
-      ball.vy = -ball.vy;
+
+    // Cue
+    if (cue.visible && balls.length > 0) {
+      ctx.save();
+      ctx.translate(balls[0].x, balls[0].y);
+      ctx.rotate(cue.angle);
+      ctx.beginPath();
+      ctx.moveTo(-cue.length, 0);
+      ctx.lineTo(10, 0);
+      ctx.strokeStyle = 'tan';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.closePath();
+      ctx.restore();
     }
   }
-  if (!moving) {
+
+  // Move balls, friction, bounce, collisions, pockets
+  function updateBalls() {
+    let moving = false;
+
+    for (let ball of balls) {
+      if (Math.abs(ball.vx) > 0.01 || Math.abs(ball.vy) > 0.01) {
+        moving = true;
+      }
+      ball.x += ball.vx;
+      ball.y += ball.vy;
+
+      // friction
+      ball.vx *= 0.99;
+      ball.vy *= 0.99;
+
+      // table edges
+      if (ball.x + ball.radius > canvas.width) {
+        ball.x = canvas.width - ball.radius;
+        ball.vx = -ball.vx;
+      } else if (ball.x - ball.radius < 0) {
+        ball.x = ball.radius;
+        ball.vx = -ball.vx;
+      }
+      if (ball.y + ball.radius > canvas.height) {
+        ball.y = canvas.height - ball.radius;
+        ball.vy = -ball.vy;
+      } else if (ball.y - ball.radius < 0) {
+        ball.y = ball.radius;
+        ball.vy = -ball.vy;
+      }
+    }
+
+    if (!moving && balls.length > 0) {
+      cue.visible = true;
+    }
+
+    handleCollisions();
+    handlePockets();
+  }
+
+  // Remove balls that fall into pockets
+  function handlePockets() {
+    for (let i = 0; i < balls.length; i++) {
+      const ball = balls[i];
+      for (let p of pockets) {
+        const dx = ball.x - p.x;
+        const dy = ball.y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < p.radius) {
+          balls.splice(i, 1);
+          i--;
+          break;
+        }
+      }
+    }
+  }
+
+  // Ball-ball collisions
+  function handleCollisions() {
+    for (let i = 0; i < balls.length; i++) {
+      for (let j = i + 1; j < balls.length; j++) {
+        const dx = balls[j].x - balls[i].x;
+        const dy = balls[j].y - balls[i].y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const sumRadius = balls[i].radius + balls[j].radius;
+
+        if (distance < sumRadius) {
+          const angle = Math.atan2(dy, dx);
+          const totalMass = 2;
+
+          // Resolve collision velocities
+          const resolveCollision = (b1, b2) => {
+            const v1 = { x: b1.vx, y: b1.vy };
+            const v2 = { x: b2.vx, y: b2.vy };
+            const collisionVel = { x: v1.x - v2.x, y: v1.y - v2.y };
+            const dot = collisionVel.x * dx + collisionVel.y * dy;
+            const collisionScale = dot / (dx * dx + dy * dy);
+            const collisionVector = {
+              x: dx * collisionScale,
+              y: dy * collisionScale
+            };
+            b1.vx -= (2 * collisionVector.x) / totalMass;
+            b1.vy -= (2 * collisionVector.y) / totalMass;
+            b2.vx += (2 * collisionVector.x) / totalMass;
+            b2.vy += (2 * collisionVector.y) / totalMass;
+          };
+
+          // Check if either ball is the cue ball (index 0)
+          // If so, that means the cue ball has collided with another ball
+          // => now allow collision sounds for everything
+          if (!hasHadCueBallCollision && hasTakenShot && (i === 0 || j === 0)) {
+            hasHadCueBallCollision = true;
+          }
+
+          // Now decide if we actually play the sound:
+          // 1) user must have taken the shot
+          // 2) the cue ball has collided at least once with some ball
+          // Only then do we produce any collision sounds (including among object balls)
+          if (hasTakenShot && hasHadCueBallCollision) {
+            const collisionSound = document.getElementById('collisionSound');
+            if (collisionSound) {
+              collisionSound.currentTime = 0;
+              collisionSound.play().catch(e => console.warn("Sound play blocked:", e));
+            }
+          }
+
+          // Adjust velocities
+          resolveCollision(balls[i], balls[j]);
+
+          // Remove overlap
+          const overlap = (sumRadius - distance) / 2;
+          const adjustX = overlap * Math.cos(angle);
+          const adjustY = overlap * Math.sin(angle);
+          balls[i].x -= adjustX;
+          balls[i].y -= adjustY;
+          balls[j].x += adjustX;
+          balls[j].y += adjustY;
+        }
+      }
+    }
+  }
+
+  // Move cue angle on mouse move
+  function onMouseMove(event) {
+    if (balls.length === 0) return;
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+    cue.angle = Math.atan2(mouseY - balls[0].y, mouseX - balls[0].x);
+  }
+
+  // Shoot the cue ball on click
+  function onMouseClick() {
+    if (balls.length === 0) return;
+    const strength = 10;
+    balls[0].vx = Math.cos(cue.angle) * strength;
+    balls[0].vy = Math.sin(cue.angle) * strength;
+    cue.visible = false;
+
+    // Mark that user took a shot, but no cue-ball collisions yet
+    hasTakenShot = true;
+  }
+
+  // Restart game with standard 8-ball rack
+  function restartGame() {
+    // Reset flags
+    hasTakenShot = false;
+    hasHadCueBallCollision = false;
+
+    balls = [];
+
+    // Position for the apex of the triangle
+    const apexX = canvas.width * 0.70;
+    const apexY = canvas.height * 0.50;
+    const rowSpacing = 18;
+    const colSpacing = BALL_RADIUS * 2;
+
+    // Generate the 15 positions in a triangular arrangement
+    const trianglePositions = [];
+    for (let row = 1; row <= 5; row++) {
+      for (let col = 1; col <= row; col++) {
+        const x = apexX + (row - 1) * rowSpacing;
+        const centerOffset = (col - (row + 1) / 2) * colSpacing;
+        const y = apexY + centerOffset;
+        const randomOffsetX = (Math.random() - 0.5) * 4;
+        const randomOffsetY = (Math.random() - 0.5) * 4;
+        trianglePositions.push({
+          x: x + randomOffsetX,
+          y: y + randomOffsetY
+        });
+      }
+    }
+
+    // By standard, the 8-ball is in the 3rd row, 2nd position => index=4
+    const eightBallIndex = 4;
+
+    // Shuffle the other 14 object-ball color indices
+    let colorIndices = [1,2,3,4,5,6,7,9,10,11,12,13,14,15];
+    shuffleArray(colorIndices);
+
+    // Place the 8-ball
+    const pos8 = trianglePositions[eightBallIndex];
+    balls.push({
+      x: pos8.x,
+      y: pos8.y,
+      radius: BALL_RADIUS,
+      color: standardColors[8],
+      vx: 0,
+      vy: 0
+    });
+
+    // Place the other 14 object balls
+    for (let i = 0; i < trianglePositions.length; i++) {
+      if (i === eightBallIndex) continue;
+      const cIndex = colorIndices.pop();
+      const pos = trianglePositions[i];
+      balls.push({
+        x: pos.x,
+        y: pos.y,
+        radius: BALL_RADIUS,
+        color: standardColors[cIndex],
+        vx: 0,
+        vy: 0
+      });
+    }
+
+    // Place the cue ball to the left
+    const cueX = canvas.width * 0.20 + (Math.random() - 0.5) * 4;
+    const cueY = canvas.height * 0.50 + (Math.random() - 0.5) * 4;
+    balls.unshift({
+      x: cueX,
+      y: cueY,
+      radius: BALL_RADIUS,
+      color: standardColors[0],
+      vx: 0,
+      vy: 0
+    });
+
+    // Reset cue
+    cue.x = balls[0].x;
+    cue.y = balls[0].y;
+    cue.angle = 0;
     cue.visible = true;
   }
-  handleCollisions();
-}
 
-function handleCollisions() {
-  for (let i = 0; i < balls.length; i++) {
-    for (let j = i + 1; j < balls.length; j++) {
-      let dx = balls[j].x - balls[i].x;
-      let dy = balls[j].y - balls[i].y;
-      let distance = Math.sqrt(dx * dx + dy * dy);
-      if (distance < balls[i].radius + balls[j].radius) {
-        let angle = Math.atan2(dy, dx);
-        let totalMass = 2;
-
-        const resolve = (ball1, ball2) => {
-          const v1 = { x: ball1.vx, y: ball1.vy };
-          const v2 = { x: ball2.vx, y: ball2.vy };
-          const collision_vel = { x: v1.x - v2.x, y: v1.y - v2.y };
-          const dot_product = collision_vel.x * dx + collision_vel.y * dy;
-          const collision_scale = dot_product / (dx * dx + dy * dy);
-          const collision_vector = { x: dx * collision_scale, y: dy * collision_scale };
-          ball1.vx -= 2 * collision_vector.x / totalMass;
-          ball1.vy -= 2 * collision_vector.y / totalMass;
-          ball2.vx += 2 * collision_vector.x / totalMass;
-          ball2.vy += 2 * collision_vector.y / totalMass;
-        };
-
-        const collisionSound = document.getElementById('collisionSound');
-        if (collisionSound) {
-          collisionSound.currentTime = 0;
-          collisionSound.play().catch(e => console.warn("Sound play blocked:", e));
-        }
-
-        resolve(balls[i], balls[j]);
-
-        const overlap = (balls[i].radius + balls[j].radius - distance) / 2;
-        const adjustX = overlap * Math.cos(angle);
-        const adjustY = overlap * Math.sin(angle);
-        balls[i].x -= adjustX;
-        balls[i].y -= adjustY;
-        balls[j].x += adjustX;
-        balls[j].y += adjustY;
-      }
+  // Fisher-Yates shuffle
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
   }
-}
 
-function onMouseMove(event) {
-  const rect = canvas.getBoundingClientRect();
-  const mouseX = event.clientX - rect.left;
-  const mouseY = event.clientY - rect.top;
-  cue.angle = Math.atan2(mouseY - balls[0].y, mouseX - balls[0].x);
-}
+  canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('click', onMouseClick);
 
-function onMouseClick() {
-  const strength = 10;
-  balls[0].vx = Math.cos(cue.angle) * strength;
-  balls[0].vy = Math.sin(cue.angle) * strength;
-  cue.visible = false;
-}
-
-canvas.addEventListener('mousemove', onMouseMove);
-canvas.addEventListener('click', onMouseClick);
-
-function gameLoop() {
-  drawBilliardTable();
-  updateBalls();
-  requestAnimationFrame(gameLoop);
-}
-
-function restartGame() {
-  balls = [];
-  const colors = ['white', 'red', 'blue', 'yellow', 'purple', 'orange', 'green'];
-  for (let i = 0; i < colors.length; i++) {
-    let placed = false;
-    while (!placed) {
-      let x = Math.random() * (canvas.width - 20) + 10;
-      let y = Math.random() * (canvas.height - 20) + 10;
-      let overlapping = balls.some(ball => {
-        let dx = ball.x - x;
-        let dy = ball.y - y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
-        return distance < 20;
-      });
-      if (!overlapping) {
-        balls.push({ x: x, y: y, radius: 10, color: colors[i], vx: 0, vy: 0 });
-        placed = true;
-      }
-    }
-  }
-  cue.x = balls[0].x;
-  cue.y = balls[0].y;
-  cue.visible = true;
-}
-
-gameLoop();
+  // Initial load
+  restartGame();
+  gameLoop();
 </script>
-
 </body>
 </html>
+
