@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Game of Life</title>
+  <style>
+    /* Full-screen gradient background */
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      background: linear-gradient(135deg, #1D2671, #C33764);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Main container to hold canvas on the left and buttons on the right */
+    .main-container {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 1rem; /* space between canvas and button container */
+      padding: 1rem;
+    }
+
+    /* Canvas styling */
+    canvas {
+      background: #111;
+      box-shadow: 0 0 10px #000;
+      display: block;
+      margin: auto;
+    }
+
+    /* Button container: vertical column of buttons */
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    /* Basic button styling */
+    .button-container button {
+      padding: 0.5rem 1rem;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      border-radius: 4px;
+      width: 200px;
+      position: relative; /* needed for tooltip positioning */
+    }
+
+    /* Hover effect on buttons */
+    .button-container button:hover {
+      opacity: 0.8;
+    }
+
+    /* 
+      Tooltip styling using a data-tooltip attribute.
+      When the user hovers over a button that has data-tooltip, 
+      we create a little box with the text stored in that attribute.
+    */
+    .button-container button[data-tooltip]:hover::after {
+      content: attr(data-tooltip); /* get text from data-tooltip attribute */
+      position: absolute;
+      top: 50%;
+      left: 110%;      /* appear to the right of the button */
+      transform: translateY(-50%);
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 4px;
+      width: 220px;
+      pointer-events: none;
+      white-space: normal;  /* allow wrapping if tooltip is long */
+      box-shadow: 0 0 6px #000;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+<div class="main-container">
+  <!-- The canvas for the Game of Life -->
+  <canvas id="gameOfLife" width="500" height="500"></canvas>
+
+  <!-- Buttons on the right side -->
+  <div class="button-container">
+    <!-- We use the 'data-tooltip' attribute to show a custom tooltip on hover -->
+    <button
+      data-tooltip="Conway's Life (B3/S23): The original Game of Life. A cell is born with 3 neighbors; survives with 2 or 3 neighbors."
+      onclick="setRule('conway')">
+      Conway's Life
+    </button>
+
+    <button
+      data-tooltip="HighLife (B36/S23): Like Conway's, but also births with 6 neighbors. Famous for 'replicators.'"
+      onclick="setRule('highlife')">
+      HighLife
+    </button>
+
+    <button
+      data-tooltip="Seeds (B2/S): Cells never survive to the next generation; only birth with exactly 2 neighbors."
+      onclick="setRule('seeds')">
+      Seeds
+    </button>
+
+    <button
+      data-tooltip="Life Without Death (B3/S012345678): Once born, a cell never dies. The grid often fills over time."
+      onclick="setRule('lifeWithoutDeath')">
+      Life w/o Death
+    </button>
+
+    <button
+      data-tooltip="2×2 (B36/S125): Patterns form blocks or '2×2' shapes, with some interesting oscillators/spaceships."
+      onclick="setRule('twoXtwo')">
+      2×2
+    </button>
+  </div>
+</div>
+
+<script>
+  // --------------------------------------------------------------------
+  // 1. RULES DEFINITION
+  // --------------------------------------------------------------------
+  // Each rule is defined by which neighbor counts cause birth (B)
+  // and which neighbor counts cause survival (S).
+  const rules = {
+    conway: {
+      name: "Conway's Life (B3/S23)",
+      birth: [3],
+      survive: [2, 3],
+    },
+    highlife: {
+      name: "HighLife (B36/S23)",
+      birth: [3, 6],
+      survive: [2, 3],
+    },
+    seeds: {
+      name: "Seeds (B2/S)",
+      birth: [2],
+      survive: [],
+    },
+    lifeWithoutDeath: {
+      name: "Life Without Death (B3/S012345678)",
+      birth: [3],
+      survive: [0,1,2,3,4,5,6,7,8],
+    },
+    twoXtwo: {
+      name: "2×2 (B36/S125)",
+      birth: [3, 6],
+      survive: [1,2,5],
+    },
+  };
+
+  // The current rule in use
+  let currentRule = rules.conway;
+
+  // --------------------------------------------------------------------
+  // 2. GRID AND CANVAS CONFIGURATION
+  // --------------------------------------------------------------------
+  const cols = 100;    // Number of cells horizontally
+  const rows = 100;    // Number of cells vertically
+  const cellSize = 5;  // Pixel width/height of each cell
+
+  // Create the grid (2D array)
+  let grid = createGrid(rows, cols);
+
+  // Set up canvas and rendering context
+  const canvas = document.getElementById('gameOfLife');
+  const ctx = canvas.getContext('2d');
+
+  // --------------------------------------------------------------------
+  // 3. INITIALIZE AND START THE SIMULATION
+  // --------------------------------------------------------------------
+  // Randomize the grid initially
+  randomizeGrid(grid);
+
+  // Start the simulation loop (update 10 times per second)
+  setInterval(() => {
+    drawGrid(grid, ctx);
+    grid = nextGeneration(grid);
+  }, 100);
+
+  // --------------------------------------------------------------------
+  // 4. BUTTON HANDLER TO SET NEW RULE AND RESTART
+  // --------------------------------------------------------------------
+  function setRule(ruleKey) {
+    // Switch to the new rule
+    currentRule = rules[ruleKey];
+    console.log("Switched to rule:", currentRule.name);
+
+    // Recreate and randomize the grid for a fresh start
+    grid = createGrid(rows, cols);
+    randomizeGrid(grid);
+  }
+
+  // --------------------------------------------------------------------
+  // 5. HELPER FUNCTIONS
+  // --------------------------------------------------------------------
+  
+  // Create an empty 2D array filled with 0
+  function createGrid(rows, cols) {
+    let arr = new Array(rows);
+    for (let i = 0; i < rows; i++) {
+      arr[i] = new Array(cols).fill(0);
+    }
+    return arr;
+  }
+
+  // Fill the grid randomly with 0 or 1
+  function randomizeGrid(grid) {
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        // ~30% chance a cell starts alive
+        grid[r][c] = Math.random() < 0.3 ? 1 : 0;
+      }
+    }
+  }
+
+  // Count the number of live neighbors for a cell
+  function countNeighbors(grid, row, col) {
+    let sum = 0;
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        // Skip the cell itself
+        if (dr === 0 && dc === 0) continue;
+        let rr = row + dr;
+        let cc = col + dc;
+        // Check boundaries
+        if (rr >= 0 && rr < rows && cc >= 0 && cc < cols) {
+          sum += grid[rr][cc];
+        }
+      }
+    }
+    return sum;
+  }
+
+  // Compute the next generation based on the current rule
+  function nextGeneration(currentGrid) {
+    let newGrid = createGrid(rows, cols);
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const state = currentGrid[r][c];
+        const neighbors = countNeighbors(currentGrid, r, c);
+
+        // Birth condition: dead cell -> alive if in birth array
+        if (state === 0 && currentRule.birth.includes(neighbors)) {
+          newGrid[r][c] = 1;
+        }
+        // Survival condition: live cell -> stays alive if in survive array
+        else if (state === 1 && currentRule.survive.includes(neighbors)) {
+          newGrid[r][c] = 1;
+        }
+        // Otherwise, cell is dead
+        else {
+          newGrid[r][c] = 0;
+        }
+      }
+    }
+    return newGrid;
+  }
+
+  // Draw the grid onto the canvas
+  function drawGrid(grid, ctx) {
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Draw alive cells
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (grid[r][c] === 1) {
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+  }
+</script>
+</body>
+</html>
+
