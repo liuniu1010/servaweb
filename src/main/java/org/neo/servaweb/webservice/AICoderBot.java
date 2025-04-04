@@ -113,7 +113,7 @@ public class AICoderBot extends AbsAIChat {
 	}
 	catch(Throwable th) {
 	    logger.error(th.getMessage(), th);
-	    throw new Error(th.getMessage(), th);
+	    throw th;
 	}
         finally {
             StreamCache.getInstance().remove(alignedSession); // this will close the associated outputstream
@@ -277,7 +277,7 @@ public class AICoderBot extends AbsAIChat {
 	}
 	catch(Throwable th) {
 	    logger.error(th.getMessage(), th);
-	    throw new Error(th.getMessage(), th);
+	    throw th;
 	}
     }
 
@@ -490,7 +490,7 @@ public class AICoderBot extends AbsAIChat {
 	    }
 	    catch(Throwable th) {
 	        logger.error(th.getMessage(), th);
-	        throw new Error(th.getMessage(), th);
+	        throw th;
 	    }
         }
     }
