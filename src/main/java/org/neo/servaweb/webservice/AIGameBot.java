@@ -44,6 +44,9 @@ import org.neo.servaaiagent.impl.AccessAgentImpl;
 
 @Path("/aigamebot")
 public class AIGameBot extends AbsAIChat {
+    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AIGameBot.class);
+    final static String HOOK = "aigamebot";
+
     @Override
     protected ChatForUIIFC getChatForUIInstance() {
         return GameBotInMemoryForUIImpl.getInstance();
@@ -51,7 +54,7 @@ public class AIGameBot extends AbsAIChat {
 
     @Override
     protected String getHook() {
-        return "aigamebot";
+        return HOOK;
     }
 
     @POST
@@ -202,13 +205,6 @@ public class AIGameBot extends AbsAIChat {
         return null;
     }
 
-/*
-    private void notifyHistory(WSModel.AIChatParams params, OutputStream outputStream) throws Exception {
-        WSModel.AIChatResponse chatResponse = super.refresh(params);
-        flushInformation(chatResponse.getMessage(), outputStream);
-    }
-*/
-
     private static void flushInformation(String information, OutputStream outputStream) throws Exception {
         if(information == null || information.trim().equals("")) {
             return;
@@ -336,7 +332,6 @@ public class AIGameBot extends AbsAIChat {
     public static class StreamCallbackImpl implements NotifyCallbackIFC {
         private WSModel.AIChatParams params;
         private OutputStream  outputStream;
-        private String historyContent;
         public StreamCallbackImpl(WSModel.AIChatParams inputParams, OutputStream inputOutputStream) {
             params = inputParams;
             outputStream = inputOutputStream;
@@ -348,10 +343,11 @@ public class AIGameBot extends AbsAIChat {
         }
 
         public void notifyHistory() throws Exception {
-            if(historyContent == null) {
-                return; 
+            try {
+                innerNotifyHistory();
             }
-            flushInformation(historyContent, outputStream);
+            catch(Exception ex) {
+            }
         }
 
         public void closeOutputStream() {
@@ -369,10 +365,23 @@ public class AIGameBot extends AbsAIChat {
         public void notify(String information) {
             try {
                 flushInformation(information, outputStream);
-                historyContent = information;
             }
             catch(Exception ex) {
                 logger.error(ex.getMessage(), ex);
+            }
+        }
+
+        private String alignSession(String loginSession) {
+            return HOOK + loginSession;
+        }
+
+        private void innerNotifyHistory() throws Exception {
+            String loginSession = params.getSession();
+            String alignedSession = alignSession(loginSession);
+            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
+            AIModel.CodeFeedback codeFeedback = storageIFC.peekCodeFeedback(alignedSession);
+            if(codeFeedback != null) {
+                flushInformation(codeFeedback.toString(), outputStream);
             }
         }
     }
