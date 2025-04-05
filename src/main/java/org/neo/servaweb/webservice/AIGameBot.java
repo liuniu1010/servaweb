@@ -189,6 +189,31 @@ public class AIGameBot extends AbsAIChat {
     }
 
     @POST
+    @Path("/previousstep")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public WSModel.AIChatResponse previousstep(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        try {
+            String loginSession = params.getSession();
+            checkAccessibilityOnAction(loginSession);
+            String alignedSession = super.alignSession(loginSession);
+            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
+            storageIFC.popCodeFeedback(alignedSession);
+            AIModel.CodeFeedback codeFeedback = storageIFC.peekCodeFeedback(alignedSession);
+            if(codeFeedback != null) {
+                codeFeedback.setIndex(AIModel.CodeFeedback.INDEX_CODECONTENT);
+            }
+
+            return super.refresh(params);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null;
+    }
+
+    @POST
     @Path("/refresh")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
