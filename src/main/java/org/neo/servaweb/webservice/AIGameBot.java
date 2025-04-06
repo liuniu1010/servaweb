@@ -46,10 +46,19 @@ import org.neo.servaaiagent.impl.AccessAgentImpl;
 public class AIGameBot extends AbsAIChat {
     final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AIGameBot.class);
     final static String HOOK = "aigamebot";
+    private String audiosFolder = "audios";
+
+    protected String getOnlineFileAbsolutePath() {
+        return super.getAbsoluteResourcePath() + File.separator + audiosFolder;
+    }
+
+    protected String getRelevantVisitPath() {
+        return audiosFolder;
+    }
 
     @Override
     protected ChatForUIIFC getChatForUIInstance() {
-        return GameBotInMemoryForUIImpl.getInstance();
+        return GameBotInMemoryForUIImpl.getInstance(getOnlineFileAbsolutePath(), getRelevantVisitPath());
     }
 
     @Override
@@ -150,6 +159,14 @@ public class AIGameBot extends AbsAIChat {
             standardHandleException(ex, response);
         }
         return null;
+    }
+
+    @POST
+    @Path("/sendaudio")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public WSModel.AIChatResponse sendAudio(WSModel.AIChatParams params) {
+        return super.sendAudio(params);
     }
 
     @POST

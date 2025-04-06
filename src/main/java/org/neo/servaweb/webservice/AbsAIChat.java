@@ -66,6 +66,30 @@ abstract public class AbsAIChat {
         }
     }
 
+    public WSModel.AIChatResponse sendAudio(WSModel.AIChatParams params) {
+        try {
+            String session = params.getSession();
+            String alignedSession = alignSession(session);
+            String userInput = params.getUserInput();
+            String fileAsBase64 = params.getFileAsBase64();
+
+            List<String> attachFiles = null;
+            if(fileAsBase64 != null 
+                && !fileAsBase64.trim().equals("")) {
+                attachFiles = new ArrayList<String>();
+                attachFiles.add(fileAsBase64.trim());
+            }
+            String renderedResponse = getChatForUIInstance().sendAudio(alignedSession, userInput, attachFiles);
+
+            WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
+            return response;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+            return new WSModel.AIChatResponse(false, ex.getMessage());
+        }
+    }
+
     public WSModel.AIChatResponse streamsend(WSModel.AIChatParams params, NotifyCallbackIFC notifyCallback) {
         try {
             String session = params.getSession();
