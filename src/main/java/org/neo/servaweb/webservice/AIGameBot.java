@@ -1,12 +1,9 @@
 package org.neo.servaweb.webservice;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Date;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.OutputStream;
 
 import javax.ws.rs.POST;
@@ -21,15 +18,12 @@ import javax.servlet.ServletOutputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
-import org.neo.servaframe.interfaces.DBAutoCommitSaveTaskIFC;
-import org.neo.servaframe.interfaces.DBQueryTaskIFC;
 import org.neo.servaframe.interfaces.DBSaveTaskIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
 import org.neo.servaframe.ServiceFactory;
 
 import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.StorageIFC;
-import org.neo.servaaibase.impl.StorageInDBImpl;
 import org.neo.servaaibase.impl.StorageInMemoryImpl;
 import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
@@ -159,14 +153,6 @@ public class AIGameBot extends AbsAIChat {
             standardHandleException(ex, response);
         }
         return null;
-    }
-
-    @POST
-    @Path("/sendaudio")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse sendAudio(WSModel.AIChatParams params) {
-        return super.sendAudio(params);
     }
 
     @POST

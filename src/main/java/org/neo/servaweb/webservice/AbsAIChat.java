@@ -12,8 +12,6 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.ArrayList;
 
-import org.apache.log4j.Logger;
-
 import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaibase.util.CommonUtil;
 
@@ -21,7 +19,7 @@ import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 
 abstract public class AbsAIChat {
-    final static Logger logger = Logger.getLogger(AbsAIChat.class);
+    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AbsAIChat.class);
     abstract protected ChatForUIIFC getChatForUIInstance();
     abstract protected String getHook();
 
