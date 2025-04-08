@@ -345,6 +345,9 @@
                     if (xhr.status === 401) {
                         document.getElementById("loginDialog").style.display = "block";
                     }
+                    else {
+                        alertError(xhr, status, error);
+                    }
                     document.getElementById('RichChatRecord').innerHTML = error;
                     enableSend();
                 }
@@ -369,6 +372,9 @@
                     if (xhr.status === 401) {
                         document.getElementById("loginDialog").style.display = "block";
                     }
+                    else {
+                        alertError(xhr, status, error);
+                    }
                     document.getElementById('RichChatRecord').innerHTML = error;
                     enableSend();
                 }
@@ -391,6 +397,9 @@
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {
                         document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
                     }
                     document.getElementById('RichChatRecord').innerHTML = error;
                     enableSend();
@@ -504,6 +513,9 @@
                     if (xhr.status === 401) {
                         document.getElementById("loginDialog").style.display = "block";
                     }
+                    else {
+                        alertError(xhr, status, error);
+                    }
                     document.getElementById("RichChatRecord").innerHTML = error;
                     document.getElementById("UserInput").value = "";
                     enableSend();
@@ -544,7 +556,6 @@
                     }
                     else {
                         alertError(xhr, status, error);
-                        streamrefresh();
                     }
                     document.getElementById("RichChatRecord").innerHTML = error;
                     document.getElementById("UserInput").value = "";
@@ -582,7 +593,6 @@
                     }
                     else {
                         alertError(xhr, status, error);
-                        streamrefresh();
                     }
                     document.getElementById("RichChatRecord").innerHTML = error;
                     document.getElementById("UserInput").value = "";
@@ -809,6 +819,12 @@
                     enableSendWithInput(input);
                 },
                 error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
+                    }
                     document.getElementById("UserInput").value = "";
                     enableSend();
                 },

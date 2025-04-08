@@ -43,7 +43,7 @@ public class AIAdminLogin {
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         try {
-            checkAccessibilityOnSendPassword(username, sourceIP);
+            checkAccessibilityOnAction(username, sourceIP);
             accountAgent.sendPassword(username, sourceIP);
             WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, "The new password has been sent to your email address");
             return chatResponse;
@@ -68,7 +68,7 @@ public class AIAdminLogin {
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         try {
-            checkAccessibilityOnLogin(username, sourceIP);
+            checkAccessibilityOnAction(username, sourceIP);
             String loginSession = accountAgent.login(username, password, sourceIP);
             WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, loginSession);
             return chatResponse;
@@ -141,13 +141,13 @@ public class AIAdminLogin {
         }
     }
 
-    private void checkAccessibilityOnSendPassword(String username, String sourceIP) {
+    private void checkAccessibilityOnAction(String username, String sourceIP) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeQueryTask(new DBQueryTaskIFC() {
             @Override
             public Object query(DBConnectionIFC dbConnection) {
                 try {
-                    innerCheckAccessibilityOnSendPassword(dbConnection, username, sourceIP);
+                    innerCheckAccessibilityOnAction(dbConnection, username, sourceIP);
                 }
                 catch(NeoAIException nex) {
                     throw nex;
@@ -160,36 +160,8 @@ public class AIAdminLogin {
         }); 
     }
 
-    private void innerCheckAccessibilityOnSendPassword(DBConnectionIFC dbConnection, String username, String sourceIP) {
+    private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String username, String sourceIP) {
         AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
-        if(accessAgent.verifyAdminByUsername(dbConnection, username)) {
-            return;
-        }
-    }
-
-    private void checkAccessibilityOnLogin(String username, String sourceIP) {
-        DBServiceIFC dbService = ServiceFactory.getDBService();
-        dbService.executeQueryTask(new DBQueryTaskIFC() {
-            @Override
-            public Object query(DBConnectionIFC dbConnection) {
-                try {
-                    innerCheckAccessibilityOnLogin(dbConnection, username, sourceIP);
-                }
-                catch(NeoAIException nex) {
-                    throw nex;
-                }
-                catch(Exception ex) {
-                    throw new NeoAIException(ex.getMessage(), ex);
-                }
-                return null;
-            }
-        }); 
-    }
-
-    private void innerCheckAccessibilityOnLogin(DBConnectionIFC dbConnection, String username, String sourceIP) {
-        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
-        if(accessAgent.verifyAdminByUsername(dbConnection, username)) {
-            return;
-        }
+        accessAgent.verifyAdminByUsername(dbConnection, username);
     }
 }

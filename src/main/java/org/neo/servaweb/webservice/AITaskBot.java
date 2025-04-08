@@ -73,7 +73,7 @@ public class AITaskBot extends AbsAIChat {
         String requirement = params.getUserInput();
         logger.info("loginSession: " + loginSession + " try to streamsend with task requirement: " + requirement);
         try {
-            checkAccessibilityOnStreamsend(loginSession);
+            checkAccessibilityOnAction(loginSession);
 
             outputStream = response.getOutputStream();
             notifyHistory(alignedSession, outputStream);
@@ -97,6 +97,77 @@ public class AITaskBot extends AbsAIChat {
         finally {
             StreamCache.getInstance().remove(alignedSession); // this will close the associated outputstream
         }
+    }
+
+
+    @POST
+    @Path("/echo")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public WSModel.AIChatResponse echo(WSModel.AIChatParams params) {
+        String loginSession = params.getSession();
+        checkAccessibilityOnAction(loginSession);
+        return super.echo(params);
+    }
+
+    @POST
+    @Path("/newchat")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public WSModel.AIChatResponse newchat(WSModel.AIChatParams params) {
+        String loginSession = params.getSession();
+        checkAccessibilityOnAction(loginSession);
+        return super.newchat(params);
+    }
+
+    @POST
+    @Path("/streamrefresh")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    public void streamrefresh(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        response.setContentType("text/event-stream");
+        response.setCharacterEncoding("UTF-8");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setHeader("Connection", "keep-alive");
+
+        String loginSession = params.getSession();
+        String alignedSession = super.alignSession(loginSession);
+        logger.info("loginSession: " + loginSession + " try to streamrefresh");
+        try {
+            checkAccessibilityOnAction(loginSession);
+
+            OutputStream outputStream = response.getOutputStream();
+            notifyHistory(alignedSession, outputStream);
+            StreamCallbackImpl streamCallback = StreamCache.getInstance().get(alignedSession);
+            if(streamCallback == null) {
+                return;
+            }
+            streamCallback.changeOutputStream(outputStream); // this output stream would be closed when streamCallback are finished
+
+            // wait 30 minutes, every 1 minute, check if the project was finished
+            for(int i = 0;i < 30;i++) {
+                Thread.sleep(60*1000);
+                streamCallback = StreamCache.getInstance().get(alignedSession);
+                if(streamCallback == null) {
+                    // finished, no need to wait, return directly
+                    return;
+                }
+            }
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+    }
+
+    @POST
+    @Path("/refresh")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public WSModel.AIChatResponse refresh(WSModel.AIChatParams params) {
+        String loginSession = params.getSession();
+        checkAccessibilityOnAction(loginSession);
+        return super.refresh(params);
     }
 
     private void standardHandleException(Exception ex, HttpServletResponse response) {
@@ -129,13 +200,13 @@ public class AITaskBot extends AbsAIChat {
         }
     }
 
-    private void checkAccessibilityOnStreamsend(String loginSession) {
+    private void checkAccessibilityOnAction(String loginSession) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeSaveTask(new DBSaveTaskIFC() {
             @Override
             public Object save(DBConnectionIFC dbConnection) {
                 try {
-                    innerCheckAccessibilityOnStreamsend(dbConnection, loginSession);
+                    innerCheckAccessibilityOnAction(dbConnection, loginSession);
                 }
                 catch(NeoAIException nex) {
                     throw nex;
@@ -148,112 +219,14 @@ public class AITaskBot extends AbsAIChat {
         }); 
     }
 
-    private void innerCheckAccessibilityOnStreamsend(DBConnectionIFC dbConnection, String loginSession) {
+    private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String loginSession) {
         AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
-        if(accessAgent.verifyAdminByLoginSession(dbConnection, loginSession)) {
-            return;
-        }
-
-        accessAgent.verifyMaintenance(dbConnection);
+        accessAgent.verifyAdminByLoginSession(dbConnection, loginSession);
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         accountAgent.checkSessionValid(dbConnection, loginSession);
         accountAgent.updateSession(dbConnection, loginSession);
         accountAgent.checkCreditsWithSession(dbConnection, loginSession);
-    }
-
-    private void checkAccessibilityOnStreamrefresh(String loginSession) {
-        DBServiceIFC dbService = ServiceFactory.getDBService();
-        dbService.executeSaveTask(new DBSaveTaskIFC() {
-            @Override
-            public Object save(DBConnectionIFC dbConnection) {
-                try {
-                    innerCheckAccessibilityOnStreamrefresh(dbConnection, loginSession);
-                }
-                catch(NeoAIException nex) {
-                    throw nex;
-                }
-                catch(Exception ex) {
-                    throw new NeoAIException(ex.getMessage(), ex);
-                }
-                return null;
-            }
-        }); 
-    }
-
-    private void innerCheckAccessibilityOnStreamrefresh(DBConnectionIFC dbConnection, String loginSession) {
-        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
-        if(accessAgent.verifyAdminByLoginSession(dbConnection, loginSession)) {
-            return;
-        }
-
-        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        accountAgent.checkSessionValid(dbConnection, loginSession);
-        accountAgent.updateSession(dbConnection, loginSession);
-    }
-
-    @POST
-    @Path("/echo")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse echo(WSModel.AIChatParams params) {
-        return super.echo(params);
-    }
-
-    @POST
-    @Path("/newchat")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse newchat(WSModel.AIChatParams params) {
-        return super.newchat(params);
-    }
-
-    @POST
-    @Path("/streamrefresh")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.SERVER_SENT_EVENTS)
-    public void streamrefresh(@Context HttpServletResponse response, WSModel.AIChatParams params) {
-        response.setContentType("text/event-stream");
-        response.setCharacterEncoding("UTF-8");
-        response.setHeader("Cache-Control", "no-cache");
-        response.setHeader("Connection", "keep-alive");
-
-        String loginSession = params.getSession();
-        String alignedSession = super.alignSession(loginSession);
-        logger.info("loginSession: " + loginSession + " try to streamrefresh");
-        try {
-            checkAccessibilityOnStreamrefresh(loginSession);
-
-            OutputStream outputStream = response.getOutputStream();
-            notifyHistory(alignedSession, outputStream);
-            StreamCallbackImpl streamCallback = StreamCache.getInstance().get(alignedSession);
-            if(streamCallback == null) {
-                return;
-            }
-            streamCallback.changeOutputStream(outputStream); // this output stream would be closed when streamCallback are finished
-
-            // wait 30 minutes, every 1 minute, check if the project was finished
-            for(int i = 0;i < 30;i++) {
-                Thread.sleep(60*1000);
-                streamCallback = StreamCache.getInstance().get(alignedSession);
-                if(streamCallback == null) {
-                    // finished, no need to wait, return directly
-                    return;
-                }
-            }
-        }
-        catch(Exception ex) {
-            logger.error(ex.getMessage());
-            standardHandleException(ex, response);
-        }
-    }
-
-    @POST
-    @Path("/refresh")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse refresh(WSModel.AIChatParams params) {
-        return super.refresh(params);
     }
 
     private void notifyHistory(String alignedSession, OutputStream inputOutputStream) {

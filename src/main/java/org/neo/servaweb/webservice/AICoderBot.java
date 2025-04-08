@@ -84,7 +84,7 @@ public class AICoderBot extends AbsAIChat {
         String requirement = params.getUserInput();
         logger.info("loginSession: " + loginSession + " try to streamsend with requirement: " + requirement);
         try {
-            checkAccessibilityOnStreamsend(loginSession);
+            checkAccessibilityOnAction(loginSession);
 
             outputStream = response.getOutputStream();
             notifyHistory(alignedSession, outputStream);
@@ -120,108 +120,14 @@ public class AICoderBot extends AbsAIChat {
         }
     }
 
-    private void standardHandleException(Exception ex, HttpServletResponse response) {
-        terminateConnection(decideHttpResponseStatus(ex), ex.getMessage(), response);
-    }
-
-    private int decideHttpResponseStatus(Exception ex) {
-        if(ex instanceof NeoAIException) {
-            NeoAIException nex = (NeoAIException)ex;
-            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID
-                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL) {
-                return HttpServletResponse.SC_UNAUTHORIZED;
-            }
-            else if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_NOCREDITS_LEFT) {
-                return HttpServletResponse.SC_PAYMENT_REQUIRED;
-            }
-        }
-        return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-    }
-
-    private void terminateConnection(int httpStatus, String message, HttpServletResponse response) {
-        try {
-            response.setStatus(httpStatus);
-            response.getWriter().write(message);
-            response.flushBuffer();
-            return;
-        }
-        catch(Exception ex) {
-            logger.error(ex.getMessage(), ex);
-        }
-    }
-
-    private void checkAccessibilityOnStreamsend(String loginSession) {
-        DBServiceIFC dbService = ServiceFactory.getDBService();
-        dbService.executeSaveTask(new DBSaveTaskIFC() {
-            @Override
-            public Object save(DBConnectionIFC dbConnection) {
-                try {
-                    innerCheckAccessibilityOnStreamsend(dbConnection, loginSession);
-                }
-                catch(NeoAIException nex) {
-                    throw nex;
-                }
-                catch(Exception ex) {
-                    throw new NeoAIException(ex.getMessage(), ex);
-                }
-                return null;
-            }
-        }); 
-    }
-
-    private void innerCheckAccessibilityOnStreamsend(DBConnectionIFC dbConnection, String loginSession) {
-        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
-        accessAgent.verifyMaintenance(dbConnection);
-
-        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        accountAgent.checkSessionValid(dbConnection, loginSession);
-        accountAgent.updateSession(dbConnection, loginSession);
-        accountAgent.checkCreditsWithSession(dbConnection, loginSession);
-    }
-
-    private void checkAccessibilityOnStreamrefresh(String loginSession) {
-        DBServiceIFC dbService = ServiceFactory.getDBService();
-        dbService.executeSaveTask(new DBSaveTaskIFC() {
-            @Override
-            public Object save(DBConnectionIFC dbConnection) {
-                try {
-                    innerCheckAccessibilityOnStreamrefresh(dbConnection, loginSession);
-                }
-                catch(NeoAIException nex) {
-                    throw nex;
-                }
-                catch(Exception ex) {
-                    throw new NeoAIException(ex.getMessage(), ex);
-                }
-                return null;
-            }
-        }); 
-    }
-
-    private void innerCheckAccessibilityOnStreamrefresh(DBConnectionIFC dbConnection, String loginSession) {
-        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        accountAgent.checkSessionValid(dbConnection, loginSession);
-        accountAgent.updateSession(dbConnection, loginSession);
-    }
-
-    private void virtualStreamsend(NotifyCallbackIFC notifyCallback) {
-        for(int i = 0;i < 50;i++) {
-            String information = "Begin to process step " + i + "...";
-            notifyCallback.notify(information);
-            try {
-                Thread.sleep(1000);
-            }
-            catch(Exception ex) {
-            }
-        }
-        notifyCallback.notify("Process completed!");
-    }
 
     @POST
     @Path("/echo")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse echo(WSModel.AIChatParams params) {
+        String loginSession = params.getSession();
+        checkAccessibilityOnAction(loginSession);
         return super.echo(params);
     }
 
@@ -230,6 +136,8 @@ public class AICoderBot extends AbsAIChat {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse newchat(WSModel.AIChatParams params) {
+        String loginSession = params.getSession();
+        checkAccessibilityOnAction(loginSession);
         return super.newchat(params);
     }
 
@@ -247,7 +155,7 @@ public class AICoderBot extends AbsAIChat {
         String alignedSession = super.alignSession(loginSession);
         logger.info("loginSession: " + loginSession + " try to streamrefresh");
         try {
-            checkAccessibilityOnStreamrefresh(loginSession);
+            checkAccessibilityOnAction(loginSession);
 
             OutputStream outputStream = response.getOutputStream();
             notifyHistory(alignedSession, outputStream);
@@ -286,9 +194,82 @@ public class AICoderBot extends AbsAIChat {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse refresh(WSModel.AIChatParams params) {
+        String loginSession = params.getSession();
+        checkAccessibilityOnAction(loginSession);
         return super.refresh(params);
     }
 
+    private void standardHandleException(Exception ex, HttpServletResponse response) {
+        terminateConnection(decideHttpResponseStatus(ex), ex.getMessage(), response);
+    }
+
+    private int decideHttpResponseStatus(Exception ex) {
+        if(ex instanceof NeoAIException) {
+            NeoAIException nex = (NeoAIException)ex;
+            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID
+                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL) {
+                return HttpServletResponse.SC_UNAUTHORIZED;
+            }
+            else if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_NOCREDITS_LEFT) {
+                return HttpServletResponse.SC_PAYMENT_REQUIRED;
+            }
+        }
+        return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+    }
+
+    private void terminateConnection(int httpStatus, String message, HttpServletResponse response) {
+        try {
+            response.setStatus(httpStatus);
+            response.getWriter().write(message);
+            response.flushBuffer();
+            return;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+    }
+
+    private void checkAccessibilityOnAction(String loginSession) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                try {
+                    innerCheckAccessibilityOnAction(dbConnection, loginSession);
+                }
+                catch(NeoAIException nex) {
+                    throw nex;
+                }
+                catch(Exception ex) {
+                    throw new NeoAIException(ex.getMessage(), ex);
+                }
+                return null;
+            }
+        }); 
+    }
+
+    private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String loginSession) {
+        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
+        accessAgent.verifyMaintenance(dbConnection);
+
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        accountAgent.checkSessionValid(dbConnection, loginSession);
+        accountAgent.updateSession(dbConnection, loginSession);
+        accountAgent.checkCreditsWithSession(dbConnection, loginSession);
+    }
+
+    private void virtualStreamsend(NotifyCallbackIFC notifyCallback) {
+        for(int i = 0;i < 50;i++) {
+            String information = "Begin to process step " + i + "...";
+            notifyCallback.notify(information);
+            try {
+                Thread.sleep(1000);
+            }
+            catch(Exception ex) {
+            }
+        }
+        notifyCallback.notify("Process completed!");
+    }
     private void notifyHistory(String alignedSession, OutputStream inputOutputStream) {
         try {
             // innerNotifyHistoryFromDB(alignedSession, inputOutputStream);

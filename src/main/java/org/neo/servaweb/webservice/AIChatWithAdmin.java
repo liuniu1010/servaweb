@@ -132,9 +132,7 @@ public class AIChatWithAdmin extends AbsAIChat {
 
     private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String loginSession) {
         AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
-        if(accessAgent.verifyAdminByLoginSession(dbConnection, loginSession)) {
-            return;
-        }
+        accessAgent.verifyAdminByLoginSession(dbConnection, loginSession);
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         accountAgent.checkSessionValid(dbConnection, loginSession);
