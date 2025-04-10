@@ -12,11 +12,21 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.neo.servaframe.interfaces.DBConnectionIFC;
+import org.neo.servaframe.interfaces.DBQueryTaskIFC;
+import org.neo.servaframe.interfaces.DBSaveTaskIFC;
+import org.neo.servaframe.interfaces.DBServiceIFC;
+import org.neo.servaframe.ServiceFactory;
+
 import org.neo.servaaibase.NeoAIException;
 import org.neo.servaaibase.util.CommonUtil;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
+import org.neo.servaaiagent.ifc.AccountAgentIFC;
+import org.neo.servaaiagent.ifc.AccessAgentIFC;
+import org.neo.servaaiagent.impl.AccountAgentImpl;
+import org.neo.servaaiagent.impl.AccessAgentImpl;
 
 abstract public class AbsAIChat {
     final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AbsAIChat.class);
@@ -179,5 +189,65 @@ abstract public class AbsAIChat {
         // Validate the file size
         long maxSize = CommonUtil.getConfigValueAsInt("maxFileSizeForUpload") * 1024 * 1024;
         return decodedSize <= maxSize;
+    }
+
+    protected void checkAccessibilityOnClientAction(String loginSession) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                try {
+                    innerCheckAccessibilityOnClientAction(dbConnection, loginSession);
+                }
+                catch(NeoAIException nex) {
+                    throw nex;
+                }
+                catch(Exception ex) {
+                    throw new NeoAIException(ex.getMessage(), ex);
+                }
+                return null;
+            }
+        });
+    }
+
+    private void updateSessionAndEnsureCredits(DBConnectionIFC dbConnection, String loginSession) {
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        accountAgent.checkSessionValid(dbConnection, loginSession);
+        accountAgent.updateSession(dbConnection, loginSession);
+        accountAgent.checkCreditsWithSession(dbConnection, loginSession);
+    }
+
+    private void innerCheckAccessibilityOnClientAction(DBConnectionIFC dbConnection, String loginSession) {
+        updateSessionAndEnsureCredits(dbConnection, loginSession);
+        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
+        if(accessAgent.verifyAdminByLoginSession(dbConnection, loginSession)) {
+            return;
+        }
+        accessAgent.verifyMaintenance(dbConnection);
+    }
+
+    protected void checkAccessibilityOnAdminAction(String loginSession) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                try {
+                    innerCheckAccessibilityOnAdminAction(dbConnection, loginSession);
+                }
+                catch(NeoAIException nex) {
+                    throw nex;
+                }
+                catch(Exception ex) {
+                    throw new NeoAIException(ex.getMessage(), ex);
+                }
+                return null;
+            }
+        });
+    }
+
+    private void innerCheckAccessibilityOnAdminAction(DBConnectionIFC dbConnection, String loginSession) {
+        updateSessionAndEnsureCredits(dbConnection, loginSession);
+        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
+        accessAgent.ensureAdminByLoginSession(dbConnection, loginSession);
     }
 }

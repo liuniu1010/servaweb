@@ -162,6 +162,9 @@ public class AIClientLogin {
 
     private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String username, String sourceIP) {
         AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
+        if(accessAgent.verifyAdminByUsername(dbConnection, username)) {
+            return;
+        }
         if(accessAgent.verifyMaintenance(dbConnection)) {
             return;
         }

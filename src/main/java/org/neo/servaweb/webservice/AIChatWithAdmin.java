@@ -50,7 +50,7 @@ public class AIChatWithAdmin extends AbsAIChat {
     public WSModel.AIChatResponse send(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnAdminAction(loginSession);
             return super.send(params);
         }
         catch(Exception ex) {
@@ -67,7 +67,7 @@ public class AIChatWithAdmin extends AbsAIChat {
     public WSModel.AIChatResponse echo(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnAdminAction(loginSession);
             return super.echo(params);
         }
         catch(Exception ex) {
@@ -84,7 +84,7 @@ public class AIChatWithAdmin extends AbsAIChat {
     public WSModel.AIChatResponse newchat(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnAdminAction(loginSession);
             return super.newchat(params);
         }
         catch(Exception ex) {
@@ -101,7 +101,7 @@ public class AIChatWithAdmin extends AbsAIChat {
     public WSModel.AIChatResponse refresh(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnAdminAction(loginSession);
             return super.refresh(params);
         }
         catch(Exception ex) {
@@ -109,34 +109,6 @@ public class AIChatWithAdmin extends AbsAIChat {
             standardHandleException(ex, response);
         }
         return null;
-    }
-
-    private void checkAccessibilityOnAction(String loginSession) {
-        DBServiceIFC dbService = ServiceFactory.getDBService();
-        dbService.executeSaveTask(new DBSaveTaskIFC() {
-            @Override
-            public Object save(DBConnectionIFC dbConnection) {
-                try {
-                    innerCheckAccessibilityOnAction(dbConnection, loginSession);
-                }
-                catch(NeoAIException nex) {
-                    throw nex;
-                }
-                catch(Exception ex) {
-                    throw new NeoAIException(ex.getMessage(), ex);
-                }
-                return null;
-            }
-        });
-    }
-
-    private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String loginSession) {
-        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
-        accessAgent.verifyAdminByLoginSession(dbConnection, loginSession);
-
-        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        accountAgent.checkSessionValid(dbConnection, loginSession);
-        accountAgent.updateSession(dbConnection, loginSession);
     }
 
     private void standardHandleException(Exception ex, HttpServletResponse response) {

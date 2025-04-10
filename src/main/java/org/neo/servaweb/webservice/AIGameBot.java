@@ -77,7 +77,7 @@ public class AIGameBot extends AbsAIChat {
         String userInput = params.getUserInput();
         logger.info("loginSession: " + loginSession + " try to streamsend with input: " + userInput);
         try {
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnClientAction(loginSession);
             outputStream = response.getOutputStream();
 
             // generate notifycall back and begin code generation 
@@ -110,7 +110,7 @@ public class AIGameBot extends AbsAIChat {
         String alignedSession = super.alignSession(loginSession);
         logger.info("loginSession: " + loginSession + " try to streamrefresh");
         try {
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnClientAction(loginSession);
 
             OutputStream outputStream = response.getOutputStream();
             StreamCallbackImpl streamCallback = StreamCache.getInstance().get(alignedSession);
@@ -143,7 +143,7 @@ public class AIGameBot extends AbsAIChat {
     public WSModel.AIChatResponse send(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnClientAction(loginSession);
             WSModel.AIChatResponse chatResponse = super.send(params);
             consume(loginSession);
             return chatResponse;
@@ -162,7 +162,7 @@ public class AIGameBot extends AbsAIChat {
     public WSModel.AIChatResponse echo(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnClientAction(loginSession);
             return super.echo(params);
         }
         catch(Exception ex) {
@@ -179,7 +179,7 @@ public class AIGameBot extends AbsAIChat {
     public WSModel.AIChatResponse newchat(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnClientAction(loginSession);
             String alignedSession = super.alignSession(loginSession);
             StreamCache.getInstance().remove(alignedSession);
             return super.newchat(params);
@@ -198,7 +198,7 @@ public class AIGameBot extends AbsAIChat {
     public WSModel.AIChatResponse previousstep(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnClientAction(loginSession);
             String alignedSession = super.alignSession(loginSession);
             StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
             storageIFC.popCodeFeedback(alignedSession);
@@ -223,7 +223,7 @@ public class AIGameBot extends AbsAIChat {
     public WSModel.AIChatResponse refresh(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnClientAction(loginSession);
             return super.refresh(params);
         }
         catch(Exception ex) {
@@ -239,35 +239,6 @@ public class AIGameBot extends AbsAIChat {
         }
         outputStream.write(information.getBytes(StandardCharsets.UTF_8));
         outputStream.flush();
-    }
-
-    private void checkAccessibilityOnAction(String loginSession) {
-        DBServiceIFC dbService = ServiceFactory.getDBService();
-        dbService.executeSaveTask(new DBSaveTaskIFC() {
-            @Override
-            public Object save(DBConnectionIFC dbConnection) {
-                try {
-                    innerCheckAccessibilityOnAction(dbConnection, loginSession);
-                }
-                catch(NeoAIException nex) {
-                    throw nex;
-                }
-                catch(Exception ex) {
-                    throw new NeoAIException(ex.getMessage(), ex);
-                }
-                return null;
-            }
-        });
-    }
-
-    private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String loginSession) {
-        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
-        accessAgent.verifyMaintenance(dbConnection);
-
-        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        accountAgent.checkSessionValid(dbConnection, loginSession);
-        accountAgent.updateSession(dbConnection, loginSession);
-        accountAgent.checkCreditsWithSession(dbConnection, loginSession);
     }
 
     private void standardHandleException(Exception ex, HttpServletResponse response) {

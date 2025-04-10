@@ -162,6 +162,6 @@ public class AIAdminLogin {
 
     private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String username, String sourceIP) {
         AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
-        accessAgent.verifyAdminByUsername(dbConnection, username);
+        accessAgent.ensureAdminByUsername(dbConnection, username);
     }
 }

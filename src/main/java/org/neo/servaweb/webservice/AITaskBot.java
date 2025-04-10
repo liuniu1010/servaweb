@@ -73,7 +73,7 @@ public class AITaskBot extends AbsAIChat {
         String requirement = params.getUserInput();
         logger.info("loginSession: " + loginSession + " try to streamsend with task requirement: " + requirement);
         try {
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnAdminAction(loginSession);
 
             outputStream = response.getOutputStream();
             notifyHistory(alignedSession, outputStream);
@@ -106,7 +106,7 @@ public class AITaskBot extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse echo(WSModel.AIChatParams params) {
         String loginSession = params.getSession();
-        checkAccessibilityOnAction(loginSession);
+        checkAccessibilityOnAdminAction(loginSession);
         return super.echo(params);
     }
 
@@ -116,7 +116,7 @@ public class AITaskBot extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse newchat(WSModel.AIChatParams params) {
         String loginSession = params.getSession();
-        checkAccessibilityOnAction(loginSession);
+        checkAccessibilityOnAdminAction(loginSession);
         return super.newchat(params);
     }
 
@@ -134,7 +134,7 @@ public class AITaskBot extends AbsAIChat {
         String alignedSession = super.alignSession(loginSession);
         logger.info("loginSession: " + loginSession + " try to streamrefresh");
         try {
-            checkAccessibilityOnAction(loginSession);
+            checkAccessibilityOnAdminAction(loginSession);
 
             OutputStream outputStream = response.getOutputStream();
             notifyHistory(alignedSession, outputStream);
@@ -166,7 +166,7 @@ public class AITaskBot extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse refresh(WSModel.AIChatParams params) {
         String loginSession = params.getSession();
-        checkAccessibilityOnAction(loginSession);
+        checkAccessibilityOnAdminAction(loginSession);
         return super.refresh(params);
     }
 
@@ -198,35 +198,6 @@ public class AITaskBot extends AbsAIChat {
         catch(Exception ex) {
             logger.error(ex.getMessage(), ex);
         }
-    }
-
-    private void checkAccessibilityOnAction(String loginSession) {
-        DBServiceIFC dbService = ServiceFactory.getDBService();
-        dbService.executeSaveTask(new DBSaveTaskIFC() {
-            @Override
-            public Object save(DBConnectionIFC dbConnection) {
-                try {
-                    innerCheckAccessibilityOnAction(dbConnection, loginSession);
-                }
-                catch(NeoAIException nex) {
-                    throw nex;
-                }
-                catch(Exception ex) {
-                    throw new NeoAIException(ex.getMessage(), ex);
-                }
-                return null;
-            }
-        }); 
-    }
-
-    private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String loginSession) {
-        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
-        accessAgent.verifyAdminByLoginSession(dbConnection, loginSession);
-
-        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        accountAgent.checkSessionValid(dbConnection, loginSession);
-        accountAgent.updateSession(dbConnection, loginSession);
-        accountAgent.checkCreditsWithSession(dbConnection, loginSession);
     }
 
     private void notifyHistory(String alignedSession, OutputStream inputOutputStream) {

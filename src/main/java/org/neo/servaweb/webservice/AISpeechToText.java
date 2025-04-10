@@ -56,36 +56,7 @@ public class AISpeechToText extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse sendAudio(WSModel.AIChatParams params) {
         String loginSession = params.getSession();
-        checkAccessibilityOnAction(loginSession);
+        checkAccessibilityOnClientAction(loginSession);
         return super.sendAudio(params);
-    }
-
-    private void checkAccessibilityOnAction(String loginSession) {
-        DBServiceIFC dbService = ServiceFactory.getDBService();
-        dbService.executeSaveTask(new DBSaveTaskIFC() {
-            @Override
-            public Object save(DBConnectionIFC dbConnection) {
-                try {
-                    innerCheckAccessibilityOnAction(dbConnection, loginSession);
-                }
-                catch(NeoAIException nex) {
-                    throw nex;
-                }
-                catch(Exception ex) {
-                    throw new NeoAIException(ex.getMessage(), ex);
-                }
-                return null;
-            }
-        });
-    }
-
-    private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String loginSession) {
-        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
-        accessAgent.verifyMaintenance(dbConnection);
-
-        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-        accountAgent.checkSessionValid(dbConnection, loginSession);
-        accountAgent.updateSession(dbConnection, loginSession);
-        accountAgent.checkCreditsWithSession(dbConnection, loginSession);
     }
 }
