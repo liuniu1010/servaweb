@@ -110,32 +110,4 @@ public class AIChatWithAdmin extends AbsAIChat {
         }
         return null;
     }
-
-    private void standardHandleException(Exception ex, HttpServletResponse response) {
-        terminateConnection(decideHttpResponseStatus(ex), ex.getMessage(), response);
-    }
-
-    private int decideHttpResponseStatus(Exception ex) {
-        if(ex instanceof NeoAIException) {
-            NeoAIException nex = (NeoAIException)ex;
-            if(nex.getCode() == NeoAIException.NEOAIEXCEPTION_SESSION_INVALID
-                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_LOGIN_FAIL
-                || nex.getCode() == NeoAIException.NEOAIEXCEPTION_ADMIN_NOTIN_WHITELIST) {
-                return HttpServletResponse.SC_UNAUTHORIZED;
-            }
-        }
-        return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-    }
-
-    private void terminateConnection(int httpStatus, String message, HttpServletResponse response) {
-        try {
-            response.setStatus(httpStatus);
-            response.getWriter().write(message);
-            response.flushBuffer();
-            return;
-        }
-        catch(Exception ex) {
-            logger.error(ex.getMessage(), ex);
-        }
-    }
 }
