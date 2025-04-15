@@ -20,11 +20,13 @@ insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'Tim
 insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'DateTimeFormat', 'dd/MM/yyyy HH:mm:ss');
 insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'GoogleApiKey', '<apiKey>');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'AIInstance', 'OpenAIImpl', 'option of GoogleAIImpl/OpenAIImpl');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'codeModel', 'gpt-4o', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'adminModel', 'gpt-4o', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'assistantModel', 'gpt-4o', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'taskModel', 'gpt-4o', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'gameModel', 'gpt-4o', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'codeModel', 'gpt-4.1', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'adminModel', 'gpt-4.1', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'assistantModel', 'gpt-4.1', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'taskModel', 'gpt-4.1', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'gameModel', 'gpt-4.1', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'speechToTextModel', 'whisper-1', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'textToSpeechModel', 'tts-1-hd', '');
 
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'javamavenlinuxSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'javagradlelinuxSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
@@ -53,9 +55,9 @@ insert into configs(id, version, configname, configvalue, comments) values(uuid(
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'consumedCreditsOnSpeechSplit', '10', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'consumedCreditsOnGameBot', '10', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyMaintenance', '0', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyUsername', '0', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyUsername', '1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyIP', '0', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyRegion', '0', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyRegion', '1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyMaxRegisterNumber', '1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyMaxOnlineNumber', '1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'maxRegisterNumber', '1000', '');
