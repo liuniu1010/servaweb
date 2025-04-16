@@ -424,19 +424,25 @@
             return wholeText.slice(0, index) + wholeText.slice(index + partText.length);
         }
 
-        var historyContent;
         function handleOnProcessText(newText) {
             if(isStringEmptyOrWhitespace(newText)) {
-                historyContent = newText;
                 enableSend();
                 return;
             }
 
-            var incrementalText = removePartText(newText, historyContent); 
-            showEmbeddedContent(incrementalText);
-            historyContent = newText;
-            if(isCompleteHTML(incrementalText)) {
-                enableSend();
+            var ENDOFINPUT = "*****ENDOFINPUT*****";
+            var ENDOFCODE = "*****ENDOFCODE*****";
+
+            var separators = [ENDOFINPUT, ENDOFCODE];
+            if(newText.endsWith(ENDOFINPUT)
+               || newText.endsWith(ENDOFCODE)) {
+                var splitText = splitString(newText, separators);
+                var secondLast = splitText[splitText.length - 2];
+                showEmbeddedContent(secondLast);
+
+                if(newText.endsWith(ENDOFCODE)) {
+                    enableSend();
+                }
             }
         }
 
@@ -832,6 +838,16 @@
                 }
             });
             document.getElementById("UserInput").value = "Please wait...";
+        }
+
+        function splitString(input, separators) {
+            // Escape regex-special characters in each separator
+            const escapedSeparators = separators.map(sep => sep.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+
+            // Join separators using regex alternation (|)
+            const regex = new RegExp(escapedSeparators.join('|'), 'g');
+
+            return input.split(regex);
         }
     </script>
 </body>

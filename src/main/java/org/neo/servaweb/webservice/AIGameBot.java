@@ -42,6 +42,9 @@ public class AIGameBot extends AbsAIChat {
     final static String HOOK = "aigamebot";
     private String audiosFolder = "audios";
 
+    private final static String ENDOFINPUT = "*****ENDOFINPUT*****";
+    private final static String ENDOFCODE = "*****ENDOFCODE*****";
+
     protected String getOnlineFileAbsolutePath() {
         return super.getAbsoluteResourcePath() + File.separator + audiosFolder;
     }
@@ -83,7 +86,7 @@ public class AIGameBot extends AbsAIChat {
             // generate notifycall back and begin code generation 
             notifyCallback = new AIGameBot.StreamCallbackImpl(params, outputStream);
             StreamCache.getInstance().put(alignedSession, notifyCallback);
-            notifyCallback.notify(params.getUserInput()); 
+            notifyCallback.notify(params.getUserInput() + ENDOFINPUT); 
             super.streamsend(params, notifyCallback);
             consume(loginSession);
         }
@@ -350,7 +353,12 @@ public class AIGameBot extends AbsAIChat {
             StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
             AIModel.CodeFeedback codeFeedback = storageIFC.peekCodeFeedback(alignedSession);
             if(codeFeedback != null) {
-                flushInformation(codeFeedback.toString(), outputStream);
+                if(codeFeedback.getIndex() == AIModel.CodeFeedback.INDEX_CODECONTENT) {
+                    this.notify(codeFeedback.toString() + ENDOFCODE);
+                }
+                else {
+                    this.notify(codeFeedback.toString() + ENDOFINPUT);
+                }
             }
         }
     }
