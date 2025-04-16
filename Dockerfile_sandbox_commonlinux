@@ -10,7 +10,7 @@ RUN apt-get update && \
     unzip -d /opt/gradle /tmp/gradle-7.5-bin.zip && \
     ln -s /opt/gradle/gradle-7.5/bin/gradle /usr/bin/gradle && \
     apt-get install -y curl && \
-    curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
     apt-get update && apt-get install -y gcc make && \
     apt-get clean && \
