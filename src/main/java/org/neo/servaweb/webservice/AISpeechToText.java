@@ -8,23 +8,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.nio.charset.StandardCharsets;
 
-import org.neo.servaframe.interfaces.DBConnectionIFC;
-import org.neo.servaframe.interfaces.DBSaveTaskIFC;
-import org.neo.servaframe.interfaces.DBServiceIFC;
-import org.neo.servaframe.ServiceFactory;
 
-import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.impl.SpeechToTextInMemoryForUIImpl;
-import org.neo.servaaiagent.ifc.AccountAgentIFC;
-import org.neo.servaaiagent.ifc.AccessAgentIFC;
-import org.neo.servaaiagent.impl.AccountAgentImpl;
-import org.neo.servaaiagent.impl.AccessAgentImpl;
 
 @Path("/aispeechtotext")
 public class AISpeechToText extends AbsAIChat {

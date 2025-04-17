@@ -6,7 +6,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.Date;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.OutputStream;
 
 import javax.ws.rs.POST;
@@ -15,7 +14,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -31,15 +29,12 @@ import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.impl.StorageInDBImpl;
 import org.neo.servaaibase.impl.StorageInMemoryImpl;
-import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.ifc.AccountAgentIFC;
-import org.neo.servaaiagent.ifc.AccessAgentIFC;
 import org.neo.servaaiagent.impl.TaskBotInMemoryForUIImpl;
 import org.neo.servaaiagent.impl.AccountAgentImpl;
-import org.neo.servaaiagent.impl.AccessAgentImpl;
 
 @Path("/aitaskbot")
 public class AITaskBot extends AbsAIChat {

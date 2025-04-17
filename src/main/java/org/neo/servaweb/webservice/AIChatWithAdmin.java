@@ -6,30 +6,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletOutputStream;
-import java.nio.charset.StandardCharsets;
 
-import org.neo.servaframe.interfaces.DBConnectionIFC;
-import org.neo.servaframe.interfaces.DBAutoCommitSaveTaskIFC;
-import org.neo.servaframe.interfaces.DBQueryTaskIFC;
-import org.neo.servaframe.interfaces.DBSaveTaskIFC;
-import org.neo.servaframe.interfaces.DBServiceIFC;
-import org.neo.servaframe.ServiceFactory;
 
-import org.neo.servaaibase.model.AIModel;
-import org.neo.servaaibase.ifc.StorageIFC;
-import org.neo.servaaibase.impl.StorageInDBImpl;
-import org.neo.servaaibase.impl.StorageInMemoryImpl;
-import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.impl.ChatWithAdminInMemoryForUIImpl;
-import org.neo.servaaiagent.ifc.AccountAgentIFC;
-import org.neo.servaaiagent.ifc.AccessAgentIFC;
-import org.neo.servaaiagent.impl.AccountAgentImpl;
-import org.neo.servaaiagent.impl.AccessAgentImpl;
 
 @Path("/aichatwithadmin")
 public class AIChatWithAdmin extends AbsAIChat {
