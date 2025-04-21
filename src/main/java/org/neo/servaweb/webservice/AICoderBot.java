@@ -30,6 +30,7 @@ import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.impl.StorageInDBImpl;
 import org.neo.servaaibase.impl.StorageInMemoryImpl;
 import org.neo.servaaibase.util.CommonUtil;
+import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
@@ -435,7 +436,7 @@ public class AICoderBot extends AbsAIChat {
         public void notify(String information) {
             try {
                 if(!isWorkingThread()) {
-                    return;
+                    throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_NOT_WORKING_THREAD);
                 }
                 String loginSession = params.getSession();
                 String alignedSession = this.alignSession(loginSession);
@@ -444,6 +445,9 @@ public class AICoderBot extends AbsAIChat {
                 codeRecord.setContent(information);
                 saveCodeRecord(codeRecord);
                 flushInformation(information, outputStream);
+            }
+            catch(NeoAIException nex) {
+                throw nex;
             }
             catch(Exception ex) {
                 logger.error(ex.getMessage());

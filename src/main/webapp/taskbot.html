@@ -204,8 +204,8 @@
     <div class="background">
         <div class="container">
             <div class="left-panel">
-                <button id="ButtonHelp" type="button" class="leftpanel-button">
-                    <img id="HelpButtonImage" src="images/help.webp" alt="Help" draggable="false">
+                <button id="ButtonNew" type="button" class="leftpanel-button">
+                    <img id="NewButtonImage" src="images/newstart.webp" alt="New" draggable="false">
                 </button>
                 <div class="logout-button-container">
                     <button id="ButtonAccount" type="button" class="leftpanel-button">
@@ -343,6 +343,29 @@
         }
 
         function newChat() {
+            var newChatUrl = "api/aitaskbot/newchat";
+            var userInput = document.getElementById("UserInput").value;
+            $.ajax({
+                url: newChatUrl,
+                type: "POST",
+                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    document.getElementById("RichChatRecord").innerHTML = "";
+                    enableSend();
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
+                    }
+                    document.getElementById('RichChatRecord').innerHTML = error;
+                    enableSend();
+                }
+            });
         }
 
         function isStringEmptyOrWhitespace(str) {
@@ -513,8 +536,9 @@
                 logoutMenu.style.display = "block";
             }
         });
-        document.getElementById("ButtonHelp").addEventListener("click", function() {
-          //  window.open("chatwithassistant.html", "_blank");
+
+        document.getElementById("ButtonNew").addEventListener("click", function() {
+            newChat();
         });
 
         let isRecording = false;

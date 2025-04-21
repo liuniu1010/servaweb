@@ -25,6 +25,7 @@ import org.neo.servaaibase.model.AIModel;
 import org.neo.servaaibase.ifc.StorageIFC;
 import org.neo.servaaibase.impl.StorageInMemoryImpl;
 import org.neo.servaaibase.util.CommonUtil;
+import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
 import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
@@ -81,6 +82,7 @@ public class AIGameBot extends AbsAIChat {
 
             // generate notifycall back and begin code generation 
             notifyCallback = new AIGameBot.StreamCallbackImpl(params, outputStream);
+            notifyCallback.registerWorkingThread();
             StreamCache.getInstance().put(alignedSession, notifyCallback);
             notifyCallback.notify(params.getUserInput() + ENDOFINPUT); 
             super.streamsend(params, notifyCallback);
@@ -176,12 +178,17 @@ public class AIGameBot extends AbsAIChat {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse newchat(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+        String loginSession = params.getSession();
+        String alignedSession = super.alignSession(loginSession);
+        logger.info("loginSession: " + loginSession + " try to newchat");
         try {
-            String loginSession = params.getSession();
             checkAccessibilityOnClientAction(loginSession);
-            String alignedSession = super.alignSession(loginSession);
+            StreamCallbackImpl streamCallback = StreamCache.getInstance().get(alignedSession);
+            if(streamCallback != null) {
+                streamCallback.clearHistory();
+            }
+ 
             StreamCache.getInstance().remove(alignedSession);
-            return super.newchat(params);
         }
         catch(Exception ex) {
             logger.error(ex.getMessage());
@@ -291,6 +298,7 @@ public class AIGameBot extends AbsAIChat {
         public void remove(String alignedSession) {
             if(streamMap.containsKey(alignedSession)) {
                 StreamCallbackImpl streamCallback = streamMap.get(alignedSession);
+                streamCallback.removeWorkingThread();
                 streamCallback.closeOutputStream(); // make sure the output stream was closed to release resource
                 streamMap.remove(alignedSession);
             }
@@ -300,6 +308,8 @@ public class AIGameBot extends AbsAIChat {
     public static class StreamCallbackImpl implements NotifyCallbackIFC {
         private WSModel.AIChatParams params;
         private OutputStream  outputStream;
+        private int workingThreadHashCode;  // to control only one thread has the ability to push data on it
+
         public StreamCallbackImpl(WSModel.AIChatParams inputParams, OutputStream inputOutputStream) {
             params = inputParams;
             outputStream = inputOutputStream;
@@ -332,11 +342,29 @@ public class AIGameBot extends AbsAIChat {
         @Override
         public void notify(String information) {
             try {
+                if(!isWorkingThread()) {
+                    throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_NOT_WORKING_THREAD);
+                }
                 flushInformation(information, outputStream);
+            }
+            catch(NeoAIException nex) {
+                throw nex;
             }
             catch(Exception ex) {
                 logger.error(ex.getMessage(), ex);
             }
+        }
+
+        private void registerWorkingThread() {
+            workingThreadHashCode = Thread.currentThread().hashCode();
+        }
+
+        private void removeWorkingThread() {
+            workingThreadHashCode = 0;
+        }
+
+        private boolean isWorkingThread() {
+            return workingThreadHashCode == Thread.currentThread().hashCode();
         }
 
         private String alignSession(String loginSession) {
@@ -355,6 +383,26 @@ public class AIGameBot extends AbsAIChat {
                 else {
                     this.notify(codeFeedback.toString() + ENDOFINPUT);
                 }
+            }
+        }
+
+        public void clearHistory() {
+            try {
+                innerClearHistory();
+            }
+            catch(Exception ex) {
+            }   
+        }
+
+        private void innerClearHistory() throws Exception {
+            try {
+                String loginSession = params.getSession();
+                String alignedSession = alignSession(loginSession);
+                StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
+                storageIFC.clearCodeFeedbacks(alignedSession);
+            }
+            catch(Exception ex) {
+                logger.error(ex.getMessage(), ex);
             }
         }
     }
