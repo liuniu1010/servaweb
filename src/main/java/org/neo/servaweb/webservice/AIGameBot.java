@@ -239,14 +239,6 @@ public class AIGameBot extends AbsAIChat {
         return null;
     }
 
-    private static void flushInformation(String information, OutputStream outputStream) throws Exception {
-        if(information == null || information.trim().equals("")) {
-            return;
-        }
-        outputStream.write(information.getBytes(StandardCharsets.UTF_8));
-        outputStream.flush();
-    }
-
     private void consume(String loginSession) {
         try {
             innerConsume(loginSession);
@@ -320,14 +312,6 @@ public class AIGameBot extends AbsAIChat {
             outputStream = inputOutputStream;
         }
 
-        public void notifyHistory() throws Exception {
-            try {
-                innerNotifyHistory();
-            }
-            catch(Exception ex) {
-            }
-        }
-
         public void closeOutputStream() {
             if(outputStream == null) {
                 return;
@@ -371,18 +355,29 @@ public class AIGameBot extends AbsAIChat {
             return HOOK + loginSession;
         }
 
+        public void notifyHistory() throws Exception {
+            try {
+                innerNotifyHistory();
+            }
+            catch(Exception ex) {
+                logger.error(ex.getMessage(), ex);
+            }
+        }
+
         private void innerNotifyHistory() throws Exception {
             String loginSession = params.getSession();
             String alignedSession = alignSession(loginSession);
             StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
             AIModel.CodeFeedback codeFeedback = storageIFC.peekCodeFeedback(alignedSession);
             if(codeFeedback != null) {
+                String information = null;
                 if(codeFeedback.getIndex() == AIModel.CodeFeedback.INDEX_CODECONTENT) {
-                    this.notify(codeFeedback.toString() + ENDOFCODE);
+                    information = codeFeedback.toString() + ENDOFCODE;
                 }
                 else {
-                    this.notify(codeFeedback.toString() + ENDOFINPUT);
+                    information = codeFeedback.toString() + ENDOFINPUT;
                 }
+                this.flushInformation(information, outputStream);
             }
         }
 
@@ -391,19 +386,23 @@ public class AIGameBot extends AbsAIChat {
                 innerClearHistory();
             }
             catch(Exception ex) {
+                logger.error(ex.getMessage(), ex);
             }   
         }
 
         private void innerClearHistory() throws Exception {
-            try {
-                String loginSession = params.getSession();
-                String alignedSession = alignSession(loginSession);
-                StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
-                storageIFC.clearCodeFeedbacks(alignedSession);
+            String loginSession = params.getSession();
+            String alignedSession = alignSession(loginSession);
+            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
+            storageIFC.clearCodeFeedbacks(alignedSession);
+        }
+
+        private static void flushInformation(String information, OutputStream outputStream) throws Exception {
+            if(information == null || information.trim().equals("")) {
+                return;
             }
-            catch(Exception ex) {
-                logger.error(ex.getMessage(), ex);
-            }
+            outputStream.write(information.getBytes(StandardCharsets.UTF_8));
+            outputStream.flush();
         }
     }
 }

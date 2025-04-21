@@ -83,10 +83,9 @@ public class AICoderBot extends AbsAIChat {
             checkAccessibilityOnClientAction(loginSession);
 
             outputStream = response.getOutputStream();
-            notifyHistory(alignedSession, outputStream);
             notifyCallback = new AICoderBot.StreamCallbackImpl(params, outputStream);
             notifyCallback.registerWorkingThread();
-            StreamCache.getInstance().put(alignedSession, notifyCallback);
+            AICoderBot.StreamCache.getInstance().put(alignedSession, notifyCallback);
             WSModel.AIChatResponse chatResponse = super.streamsend(params, notifyCallback);
 
             String information = "";
@@ -104,16 +103,8 @@ public class AICoderBot extends AbsAIChat {
             logger.error(ex.getMessage(), ex);
             standardHandleException(ex, response);
         }
-	catch(Error er) {
-	    logger.error(er.getMessage(), er);
-	    throw er;
-	}
-	catch(Throwable th) {
-	    logger.error(th.getMessage(), th);
-	    throw th;
-	}
         finally {
-            StreamCache.getInstance().remove(alignedSession); // this will close the associated outputstream
+            AICoderBot.StreamCache.getInstance().remove(alignedSession); // this will close the associated outputstream
         }
     }
 
@@ -138,8 +129,11 @@ public class AICoderBot extends AbsAIChat {
         logger.info("loginSession: " + loginSession + " try to newchat");
         try {
             checkAccessibilityOnClientAction(loginSession);
-            clearHistory(alignedSession);
-            StreamCache.getInstance().remove(alignedSession);
+            AICoderBot.StreamCallbackImpl streamCallback = AICoderBot.StreamCache.getInstance().get(alignedSession);
+            if(streamCallback != null) {
+                streamCallback.clearHistory();
+            }
+            AICoderBot.StreamCache.getInstance().remove(alignedSession);
         }
         catch(Exception ex) {
             logger.error(ex.getMessage());
@@ -165,17 +159,17 @@ public class AICoderBot extends AbsAIChat {
             checkAccessibilityOnClientAction(loginSession);
 
             OutputStream outputStream = response.getOutputStream();
-            notifyHistory(alignedSession, outputStream);
-            StreamCallbackImpl streamCallback = StreamCache.getInstance().get(alignedSession);
+            AICoderBot.StreamCallbackImpl streamCallback = AICoderBot.StreamCache.getInstance().get(alignedSession);
             if(streamCallback == null) {
                 return;
             }
             streamCallback.changeOutputStream(outputStream); // this output stream would be closed when streamCallback are finished
+            streamCallback.notifyHistory();
 
             // wait 30 minutes, every 1 minute, check if the project was finished
             for(int i = 0;i < 30;i++) {
                 Thread.sleep(60*1000);
-                streamCallback = StreamCache.getInstance().get(alignedSession);
+                streamCallback = AICoderBot.StreamCache.getInstance().get(alignedSession);
                 if(streamCallback == null) {
                     // finished, no need to wait, return directly
                     return;
@@ -186,14 +180,6 @@ public class AICoderBot extends AbsAIChat {
             logger.error(ex.getMessage());
             standardHandleException(ex, response);
         }
-	catch(Error er) {
-	    logger.error(er.getMessage(), er);
-	    throw er;
-	}
-	catch(Throwable th) {
-	    logger.error(th.getMessage(), th);
-	    throw th;
-	}
     }
 
     @POST
@@ -217,85 +203,6 @@ public class AICoderBot extends AbsAIChat {
             }
         }
         notifyCallback.notify("Process completed!");
-    }
-
-    private void clearHistory(String alignedSession) {
-        try {
-            innerClearHistoryFromMemory(alignedSession);
-        }
-        catch(Exception ex) {
-        }
-    }
-
-    private void notifyHistory(String alignedSession, OutputStream inputOutputStream) {
-        try {
-            innerNotifyHistoryFromMemory(alignedSession, inputOutputStream);
-        }
-        catch(Exception ex) {
-        }
-    }
-
-    private void innerNotifyHistoryFromDB(String alignedSession, OutputStream outputStream) {
-        DBServiceIFC dbService = ServiceFactory.getDBService();
-        dbService.executeQueryTask(new DBQueryTaskIFC() {
-            @Override
-            public Object query(DBConnectionIFC dbConnection) {
-                try {
-                    StorageIFC storageIFC = StorageInDBImpl.getInstance(dbConnection);
-                    List<AIModel.CodeRecord> codeRecords = storageIFC.getCodeRecords(alignedSession);
-                    String information = "";
-                    for(AIModel.CodeRecord codeRecord: codeRecords) {
-                        if(codeRecord.getContent() == null || codeRecord.getContent().trim().equals("")) {
-                            continue;
-                        }
-                        information += "\n\n" + codeRecord.getContent();
-                    }
-                    flushInformation(information, outputStream);
-                }
-                catch(Exception ex) {
-                    logger.error(ex.getMessage(), ex);
-                }
-                return null;
-            }
-        });
-    }
-
-    private void innerNotifyHistoryFromMemory(String alignedSession, OutputStream outputStream) {
-        try {
-            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
-            List<AIModel.CodeRecord> codeRecords = storageIFC.getCodeRecords(alignedSession);
-            String information = "";
-            for(AIModel.CodeRecord codeRecord: codeRecords) {
-                if(codeRecord.getContent() == null || codeRecord.getContent().trim().equals("")) {
-                    continue;
-                }
-                information += "\n\n" + codeRecord.getContent();
-            }
-            flushInformation(information, outputStream);
-        }
-        catch(Exception ex) {
-            logger.error(ex.getMessage(), ex);
-        }
-    }
-
-    private void innerClearHistoryFromMemory(String alignedSession) {
-        try {
-            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
-            storageIFC.clearCodeRecords(alignedSession);
-        }
-        catch(Exception ex) {
-            logger.error(ex.getMessage(), ex);
-        }
-    }
-
-    private static void flushInformation(String information, OutputStream outputStream) throws Exception {
-        if(information == null || information.trim().equals("")) {
-            return;
-        }
-        String toFlush = "\n\n" + information;
-        toFlush = toFlush.replace("\n", "<br>");
-        outputStream.write(toFlush.getBytes(StandardCharsets.UTF_8));
-        outputStream.flush();
     }
 
     private void consume(String loginSession) {
@@ -348,7 +255,7 @@ public class AICoderBot extends AbsAIChat {
 
         public void remove(String alignedSession) {
             if(streamMap.containsKey(alignedSession)) {
-                StreamCallbackImpl streamCallback = streamMap.get(alignedSession);
+                AICoderBot.StreamCallbackImpl streamCallback = streamMap.get(alignedSession);
                 streamCallback.removeWorkingThread();
                 streamCallback.closeOutputStream(); // make sure the output stream was closed to release resource
                 streamMap.remove(alignedSession);
@@ -452,14 +359,56 @@ public class AICoderBot extends AbsAIChat {
             catch(Exception ex) {
                 logger.error(ex.getMessage());
             }
-	    catch(Error er) {
-	        logger.error(er.getMessage(), er);
-	        throw er;
-	    }
-	    catch(Throwable th) {
-	        logger.error(th.getMessage(), th);
-	        throw th;
-	    }
+        }
+
+        public void clearHistory() {
+            try {
+                innerClearHistory();
+            }
+            catch(Exception ex) {
+                logger.error(ex.getMessage(), ex);
+            }
+        }
+
+        private void innerClearHistory() {
+            String loginSession = params.getSession();
+            String alignedSession = alignSession(loginSession);
+            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
+            storageIFC.clearCodeRecords(alignedSession);
+        }
+
+        public void notifyHistory() {
+            try {
+                innerNotifyHistory();
+            }
+            catch(Exception ex) {
+                logger.error(ex.getMessage(), ex);
+            }
+        }
+
+        private void innerNotifyHistory() throws Exception {
+            String loginSession = params.getSession();
+            String alignedSession = alignSession(loginSession);
+            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
+            List<AIModel.CodeRecord> codeRecords = storageIFC.getCodeRecords(alignedSession);
+            String information = "";
+            for(AIModel.CodeRecord codeRecord: codeRecords) {
+                if(codeRecord.getContent() == null || codeRecord.getContent().trim().equals("")) {
+                    continue;
+                }
+                information += "\n\n" + codeRecord.getContent();
+            }
+            flushInformation(information, outputStream);
+        }
+
+        private static void flushInformation(String information, OutputStream outputStream) throws Exception {
+            if(information == null || information.trim().equals("")) {
+                return;
+            }
+            String toFlush = "\n\n" + information;
+            toFlush = toFlush.replace("\n", "<br>");
+            outputStream.write(toFlush.getBytes(StandardCharsets.UTF_8));
+            outputStream.flush();
         }
     }
 }
