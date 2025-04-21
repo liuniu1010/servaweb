@@ -73,7 +73,7 @@ public class AICoderBot extends AbsAIChat {
         response.setHeader("Connection", "keep-alive");
 
         ServletOutputStream outputStream = null;
-        StreamCallbackImpl notifyCallback = null;
+        AICoderBot.StreamCallbackImpl notifyCallback = null;
         String loginSession = params.getSession();
         String alignedSession = super.alignSession(loginSession);
         String requirement = params.getUserInput();
@@ -84,6 +84,7 @@ public class AICoderBot extends AbsAIChat {
             outputStream = response.getOutputStream();
             notifyHistory(alignedSession, outputStream);
             notifyCallback = new AICoderBot.StreamCallbackImpl(params, outputStream);
+            notifyCallback.registerWorkingThread();
             StreamCache.getInstance().put(alignedSession, notifyCallback);
             WSModel.AIChatResponse chatResponse = super.streamsend(params, notifyCallback);
 
@@ -130,10 +131,20 @@ public class AICoderBot extends AbsAIChat {
     @Path("/newchat")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse newchat(WSModel.AIChatParams params) {
+    public WSModel.AIChatResponse newchat(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         String loginSession = params.getSession();
-        checkAccessibilityOnClientAction(loginSession);
-        return super.newchat(params);
+        String alignedSession = super.alignSession(loginSession);
+        logger.info("loginSession: " + loginSession + " try to newchat");
+        try {
+            checkAccessibilityOnClientAction(loginSession);
+            clearHistory(alignedSession);
+            StreamCache.getInstance().remove(alignedSession);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null;
     }
 
     @POST
@@ -206,9 +217,17 @@ public class AICoderBot extends AbsAIChat {
         }
         notifyCallback.notify("Process completed!");
     }
+
+    private void clearHistory(String alignedSession) {
+        try {
+            innerClearHistoryFromMemory(alignedSession);
+        }
+        catch(Exception ex) {
+        }
+    }
+
     private void notifyHistory(String alignedSession, OutputStream inputOutputStream) {
         try {
-            // innerNotifyHistoryFromDB(alignedSession, inputOutputStream);
             innerNotifyHistoryFromMemory(alignedSession, inputOutputStream);
         }
         catch(Exception ex) {
@@ -252,6 +271,16 @@ public class AICoderBot extends AbsAIChat {
                 information += "\n\n" + codeRecord.getContent();
             }
             flushInformation(information, outputStream);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+    }
+
+    private void innerClearHistoryFromMemory(String alignedSession) {
+        try {
+            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
+            storageIFC.clearCodeRecords(alignedSession);
         }
         catch(Exception ex) {
             logger.error(ex.getMessage(), ex);
@@ -319,6 +348,7 @@ public class AICoderBot extends AbsAIChat {
         public void remove(String alignedSession) {
             if(streamMap.containsKey(alignedSession)) {
                 StreamCallbackImpl streamCallback = streamMap.get(alignedSession);
+                streamCallback.removeWorkingThread();
                 streamCallback.closeOutputStream(); // make sure the output stream was closed to release resource
                 streamMap.remove(alignedSession);
             } 
@@ -328,6 +358,8 @@ public class AICoderBot extends AbsAIChat {
     public static class StreamCallbackImpl implements NotifyCallbackIFC {
         private WSModel.AIChatParams params;
         private OutputStream  outputStream;
+        private int workingThreadHashCode;  // to control only one thread has the ability to push data on it
+
         public StreamCallbackImpl(WSModel.AIChatParams inputParams, OutputStream inputOutputStream) {
             params = inputParams; 
             outputStream = inputOutputStream;
@@ -343,6 +375,18 @@ public class AICoderBot extends AbsAIChat {
         public void changeOutputStream(OutputStream inputOutputStream) {
             closeOutputStream(); // close original output stream before switch to new one
             outputStream = inputOutputStream;
+        }
+
+        private void registerWorkingThread() {
+            workingThreadHashCode = Thread.currentThread().hashCode();
+        }
+
+        private void removeWorkingThread() {
+            workingThreadHashCode = 0;
+        }
+
+        private boolean isWorkingThread() {
+            return workingThreadHashCode == Thread.currentThread().hashCode();
         }
 
         private String alignSession(String loginSession) {
@@ -390,6 +434,9 @@ public class AICoderBot extends AbsAIChat {
         @Override
         public void notify(String information) {
             try {
+                if(!isWorkingThread()) {
+                    return;
+                }
                 String loginSession = params.getSession();
                 String alignedSession = this.alignSession(loginSession);
                 AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(alignedSession);
