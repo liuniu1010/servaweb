@@ -78,12 +78,15 @@ public class AIGameBot extends AbsAIChat {
         logger.info("loginSession: " + loginSession + " try to streamsend with input: " + userInput);
         try {
             checkAccessibilityOnClientAction(loginSession);
-            outputStream = response.getOutputStream();
 
-            // generate notifycall back and begin code generation 
+            // maybe the old callback exists, remove it 
+            AIGameBot.StreamCache.getInstance().remove(alignedSession);
+
+            // generate notifycallback and begin code generation 
+            outputStream = response.getOutputStream();
             notifyCallback = new AIGameBot.StreamCallbackImpl(params, outputStream);
             notifyCallback.registerWorkingThread();
-            StreamCache.getInstance().put(alignedSession, notifyCallback);
+            AIGameBot.StreamCache.getInstance().put(alignedSession, notifyCallback);
             notifyCallback.notify(params.getUserInput() + ENDOFINPUT); 
             super.streamsend(params, notifyCallback);
             consume(loginSession);
@@ -114,7 +117,7 @@ public class AIGameBot extends AbsAIChat {
             checkAccessibilityOnClientAction(loginSession);
 
             OutputStream outputStream = response.getOutputStream();
-            StreamCallbackImpl streamCallback = StreamCache.getInstance().get(alignedSession);
+            AIGameBot.StreamCallbackImpl streamCallback = AIGameBot.StreamCache.getInstance().get(alignedSession);
             if(streamCallback == null) {
                 return;
             }
@@ -124,7 +127,7 @@ public class AIGameBot extends AbsAIChat {
             // wait 5 minutes, every 1 minute, check if the project was finished
             for(int i = 0;i < 5;i++) {
                 Thread.sleep(60*1000);
-                streamCallback = StreamCache.getInstance().get(alignedSession);
+                streamCallback = AIGameBot.StreamCache.getInstance().get(alignedSession);
                 if(streamCallback == null) {
                     // finished, no need to wait, return directly
                     return;
@@ -183,12 +186,11 @@ public class AIGameBot extends AbsAIChat {
         logger.info("loginSession: " + loginSession + " try to newchat");
         try {
             checkAccessibilityOnClientAction(loginSession);
-            StreamCallbackImpl streamCallback = StreamCache.getInstance().get(alignedSession);
+            AIGameBot.StreamCallbackImpl streamCallback = AIGameBot.StreamCache.getInstance().get(alignedSession);
             if(streamCallback != null) {
                 streamCallback.clearHistory();
             }
- 
-            StreamCache.getInstance().remove(alignedSession);
+            AIGameBot.StreamCache.getInstance().remove(alignedSession);
         }
         catch(Exception ex) {
             logger.error(ex.getMessage());
@@ -289,7 +291,7 @@ public class AIGameBot extends AbsAIChat {
 
         public void remove(String alignedSession) {
             if(streamMap.containsKey(alignedSession)) {
-                StreamCallbackImpl streamCallback = streamMap.get(alignedSession);
+                AIGameBot.StreamCallbackImpl streamCallback = streamMap.get(alignedSession);
                 streamCallback.removeWorkingThread();
                 streamCallback.closeOutputStream(); // make sure the output stream was closed to release resource
                 streamMap.remove(alignedSession);
@@ -347,7 +349,8 @@ public class AIGameBot extends AbsAIChat {
             workingThreadHashCode = 0;
         }
 
-        private boolean isWorkingThread() {
+        @Override
+        public boolean isWorkingThread() {
             return workingThreadHashCode == Thread.currentThread().hashCode();
         }
 

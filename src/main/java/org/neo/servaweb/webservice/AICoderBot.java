@@ -82,6 +82,10 @@ public class AICoderBot extends AbsAIChat {
         try {
             checkAccessibilityOnClientAction(loginSession);
 
+            // old notify callback might exist, remove it
+            AICoderBot.StreamCache.getInstance().remove(alignedSession);
+
+            // create new notifycallback
             outputStream = response.getOutputStream();
             notifyCallback = new AICoderBot.StreamCallbackImpl(params, outputStream);
             notifyCallback.registerWorkingThread();
@@ -104,7 +108,7 @@ public class AICoderBot extends AbsAIChat {
             standardHandleException(ex, response);
         }
         finally {
-            AICoderBot.StreamCache.getInstance().remove(alignedSession); // this will close the associated outputstream
+            // AICoderBot.StreamCache.getInstance().remove(alignedSession); // this will close the associated outputstream
         }
     }
 
@@ -293,7 +297,8 @@ public class AICoderBot extends AbsAIChat {
             workingThreadHashCode = 0;
         }
 
-        private boolean isWorkingThread() {
+        @Override
+        public boolean isWorkingThread() {
             return workingThreadHashCode == Thread.currentThread().hashCode();
         }
 

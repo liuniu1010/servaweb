@@ -71,6 +71,10 @@ public class AITaskBot extends AbsAIChat {
         try {
             checkAccessibilityOnAdminAction(loginSession);
 
+            // old notifycallback might exist, remove it
+            AITaskBot.StreamCache.getInstance().remove(alignedSession);
+
+            // create new notifycallback
             outputStream = response.getOutputStream();
             notifyCallback = new AITaskBot.StreamCallbackImpl(params, outputStream);
             notifyCallback.registerWorkingThread();
@@ -91,7 +95,7 @@ public class AITaskBot extends AbsAIChat {
             standardHandleException(ex, response);
         }
         finally {
-            AITaskBot.StreamCache.getInstance().remove(alignedSession); // this will close the associated outputstream
+            // AITaskBot.StreamCache.getInstance().remove(alignedSession); // this will close the associated outputstream
         }
     }
 
@@ -243,7 +247,8 @@ public class AITaskBot extends AbsAIChat {
             workingThreadHashCode = 0;
         }
 
-        private boolean isWorkingThread() {
+        @Override
+        public boolean isWorkingThread() {
             return workingThreadHashCode == Thread.currentThread().hashCode();
         }
 
