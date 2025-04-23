@@ -18,17 +18,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletOutputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.neo.servaframe.interfaces.DBConnectionIFC;
-import org.neo.servaframe.interfaces.DBAutoCommitSaveTaskIFC;
-import org.neo.servaframe.interfaces.DBQueryTaskIFC;
-import org.neo.servaframe.interfaces.DBSaveTaskIFC;
-import org.neo.servaframe.interfaces.DBServiceIFC;
-import org.neo.servaframe.ServiceFactory;
-
-import org.neo.servaaibase.model.AIModel;
-import org.neo.servaaibase.ifc.StorageIFC;
-import org.neo.servaaibase.impl.StorageInDBImpl;
-import org.neo.servaaibase.impl.StorageInMemoryImpl;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
@@ -36,10 +25,13 @@ import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.ifc.AccountAgentIFC;
 import org.neo.servaaiagent.impl.TaskBotInMemoryForUIImpl;
 import org.neo.servaaiagent.impl.AccountAgentImpl;
+import org.neo.servaaiagent.impl.SimpleNotifyCallbackImpl;
 
 @Path("/aitaskbot")
 public class AITaskBot extends AbsAIChat {
     final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AITaskBot.class);
+    final static String START_MARK = "-----start-----";
+    final static String END_MARK = "-----end-----";
     final static String HOOK = "aitaskbot";
 
     @Override
@@ -62,8 +54,7 @@ public class AITaskBot extends AbsAIChat {
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Connection", "keep-alive");
 
-        ServletOutputStream outputStream = null;
-        AITaskBot.StreamCallbackImpl notifyCallback = null;
+        NotifyCallbackIFC notifyCallback = null;
         String loginSession = params.getSession();
         String alignedSession = super.alignSession(loginSession);
         String requirement = params.getUserInput();
@@ -71,14 +62,20 @@ public class AITaskBot extends AbsAIChat {
         try {
             checkAccessibilityOnAdminAction(loginSession);
 
-            // old notifycallback might exist, remove it
-            AITaskBot.StreamCache.getInstance().remove(alignedSession);
-
-            // create new notifycallback
-            outputStream = response.getOutputStream();
-            notifyCallback = new AITaskBot.StreamCallbackImpl(params, outputStream);
+            // get or create new notifycallback
+            OutputStream outputStream = response.getOutputStream();
+            notifyCallback = StreamCache.getInstance().get(alignedSession);
+            if(notifyCallback == null) {
+                notifyCallback = new SimpleNotifyCallbackImpl(outputStream);
+                StreamCache.getInstance().put(alignedSession, notifyCallback);
+            }
+            else {
+                notifyCallback.changeOutputStream(outputStream);
+            }
             notifyCallback.registerWorkingThread();
-            AITaskBot.StreamCache.getInstance().put(alignedSession, notifyCallback);
+            notifyCallback.notifyHistory();
+            notifyCallback.notify("<br>" + START_MARK);
+
             WSModel.AIChatResponse chatResponse = super.streamsend(params, notifyCallback);
 
             String information = "";
@@ -88,7 +85,9 @@ public class AITaskBot extends AbsAIChat {
             else {
                 information = "Failed to execute task due to: " + chatResponse.getMessage();
             }
-            notifyCallback.notify(information);
+            if(notifyCallback.isWorkingThread()) {
+                notifyCallback.notify("<br>" + information);
+            }
         }
         catch(Exception ex) {
             logger.error(ex.getMessage(), ex);
@@ -96,6 +95,9 @@ public class AITaskBot extends AbsAIChat {
         }
         finally {
             // AITaskBot.StreamCache.getInstance().remove(alignedSession); // this will close the associated outputstream
+            if(notifyCallback != null && notifyCallback.isWorkingThread()) {
+                notifyCallback.notify("<br>" + END_MARK);
+            }
         }
     }
 
@@ -120,11 +122,7 @@ public class AITaskBot extends AbsAIChat {
         logger.info("loginSession: " + loginSession + " try to newchat");
         try {
             checkAccessibilityOnAdminAction(loginSession);
-            AITaskBot.StreamCallbackImpl streamCallback = AITaskBot.StreamCache.getInstance().get(alignedSession);
-            if(streamCallback != null) {
-                streamCallback.clearHistory();
-            }
-            AITaskBot.StreamCache.getInstance().remove(alignedSession);
+            StreamCache.getInstance().remove(alignedSession);
         }
         catch(Exception ex) {
             logger.error(ex.getMessage());
@@ -149,18 +147,22 @@ public class AITaskBot extends AbsAIChat {
         try {
             checkAccessibilityOnAdminAction(loginSession);
 
+            // get or create new notifycallback
             OutputStream outputStream = response.getOutputStream();
-            AITaskBot.StreamCallbackImpl streamCallback = AITaskBot.StreamCache.getInstance().get(alignedSession);
-            if(streamCallback == null) {
+            NotifyCallbackIFC notifyCallback = StreamCache.getInstance().get(alignedSession);
+            if(notifyCallback == null) {
                 return;
             }
-            streamCallback.changeOutputStream(outputStream); // this output stream would be closed when streamCallback are finished
-            streamCallback.notifyHistory();
-            // wait 30 minutes, every 1 minute, check if the project was finished
-            for(int i = 0;i < 30;i++) {
+            else {
+                notifyCallback.changeOutputStream(outputStream);
+            }
+            notifyCallback.notifyHistory();
+
+            // wait 5 minutes, every 1 minute, check if the project was finished
+            for(int i = 0;i < 5;i++) {
                 Thread.sleep(60*1000);
-                streamCallback = AITaskBot.StreamCache.getInstance().get(alignedSession);
-                if(streamCallback == null) {
+                notifyCallback = AITaskBot.StreamCache.getInstance().get(alignedSession);
+                if(notifyCallback == null) {
                     // finished, no need to wait, return directly
                     return;
                 }
@@ -191,14 +193,15 @@ public class AITaskBot extends AbsAIChat {
             return instance; 
         }
 
-        private Map<String, AITaskBot.StreamCallbackImpl> streamMap = new ConcurrentHashMap<String, AITaskBot.StreamCallbackImpl>();
-        public void put(String alignedSession, AITaskBot.StreamCallbackImpl streamCallback) {
-            if(streamCallback != null) {
-                streamMap.put(alignedSession, streamCallback);
+        private Map<String, NotifyCallbackIFC> streamMap = new ConcurrentHashMap<String, NotifyCallbackIFC>();
+
+        public void put(String alignedSession, NotifyCallbackIFC notifyCallback) {
+            if(notifyCallback != null) {
+                streamMap.put(alignedSession, notifyCallback);
             }
         }
 
-        public AITaskBot.StreamCallbackImpl get(String alignedSession) {
+        public NotifyCallbackIFC get(String alignedSession) {
             if(streamMap.containsKey(alignedSession)) {
                 return streamMap.get(alignedSession);
             }
@@ -209,161 +212,12 @@ public class AITaskBot extends AbsAIChat {
 
         public void remove(String alignedSession) {
             if(streamMap.containsKey(alignedSession)) {
-                AITaskBot.StreamCallbackImpl streamCallback = streamMap.get(alignedSession);
-                streamCallback.removeWorkingThread();
-                streamCallback.closeOutputStream(); // make sure the output stream was closed to release resource
+                NotifyCallbackIFC notifyCallback = streamMap.get(alignedSession);
+                notifyCallback.removeWorkingThread();
+                notifyCallback.clearHistory();
+                notifyCallback.closeOutputStream(); // make sure the output stream was closed to release resource
                 streamMap.remove(alignedSession);
             } 
-        }
-    }
-
-    public static class StreamCallbackImpl implements NotifyCallbackIFC {
-        private WSModel.AIChatParams params;
-        private OutputStream  outputStream;
-        private int workingThreadHashCode;  // to control only one thread has the ability to push data on it
-
-        public StreamCallbackImpl(WSModel.AIChatParams inputParams, OutputStream inputOutputStream) {
-            params = inputParams; 
-            outputStream = inputOutputStream;
-
-            String loginSession = params.getSession();
-            String alignedSession = this.alignSession(loginSession);
-            AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(alignedSession);
-            codeRecord.setCreateTime(new Date());
-            codeRecord.setRequirement(params.getUserInput());
-            saveCodeRecord(codeRecord);
-        }
-
-        public void changeOutputStream(OutputStream inputOutputStream) {
-            closeOutputStream(); // close original output stream before switch to new one
-            outputStream = inputOutputStream;
-        }
-
-        private void registerWorkingThread() {
-            workingThreadHashCode = Thread.currentThread().hashCode();
-        }   
-
-        private void removeWorkingThread() {
-            workingThreadHashCode = 0;
-        }
-
-        @Override
-        public boolean isWorkingThread() {
-            return workingThreadHashCode == Thread.currentThread().hashCode();
-        }
-
-        private String alignSession(String loginSession) {
-            return HOOK + loginSession;
-        }
-
-        private void saveCodeRecord(AIModel.CodeRecord codeRecord) {
-            try {
-                // innerSaveCodeRecordInDB(codeRecord);
-                innerSaveCodeRecordInMemory(codeRecord);
-            }
-            catch(Exception ex) {
-            }
-        }
-
-        private void innerSaveCodeRecordInMemory(AIModel.CodeRecord codeRecord) {
-            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
-            storageIFC.addCodeRecord(codeRecord.getSession(), codeRecord);
-        }
-
-        private void innerSaveCodeRecordInDB(AIModel.CodeRecord codeRecord) {
-            DBServiceIFC dbService = ServiceFactory.getDBService();
-            dbService.executeAutoCommitSaveTask(new DBAutoCommitSaveTaskIFC() {
-                @Override
-                public Object autoCommitSave(DBConnectionIFC dbConnection) {
-                    StorageIFC storageIFC = StorageInDBImpl.getInstance(dbConnection);
-                    storageIFC.addCodeRecord(codeRecord.getSession(), codeRecord);
-                    return null;
-                }
-            });
-        }
-
-        public void closeOutputStream() {
-            if(outputStream == null) {
-                return;
-            }
-            try {
-               outputStream.close();
-            }
-            catch(Exception ex) {
-            }
-        }
-
-
-        @Override
-        public void notify(String information) {
-            try {
-                if(!isWorkingThread()) {
-                    throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_NOT_WORKING_THREAD);
-                }
-                String loginSession = params.getSession();
-                String alignedSession = this.alignSession(loginSession);
-                AIModel.CodeRecord codeRecord = new AIModel.CodeRecord(alignedSession);
-                codeRecord.setCreateTime(new Date());
-                codeRecord.setContent(information);
-                saveCodeRecord(codeRecord);
-                flushInformation(information, outputStream);
-            }
-            catch(NeoAIException nex) {
-                throw nex;
-            }
-            catch(Exception ex) {
-                logger.error(ex.getMessage());
-            }
-        }
-
-        private void clearHistory() {
-            try {
-                innerClearHistory();
-            }
-            catch(Exception ex) {
-                logger.error(ex.getMessage(), ex);
-            }  
-        }
-
-        private void notifyHistory() {
-            try {
-                innerNotifyHistory();
-            }
-            catch(Exception ex) {
-                logger.error(ex.getMessage(), ex);
-            }
-        }
-
-        private void innerNotifyHistory() throws Exception {
-            String loginSession = params.getSession();
-            String alignedSession = alignSession(loginSession); 
-            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
-            List<AIModel.CodeRecord> codeRecords = storageIFC.getCodeRecords(alignedSession);
-            String information = "";
-            for(AIModel.CodeRecord codeRecord: codeRecords) {
-                if(codeRecord.getContent() == null || codeRecord.getContent().trim().equals("")) {
-                    continue;
-                }
-                information += "\n\n" + codeRecord.getContent();
-            }
-            flushInformation(information, outputStream);
-        }
-
-        private void innerClearHistory() {
-            String loginSession = params.getSession();
-            String alignedSession = alignSession(loginSession);
-            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
-            storageIFC.clearCodeRecords(alignedSession);
-        }
-
-        private static void flushInformation(String information, OutputStream outputStream) throws Exception {
-            if(information == null || information.trim().equals("")) {
-                return;
-            }
-            String toFlush = "\n\n" + information;
-            toFlush = toFlush.replace("\n", "<br>");
-            outputStream.write(toFlush.getBytes(StandardCharsets.UTF_8));
-            outputStream.flush();
         }
     }
 }
