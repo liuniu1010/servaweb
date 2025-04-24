@@ -315,6 +315,7 @@
                     onprogress: function(e) {
                         var newText = e.target.responseText;
                         handleOnProcessText(newText);
+
                         // Delay the scrolling code by 100ms to ensure that the content is fully loaded
                         setTimeout(function() {
                             chatRecordEditor = document.getElementById("RichChatRecord");
@@ -323,7 +324,6 @@
                     }
                 },
                 success: function (data) {
-                    enableSend();
                 },
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {
@@ -403,7 +403,6 @@
                     }
                 },
                 success: function (data) {
-                    enableSend();
                 },
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {

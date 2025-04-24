@@ -295,6 +295,7 @@
             document.getElementById("ButtonSendAudio").disabled = true;
             document.getElementById("ButtonSend").disabled = true;
             document.getElementById("UserInput").disabled = true;
+            document.getElementById("UserInput").value = "Please wait...";
         }
 
         function refresh() {
@@ -313,7 +314,8 @@
                 xhrFields: {
                     onprogress: function(e) {
                         var newText = e.target.responseText;
-                        document.getElementById("RichChatRecord").innerHTML = newText;
+                        handleOnProcessText(newText);
+
                         // Delay the scrolling code by 100ms to ensure that the content is fully loaded
                         setTimeout(function() {
                             chatRecordEditor = document.getElementById("RichChatRecord");
@@ -322,7 +324,6 @@
                     }
                 },
                 success: function (data) {
-                    enableSend();
                 },
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {
@@ -352,7 +353,7 @@
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
-                    document.getElementById("RichChatRecord").innerHTML = "";
+                    showEmbeddedContent("");
                     enableSend();
                 },
                 error: function(xhr, status, error) {
@@ -379,9 +380,9 @@
 
         var xhr;
         function streamsend() {
-            disableSend();
             var streamsendUrl = "api/aicoderbot/streamsend";
             var userInput = document.getElementById("UserInput").value;
+            disableSend();
             if(isStringEmptyOrWhitespace(userInput)) {
                 enableSend();
                 return false;
@@ -395,7 +396,8 @@
                 xhrFields: {
                     onprogress: function(e) {
                         var newText = e.target.responseText;
-                        document.getElementById("RichChatRecord").innerHTML = newText;
+                        handleOnProcessText(newText);
+
                         // Delay the scrolling code by 100ms to ensure that the content is fully loaded
                         setTimeout(function() {
                             chatRecordEditor = document.getElementById("RichChatRecord");
@@ -404,7 +406,6 @@
                     }
                 },
                 success: function (data) {
-                    enableSend();
                 },
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {
@@ -537,6 +538,23 @@
             return re.test(String(email).toLowerCase());
         }
 
+        function handleOnProcessText(newText) {
+            if(isStringEmptyOrWhitespace(newText)) {
+                enableSend();
+                return;
+            }
+
+            var END_MARK = "-----end-----";
+            showEmbeddedContent(newText);
+            if(newText.trim().endsWith(END_MARK)) {
+                enableSend();
+            }
+        }
+
+        function showEmbeddedContent(content) {
+            document.getElementById("RichChatRecord").innerHTML = content;
+        }
+
         document.getElementById("ButtonAccount").addEventListener("click", function() {
             var logoutMenu = document.getElementById("logoutMenu");
             if (logoutMenu.style.display === "block") {
@@ -620,7 +638,6 @@
                 complete: function() {
                 }
             });
-            document.getElementById("UserInput").value = "Please wait...";
         } 
     </script>
 </body>
