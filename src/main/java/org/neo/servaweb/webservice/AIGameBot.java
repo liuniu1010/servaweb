@@ -6,12 +6,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.io.File;
 import java.io.OutputStream;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import javax.servlet.AsyncContext;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +40,9 @@ import org.neo.servaaiagent.ifc.NotifyCallbackIFC;
 import org.neo.servaaiagent.impl.GameBotInMemoryForUIImpl;
 import org.neo.servaaiagent.ifc.AccountAgentIFC;
 import org.neo.servaaiagent.impl.AccountAgentImpl;
+import org.neo.servaaiagent.impl.SimpleNotifyCallbackImpl;
+
+import org.neo.servaweb.util.StreamCache;
 
 @Path("/aigamebot")
 public class AIGameBot extends AbsAIChat {
@@ -64,14 +75,13 @@ public class AIGameBot extends AbsAIChat {
     @Path("/streamsend")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.SERVER_SENT_EVENTS)
-    public void streamsend(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+    public void streamsend(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
         response.setContentType("text/event-stream");
         response.setCharacterEncoding("UTF-8");
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Connection", "keep-alive");
 
-        ServletOutputStream outputStream = null;
-        AIGameBot.StreamCallbackImpl notifyCallback = null;
+        NotifyCallbackIFC notifyCallback = null;
         String loginSession = params.getSession();
         String alignedSession = super.alignSession(loginSession);
         String userInput = params.getUserInput();
@@ -79,24 +89,51 @@ public class AIGameBot extends AbsAIChat {
         try {
             checkAccessibilityOnClientAction(loginSession);
 
-            // maybe the old callback exists, remove it 
-            AIGameBot.StreamCache.getInstance().remove(alignedSession);
+            // get or create new notifycallback
+            AsyncContext asyncContext = request.startAsync();
+            asyncContext.setTimeout(0);
 
-            // generate notifycallback and begin code generation 
-            outputStream = response.getOutputStream();
-            notifyCallback = new AIGameBot.StreamCallbackImpl(params, outputStream);
+            OutputStream outputStream = asyncContext.getResponse().getOutputStream();
+
+            notifyCallback = StreamCache.getInstance().get(alignedSession);
+            if(notifyCallback == null) {
+                notifyCallback = new SimpleNotifyCallbackImpl(outputStream);
+            }
+            else {
+                notifyCallback.changeOutputStream(outputStream);
+            }
             notifyCallback.registerWorkingThread();
-            AIGameBot.StreamCache.getInstance().put(alignedSession, notifyCallback);
+            notifyCallback.clearHistory();
             notifyCallback.notify(params.getUserInput() + ENDOFINPUT); 
-            super.streamsend(params, notifyCallback);
-            consume(loginSession);
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            final NotifyCallbackIFC streamCallback = notifyCallback;
+            Future<?> future = executor.submit(() -> {
+                inThreadStreamSend(asyncContext, params, streamCallback);
+            });
+
+            StreamCache.getInstance().put(alignedSession, notifyCallback, future);
         }
         catch(Exception ex) {
             logger.error(ex.getMessage(), ex);
             standardHandleException(ex, response);
         }
+    }
+
+    private void inThreadStreamSend(AsyncContext asyncContext, WSModel.AIChatParams params, NotifyCallbackIFC notifyCallback) {
+        HttpServletResponse response = (HttpServletResponse) asyncContext.getResponse();
+        try {
+            notifyCallback.registerWorkingThread();
+            String loginSession = params.getSession();
+            super.streamsend(params, notifyCallback);
+            consume(loginSession);
+        }
+        catch(Exception ex) {
+            logger.warn(ex.getMessage(), ex);
+            standardHandleException(ex, response);
+        }
         finally {
-            // StreamCache.getInstance().remove(alignedSession); // this will close the associated outputstream
+            asyncContext.complete();
         }
     }
 
@@ -104,7 +141,7 @@ public class AIGameBot extends AbsAIChat {
     @Path("/streamrefresh")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.SERVER_SENT_EVENTS)
-    public void streamrefresh(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+    public void streamrefresh(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
         response.setContentType("text/event-stream");
         response.setCharacterEncoding("UTF-8");
         response.setHeader("Cache-Control", "no-cache");
@@ -116,23 +153,40 @@ public class AIGameBot extends AbsAIChat {
         try {
             checkAccessibilityOnClientAction(loginSession);
 
-            OutputStream outputStream = response.getOutputStream();
-            AIGameBot.StreamCallbackImpl streamCallback = AIGameBot.StreamCache.getInstance().get(alignedSession);
-            if(streamCallback == null) {
+            NotifyCallbackIFC notifyCallback = StreamCache.getInstance().get(alignedSession);
+
+            if (notifyCallback == null) {
+                response.getOutputStream().write(" ".getBytes(StandardCharsets.UTF_8));
+                response.getOutputStream().flush();
                 return;
             }
-            streamCallback.changeOutputStream(outputStream); // this output stream would be closed when streamCallback are finished
-            streamCallback.notifyHistory();
 
-            // wait 5 minutes, every 1 minute, check if the project was finished
-            for(int i = 0;i < 5;i++) {
-                Thread.sleep(60*1000);
-                streamCallback = AIGameBot.StreamCache.getInstance().get(alignedSession);
-                if(streamCallback == null) {
-                    // finished, no need to wait, return directly
-                    return;
+            AsyncContext asyncContext = request.startAsync();
+            asyncContext.setTimeout(0); // disable timeout, let us manage it
+
+            OutputStream outputStream = asyncContext.getResponse().getOutputStream();
+            notifyCallback.changeOutputStream(outputStream); // rebind new output stream
+            notifyCallback.notifyHistory();
+
+            ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+            scheduler.scheduleAtFixedRate(() -> {
+                try {
+                    if (!StreamCache.getInstance().isTaskRunning(alignedSession)) {
+                        asyncContext.complete();
+                        scheduler.shutdown();
+                    }
                 }
-            }
+                catch (Exception e) {
+                    logger.warn("Exception in async streamrefresh check", e);
+                    try {
+                        asyncContext.complete();
+                    }
+                    catch (Exception ignored) {
+                    }
+                    scheduler.shutdown();
+                }
+            }, 0, 10, TimeUnit.SECONDS);
         }
         catch(Exception ex) {
             logger.error(ex.getMessage());
@@ -186,11 +240,7 @@ public class AIGameBot extends AbsAIChat {
         logger.info("loginSession: " + loginSession + " try to newchat");
         try {
             checkAccessibilityOnClientAction(loginSession);
-            AIGameBot.StreamCallbackImpl streamCallback = AIGameBot.StreamCache.getInstance().get(alignedSession);
-            if(streamCallback != null) {
-                streamCallback.clearHistory();
-            }
-            AIGameBot.StreamCache.getInstance().remove(alignedSession);
+            StreamCache.getInstance().remove(alignedSession);
         }
         catch(Exception ex) {
             logger.error(ex.getMessage());
@@ -203,25 +253,39 @@ public class AIGameBot extends AbsAIChat {
     @Path("/previousstep")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse previousstep(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+    public void previousstep(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
             checkAccessibilityOnClientAction(loginSession);
+
             String alignedSession = super.alignSession(loginSession);
             StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
             storageIFC.popCodeFeedback(alignedSession);
-            AIModel.CodeFeedback codeFeedback = storageIFC.peekCodeFeedback(alignedSession);
-            if(codeFeedback != null) {
-                codeFeedback.setIndex(AIModel.CodeFeedback.INDEX_CODECONTENT);
-            }
 
-            return super.refresh(params);
+            AIModel.CodeFeedback codeFeedback = storageIFC.peekCodeFeedback(alignedSession);
+            NotifyCallbackIFC notifyCallback = StreamCache.getInstance().get(alignedSession);
+
+            if(notifyCallback != null) {
+                notifyCallback.registerWorkingThread();
+                OutputStream outputStream = response.getOutputStream();
+                notifyCallback.changeOutputStream(outputStream);
+                notifyCallback.clearHistory();
+                if(codeFeedback != null) {
+                    notifyCallback.notify(codeFeedback.getCodeContent() + ENDOFCODE);
+                }
+                else {
+                    notifyCallback.notify(" ");
+                }
+            }
+            else {
+                response.getOutputStream().write(" ".getBytes(StandardCharsets.UTF_8));
+                response.getOutputStream().flush();
+            }
         }
         catch(Exception ex) {
             logger.error(ex.getMessage());
             standardHandleException(ex, response);
         }
-        return null;
     }
 
     @POST
@@ -262,150 +326,5 @@ public class AIGameBot extends AbsAIChat {
                 return null;
             }
         });
-    }
-
-    public static class StreamCache {
-        private static StreamCache instance = new StreamCache();
-        private StreamCache() {
-        }
- 
-        public static StreamCache getInstance() {
-            return instance;
-        }
-
-        private Map<String, AIGameBot.StreamCallbackImpl> streamMap = new ConcurrentHashMap<String, AIGameBot.StreamCallbackImpl>();    
-        public void put(String alignedSession, AIGameBot.StreamCallbackImpl streamCallback) {
-            if(streamCallback != null) {
-                streamMap.put(alignedSession, streamCallback);
-            }   
-        }   
-
-        public AIGameBot.StreamCallbackImpl get(String alignedSession) {
-            if(streamMap.containsKey(alignedSession)) {
-                return streamMap.get(alignedSession);
-            }
-            else {
-                return null;
-            }
-        }
-
-        public void remove(String alignedSession) {
-            if(streamMap.containsKey(alignedSession)) {
-                AIGameBot.StreamCallbackImpl streamCallback = streamMap.get(alignedSession);
-                streamCallback.removeWorkingThread();
-                streamCallback.closeOutputStream(); // make sure the output stream was closed to release resource
-                streamMap.remove(alignedSession);
-            }
-        }
-    }
-
-    public static class StreamCallbackImpl implements NotifyCallbackIFC {
-        private WSModel.AIChatParams params;
-        private OutputStream  outputStream;
-        private int workingThreadHashCode;  // to control only one thread has the ability to push data on it
-
-        public StreamCallbackImpl(WSModel.AIChatParams inputParams, OutputStream inputOutputStream) {
-            params = inputParams;
-            outputStream = inputOutputStream;
-        }
-
-        public void changeOutputStream(OutputStream inputOutputStream) {
-            closeOutputStream(); // close original output stream before switch to new one
-            outputStream = inputOutputStream;
-        }
-
-        public void closeOutputStream() {
-            if(outputStream == null) {
-                return;
-            }
-            try {
-               outputStream.close();
-            }
-            catch(Exception ex) {
-            }
-        }
-
-        @Override
-        public void notify(String information) {
-            try {
-                if(!isWorkingThread()) {
-                    throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_NOT_WORKING_THREAD);
-                }
-                flushInformation(information, outputStream);
-            }
-            catch(NeoAIException nex) {
-                throw nex;
-            }
-            catch(Exception ex) {
-                logger.error(ex.getMessage(), ex);
-            }
-        }
-
-        private void registerWorkingThread() {
-            workingThreadHashCode = Thread.currentThread().hashCode();
-        }
-
-        private void removeWorkingThread() {
-            workingThreadHashCode = 0;
-        }
-
-        @Override
-        public boolean isWorkingThread() {
-            return workingThreadHashCode == Thread.currentThread().hashCode();
-        }
-
-        private String alignSession(String loginSession) {
-            return HOOK + loginSession;
-        }
-
-        public void notifyHistory() throws Exception {
-            try {
-                innerNotifyHistory();
-            }
-            catch(Exception ex) {
-                logger.error(ex.getMessage(), ex);
-            }
-        }
-
-        private void innerNotifyHistory() throws Exception {
-            String loginSession = params.getSession();
-            String alignedSession = alignSession(loginSession);
-            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
-            AIModel.CodeFeedback codeFeedback = storageIFC.peekCodeFeedback(alignedSession);
-            if(codeFeedback != null) {
-                String information = null;
-                if(codeFeedback.getIndex() == AIModel.CodeFeedback.INDEX_CODECONTENT) {
-                    information = codeFeedback.toString() + ENDOFCODE;
-                }
-                else {
-                    information = codeFeedback.toString() + ENDOFINPUT;
-                }
-                this.flushInformation(information, outputStream);
-            }
-        }
-
-        public void clearHistory() {
-            try {
-                innerClearHistory();
-            }
-            catch(Exception ex) {
-                logger.error(ex.getMessage(), ex);
-            }   
-        }
-
-        private void innerClearHistory() throws Exception {
-            String loginSession = params.getSession();
-            String alignedSession = alignSession(loginSession);
-            StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
-            storageIFC.clearCodeFeedbacks(alignedSession);
-        }
-
-        private static void flushInformation(String information, OutputStream outputStream) throws Exception {
-            if(information == null || information.trim().equals("")) {
-                return;
-            }
-            outputStream.write(information.getBytes(StandardCharsets.UTF_8));
-            outputStream.flush();
-        }
     }
 }

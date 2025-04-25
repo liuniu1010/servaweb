@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gomoku: Human vs Computer</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0e6d2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+      user-select: none;
+      color: #333;
+    }
+    h1 {
+      margin-top: 20px;
+      text-shadow: 1px 1px 2px #bfae80;
+    }
+    #game {
+      position: relative;
+      margin-top: 20px;
+      background: #d8b65a;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+      border-radius: 8px;
+      border: 2px solid #a07e20;
+    }
+    canvas {
+      display: block;
+      background: #d8b65a;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #info {
+      margin-top: 15px;
+      font-weight: 600;
+      font-size: 1.2em;
+      min-height: 24px;
+      color: #5a3e07;
+      text-shadow: 0 0 1px #fff3cc;
+    }
+    #controls {
+      margin-top: 15px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      background: #bfae7a;
+      border: 2px solid #8f7a37;
+      border-radius: 5px;
+      padding: 10px 18px;
+      cursor: pointer;
+      font-weight: 700;
+      color: #4b3a0f;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+      box-shadow: inset 0 0 6px #f1e7b8;
+    }
+    button:hover {
+      background: #d6c083;
+      border-color: #a08832;
+    }
+    button:disabled {
+      background: #bdbdbd;
+      border-color: #999999;
+      cursor: default;
+      box-shadow: none;
+      color: #7a7a7a;
+    }
+    #footer {
+      margin-top: auto;
+      padding: 10px;
+      font-size: 12px;
+      color: #888;
+      text-align: center;
+      width: 100%;
+      box-shadow: inset 0 1px 2px #af9f5b;
+      background: #e6ddaa;
+      user-select: text;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gomoku: Human vs Computer</h1>
+  <div id="game">
+    <canvas id="board" width="600" height="600" tabindex="0" aria-label="Gomoku Board"></canvas>
+    <div id="info" role="alert" aria-live="polite"></div>
+    <div id="controls">
+      <button id="btnNewGame">New Game</button>
+      <button id="btnUndo" disabled>undo</button>
+      <button id="btnToggleFirst">Toggle First Player (Current: Human)</button>
+    </div>
+  </div>
+  <div id="footer">Designer &copy; 2024 Gomoku Game</div>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById('board');
+      const ctx = canvas.getContext('2d');
+      const info = document.getElementById('info');
+      const btnNewGame = document.getElementById('btnNewGame');
+      const btnUndo = document.getElementById('btnUndo');
+      const btnToggleFirst = document.getElementById('btnToggleFirst');
+      
+      const BOARD_SIZE = 15;
+      const CELL_SIZE = canvas.width / BOARD_SIZE;
+
+      const PIECE_RADIUS = CELL_SIZE * 0.4;
+
+      let board = [];
+
+      let moves = [];
+
+      let humanFirst = true;
+
+      let humanTurn = true;
+
+      let gameOver = false;
+
+      const directions = [
+        { x: 1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 1, y: 1 },
+        { x: 1, y: -1 },
+      ];
+
+      function initBoard() {
+        board = Array.from({length: BOARD_SIZE}, () => Array(BOARD_SIZE).fill(0));
+        moves = [];
+        gameOver = false;
+        humanTurn = humanFirst;
+        updateInfo(humanTurn ? 'Your Turn (Black)' : 'Computer is thinking...');
+        btnUndo.disabled = true;
+      }
+
+      function drawBoard() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#6b4c03';
+        ctx.lineWidth = 1;
+
+        for (let i = 0; i < BOARD_SIZE; i++) {
+          ctx.beginPath();
+          ctx.moveTo(CELL_SIZE/2 + i * CELL_SIZE, CELL_SIZE/2);
+          ctx.lineTo(CELL_SIZE/2 + i * CELL_SIZE, canvas.height - CELL_SIZE/2);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(CELL_SIZE/2, CELL_SIZE/2 + i * CELL_SIZE);
+          ctx.lineTo(canvas.width - CELL_SIZE/2, CELL_SIZE/2 + i * CELL_SIZE);
+          ctx.stroke();
+        }
+
+        let starPoints = [3, 7, 11];
+        for (let i of starPoints) {
+          for (let j of starPoints) {
+            ctx.beginPath();
+            ctx.arc(CELL_SIZE/2 + i * CELL_SIZE, CELL_SIZE/2 + j * CELL_SIZE, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = '#6b4c03';
+            ctx.fill();
+          }
+        }
+      }
+
+      function drawPieces() {
+        for (let y = 0; y < BOARD_SIZE; y++) {
+          for (let x = 0; x < BOARD_SIZE; x++) {
+            const piece = board[y][x];
+            if (piece !== 0) {
+              drawPiece(x, y, piece === 1);
+            }
+          }
+        }
+      }
+
+      function drawPiece(x, y, isBlack) {
+        const cx = CELL_SIZE/2 + x * CELL_SIZE;
+        const cy = CELL_SIZE/2 + y * CELL_SIZE;
+        const gradient = ctx.createRadialGradient(cx - PIECE_RADIUS/3, cy - PIECE_RADIUS/3, PIECE_RADIUS/5, cx, cy, PIECE_RADIUS);
+        if (isBlack) {
+          gradient.addColorStop(0, '#0a0a0a');
+          gradient.addColorStop(1, '#454545');
+        } else {
+          gradient.addColorStop(0, '#f9f9f9');
+          gradient.addColorStop(1, '#cfcfcf');
+        }
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(cx, cy, PIECE_RADIUS, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.strokeStyle = isBlack ? '#222' : '#888';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      function tryMove(x, y, player) {
+        if (gameOver) return false;
+        if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE) return false;
+        if (board[y][x] !== 0) return false;
+        board[y][x] = player;
+        moves.push({x, y, player});
+        btnUndo.disabled = false;
+        return true;
+      }
+
+      function checkWin(x, y, player) {
+        for (let dir of directions) {
+          let count = 1;
+
+          let i = 1;
+          while (true) {
+            const nx = x + dir.x * i;
+            const ny = y + dir.y * i;
+            if (nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE) break;
+            if (board[ny][nx] !== player) break;
+            count++;
+            i++;
+          }
+
+          i = 1;
+          while (true) {
+            const nx = x - dir.x * i;
+            const ny = y - dir.y * i;
+            if (nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE) break;
+            if (board[ny][nx] !== player) break;
+            count++;
+            i++;
+          }
+          if (count >= 5) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function isDraw() {
+        for (let y = 0; y < BOARD_SIZE; y++) {
+          for (let x = 0; x < BOARD_SIZE; x++) {
+            if (board[y][x] === 0) return false;
+          }
+        }
+        return true;
+      }
+
+      function updateInfo(text) {
+        info.textContent = text;
+      }
+
+      function handleClick(event) {
+        if (gameOver || !humanTurn) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.floor((event.clientX - rect.left) / CELL_SIZE);
+        const y = Math.floor((event.clientY - rect.top) / CELL_SIZE);
+
+        if (tryMove(x, y, 1)) {
+          drawGame();
+          if (checkWin(x, y, 1)) {
+            gameOver = true;
+            updateInfo('You win! 🎉');
+            return;
+          } else if (isDraw()) {
+            gameOver = true;
+            updateInfo('Draw!');
+            return;
+          }
+          humanTurn = false;
+          updateInfo('Computer is thinking...');
+          setTimeout(computerMove, 300);
+        }
+      }
+
+      function computerMove() {
+        if (gameOver) return;
+        
+        function countConsecutive(x, y, player, dx, dy) {
+          let count = 0;
+          for (let step = 1; step < 5; step++) {
+            const nx = x + dx * step;
+            const ny = y + dy * step;
+            if (nx < 0 || nx >= BOARD_SIZE || ny < 0 || ny >= BOARD_SIZE) break;
+            if (board[ny][nx] !== player) break;
+            count++;
+          }
+          return count;
+        }
+
+        function evaluatePoint(x, y) {
+          if (board[y][x] !== 0) return -1;
+          let score = 0;
+          for (let dir of directions) {
+            let ownCount = 1 + countConsecutive(x, y, 2, dir.x, dir.y) + countConsecutive(x, y, 2, -dir.x, -dir.y);
+            let oppCount = 1 + countConsecutive(x, y, 1, dir.x, dir.y) + countConsecutive(x, y, 1, -dir.x, -dir.y);
+
+            if (ownCount >= 5) {
+              score += 10000;
+            } else if (ownCount === 4) {
+              score += 5000;
+            } else if (ownCount === 3) {
+              score += 1000;
+            } else if (ownCount === 2) {
+              score += 500;
+            }
+
+            if (oppCount >= 5) {
+              score += 9000;
+            } else if (oppCount === 4) {
+              score += 4000;
+            } else if (oppCount === 3) {
+              score += 800;
+            } else if (oppCount === 2) {
+              score += 400;
+            }
+          }
+          return score;
+        }
+
+        let bestScore = -1;
+        let candidates = [];
+        for (let y = 0; y < BOARD_SIZE; y++) {
+          for (let x = 0; x < BOARD_SIZE; x++) {
+            const s = evaluatePoint(x, y);
+            if (s > bestScore) {
+              bestScore = s;
+              candidates = [{ x, y }];
+            } else if (s === bestScore) {
+              candidates.push({ x, y });
+            }
+          }
+        }
+
+        if (candidates.length === 0) {
+          gameOver = true;
+          updateInfo('Draw!');
+          return;
+        }
+
+        const move = candidates[Math.floor(Math.random() * candidates.length)];
+        tryMove(move.x, move.y, 2);
+        drawGame();
+        if (checkWin(move.x, move.y, 2)) {
+          gameOver = true;
+          updateInfo('Computer wins!😢');
+          return;
+        } else if (isDraw()) {
+          gameOver = true;
+          updateInfo('Draw!');
+          return;
+        }
+
+        humanTurn = true;
+        updateInfo('Your Turn (Black)');
+      }
+
+      function drawGame() {
+        drawBoard();
+        drawPieces();
+      }
+
+      function undoMove() {
+        if (moves.length === 0 || gameOver) return;
+
+        for (let i = 0; i < 2; i++) {
+          const lastMove = moves.pop();
+          if (!lastMove) break;
+          board[lastMove.y][lastMove.x] = 0;
+        }
+        gameOver = false;
+        humanTurn = humanFirst;
+        drawGame();
+        updateInfo(humanTurn ? 'Your Turn (Black)' : 'Computer is thinking...');
+        btnUndo.disabled = moves.length === 0;
+        if (!humanTurn) {
+          setTimeout(computerMove, 300);
+        }
+      }
+
+      function toggleFirst() {
+        humanFirst = !humanFirst;
+        btnToggleFirst.textContent = 'Toggle First Player (Current: ' + (humanFirst ? 'Human' : 'Computer') + '）';
+        startNewGame();
+      }
+
+      function startNewGame() {
+        initBoard();
+        drawGame();
+        if (!humanTurn) {
+          setTimeout(computerMove, 300);
+        }
+      }
+
+      canvas.addEventListener('click', handleClick);
+      btnNewGame.addEventListener('click', startNewGame);
+      btnUndo.addEventListener('click', undoMove);
+      btnToggleFirst.addEventListener('click', toggleFirst);
+
+      startNewGame();
+    })();
+  </script>
+</body>
+</html>

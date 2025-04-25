@@ -308,6 +308,7 @@
             document.getElementById("ButtonSendAudio").disabled = true;
             document.getElementById("ButtonSend").disabled = true;
             document.getElementById("UserInput").disabled = true;
+            document.getElementById("UserInput").value = "Please wait...";
         }
 
         function showEmbeddedContent(content) {
@@ -383,6 +384,39 @@
 
         function previousstep() {
             var previousstepUrl = "api/aigamebot/previousstep";
+            var userInput = "";
+            disableSend();
+            $.ajax({
+                url: previousstepUrl,
+                type: "POST",
+                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                xhrFields: {
+                    onprogress: function(e) {
+                        var newText = e.target.responseText;
+                        handleOnProcessText(newText);
+                    }
+                },
+                success: function (data) {
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
+                    }
+                    document.getElementById("RichChatRecord").innerHTML = error;
+                    document.getElementById("UserInput").value = "";
+                    enableSend();
+                }
+            });
+            logoutMenu.style.display = "none";
+        }
+
+        function previousstep_bak() {
+            var previousstepUrl = "api/aigamebot/previousstep";
             var userInput = document.getElementById("UserInput").value;
             $.ajax({
                 url: previousstepUrl,
@@ -434,6 +468,7 @@
             var ENDOFCODE = "*****ENDOFCODE*****";
 
             var separators = [ENDOFINPUT, ENDOFCODE];
+            newText = newText.trim();
             if(newText.endsWith(ENDOFINPUT)
                || newText.endsWith(ENDOFCODE)) {
                 var splitText = splitString(newText, separators);
@@ -448,9 +483,9 @@
 
         var xhr;
         function streamsend() {
-            disableSend();
             var streamsendUrl = "api/aigamebot/streamsend";
             var userInput = document.getElementById("UserInput").value;
+            disableSend();
             if(isStringEmptyOrWhitespace(userInput)) {
                 enableSend();
                 return false;
@@ -474,7 +509,6 @@
                     }
                 },
                 success: function (data) {
-                    enableSend();
                 },
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {
@@ -491,9 +525,9 @@
         }
 
         function streamrefresh() {
-            disableSend();
             var streamrefreshUrl = "api/aigamebot/streamrefresh";
             var userInput = "";
+            disableSend();
             $.ajax({
                 url: streamrefreshUrl,
                 type: "POST",
@@ -513,7 +547,6 @@
                     }
                 },
                 success: function (data) {
-                    enableSend();
                 },
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {
@@ -525,18 +558,15 @@
                     document.getElementById("RichChatRecord").innerHTML = error;
                     document.getElementById("UserInput").value = "";
                     enableSend();
-                },
-                complete: function() {
-                    document.getElementById("UserInput").value = "";
                 }
             });
             logoutMenu.style.display = "none";
         }
 
         function sendEcho() {
-            disableSend();
             var echoUrl = "api/aigamebot/echo";
             var userInput = document.getElementById("UserInput").value;
+            disableSend();
             if(isStringEmptyOrWhitespace(userInput)) {
                 enableSend();
                 return false;
@@ -608,7 +638,6 @@
                     document.getElementById("UserInput").value = "";
                 }
             });
-            document.getElementById("UserInput").value = "Please wait...";
         }
 
         function disableSendPasswordButton() {
@@ -837,7 +866,6 @@
                 complete: function() {
                 }
             });
-            document.getElementById("UserInput").value = "Please wait...";
         }
 
         function splitString(input, separators) {
