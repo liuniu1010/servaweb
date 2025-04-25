@@ -241,6 +241,7 @@ public class AIGameBot extends AbsAIChat {
         try {
             checkAccessibilityOnClientAction(loginSession);
             StreamCache.getInstance().remove(alignedSession);
+            super.newchat(params);
         }
         catch(Exception ex) {
             logger.error(ex.getMessage());
