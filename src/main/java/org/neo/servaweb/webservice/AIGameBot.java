@@ -156,7 +156,7 @@ public class AIGameBot extends AbsAIChat {
             NotifyCallbackIFC notifyCallback = StreamCache.getInstance().get(alignedSession);
 
             if (notifyCallback == null) {
-                response.getOutputStream().write(" ".getBytes(StandardCharsets.UTF_8));
+                response.getOutputStream().write((ENDOFCODE + " " + ENDOFCODE).getBytes(StandardCharsets.UTF_8));
                 response.getOutputStream().flush();
                 return;
             }
@@ -274,11 +274,11 @@ public class AIGameBot extends AbsAIChat {
                     notifyCallback.notify(codeFeedback.getCodeContent() + ENDOFCODE);
                 }
                 else {
-                    notifyCallback.notify(" ");
+                    notifyCallback.notify(ENDOFCODE + " " + ENDOFCODE);
                 }
             }
             else {
-                response.getOutputStream().write(" ".getBytes(StandardCharsets.UTF_8));
+                response.getOutputStream().write((ENDOFCODE + " " + ENDOFCODE).getBytes(StandardCharsets.UTF_8));
                 response.getOutputStream().flush();
             }
         }
