@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linux Terminal Simulator (with Pipeline, head, tail)</title>
+  <style>
+    body {
+      background: #121314;
+      color: #eaeaea;
+      font-family: 'Fira Mono', 'Consolas', 'Monaco', monospace;
+      margin: 0;
+      height: 100vh;
+    }
+    #terminal-container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: #191a1b;
+      border-radius: 10px;
+      box-shadow: 0 2px 32px #000b 0.10;
+      padding: 30px;
+      min-height: 500px;
+      position: relative;
+      z-index: 1;
+    }
+    #terminal {
+      min-height: 400px;
+      outline: none;
+    }
+    .input-line {
+      display: flex;
+      align-items: center;
+      margin-bottom: 3px;
+      line-height: 1.9;
+    }
+    .prompt {
+      color: #30d178;
+      margin-right: 8px;
+      user-select: none;
+    }
+    .command-input {
+      background: none;
+      border: none;
+      color: inherit;
+      font: inherit;
+      width: 100%;
+      outline: none;
+    }
+    .output {
+      margin-left: 1.7em;
+      white-space: pre-wrap;
+      color: #dadada;
+    }
+    .cmd-error {
+      color: #e35f58;
+      margin-left: 1.7em;
+    }
+    .cmd-stdout {
+      color: #eaeaea;
+      margin-left: 1.7em;
+    }
+    .cmd-info {
+      color: #50b0ff;
+      margin-left: 1.7em;
+      font-style: italic;
+    }
+    .file {
+      color: #81c0fa;
+    }
+    .dir {
+      color: #ffe447;
+      font-weight: bold;
+    }
+    #vim-modal {
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      z-index: 1000;
+      background: rgba(10,10,15,0.93);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      display:none;
+      flex-direction: column;
+    }
+    #vim-editor-ui {
+      background: #101215;
+      border-radius: 10px;
+      box-shadow: 0 2px 22px #000b 0.18;
+      padding: 0 0 6px;
+      min-width: 300px;
+      max-width: calc(100vw - 40px);
+      min-height: 120px;
+      max-height: calc(98vh - 30px);
+      display: flex;
+      flex-direction: column;
+      width: 80vw;
+    }
+    #vim-buffer {
+      background: #181b21;
+      font-family: 'Fira Mono', 'Consolas', 'Monaco', monospace;
+      font-size: 1.08em;
+      color: #d8ffd6;
+      border: none;
+      margin: 0;
+      padding: 22px 18px 22px 12px;
+      flex: 1 1 auto;
+      resize: none;
+      border-radius: 10px 10px 0 0;
+      outline: none;
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 160px;
+      max-height: 60vh;
+      overflow: auto;
+    }
+    #vim-statusbar {
+      width:100%;
+      color: #30d178;
+      background: #16181c;
+      font-size: 1.0em;
+      padding: 2px 10px 3px 12px;
+      border-radius: 0 0 7px 7px;
+      border-top: 1px solid #223233;
+      font-family: 'Fira Mono', monospace;
+      letter-spacing: 1px;
+    }
+    .vim-help {
+      padding: 0 16px 6px 16px;
+      font-size: 0.98em;
+      color: #eaeaea66;
+      font-style: italic;
+    }
+    /* Scrollbar */
+    #terminal-container::-webkit-scrollbar {
+      width: 10px;
+      background: #232425;
+    }
+    #terminal-container::-webkit-scrollbar-thumb {
+      background: #333435;
+      border-radius: 10px;
+    }
+    @media (max-width: 600px) {
+      #terminal-container { padding: 10px; }
+      #vim-editor-ui { width: 98vw; min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div id="terminal-container">
+    <div id="terminal" tabindex="0"></div>
+  </div>
+  <div id="vim-modal">
+    <div id="vim-editor-ui">
+      <textarea id="vim-buffer" spellcheck="false"></textarea>
+      <div class="vim-help">Vim Simulator: [ESC]: Normal mode, [i]: Insert mode, [:wq]: save+quit, [:q!]: quit without save, [Tab]: indent</div>
+      <div id="vim-statusbar">-- NORMAL --</div>
+    </div>
+  </div>
+  <script>
+// Linux Terminal Simulator with Pipeline, head, tail Support
+const user = 'user';
+const host = 'linuxsim';
+let currDir = '/home/user';
+const homeDir = '/home/user';
+// Virtual Filesystem structure (unchanged)
+let fs = {
+  '/':        { type: 'dir', children: ['home','bin'] },
+  '/home':    { type: 'dir', children: ['user'] },
+  '/home/user': { type: 'dir', children: ['file.txt','projects'] },
+  '/home/user/file.txt': { type: 'file', content: 'This is a sample file for the Linux Simulator!'},
+  '/home/user/projects': { type: 'dir', children: ['hello.c','README.md'] },
+  '/home/user/projects/hello.c': { type: 'file', content: '#include <stdio.h>\nint main() { printf("Hello, Linux Simulator!\\n"); return 0; }' },
+  '/home/user/projects/README.md': { type: 'file', content: '# Project Folder\nThis is the README for the projects folder.' },
+  '/bin':     { type: 'dir', children: ['ls','cat','pwd','cd','echo','clear','help','touch','mkdir','rm','rmdir','whoami','date','tree','vim','ifconfig','ping','nslookup','ps','top','head','tail'] },
+};
+
+const commandList = [
+  'ls', 'cd', 'cat', 'echo', 'pwd', 'touch', 'mkdir', 'rm', 'rmdir', 'whoami', 'clear', 'help', 'date', 'tree', 'vim',
+  'ifconfig', 'ping', 'nslookup', 'ps', 'top', 'head', 'tail'
+];
+
+function getPrompt() {
+  return `<span class="prompt">${user}@${host}:${currDir.replace('/home/user','~')}$</span>`;
+}
+// ... Filesystem helper functions and system static info (Unchanged)
+function fs_resolve(path, currentDir=currDir) {
+  if (!path || path.length===0) return currentDir;
+  if (path === '~') return homeDir;
+  let parts;
+  if (path[0]==='/') {
+    parts = path.split('/').filter(Boolean);
+  } else {
+    let cur = currentDir.split('/').filter(Boolean);
+    let rel = path.split('/');
+    parts = [...cur];
+    rel.forEach(p => {
+      if (p==='..') parts.pop();
+      else if (p==='.' || p==="") {} 
+      else parts.push(p);
+    });
+  }
+  return '/' + parts.join('/');
+}
+function fs_exists(path) {
+  return fs[path] !== undefined;
+}
+function fs_is_dir(path) {
+  return fs_exists(path) && fs[path].type === 'dir';
+}
+function fs_is_file(path) {
+  return fs_exists(path) && fs[path].type === 'file';
+}
+function fs_list(path) {
+  if (fs_is_dir(path)) {
+    return fs[path].children || [];
+  }
+  return [];
+}
+function fs_parent(path) {
+  if (path==='/') return null;
+  let parts = path.split('/');
+  parts.pop();
+  if (parts.length === 1 && parts[0]==='') return '/';
+  return parts.join('/') || '/';
+}
+function fs_add_file(path, content='') {
+  let parent = fs_parent(path);
+  let fname = path.split('/').pop();
+  if (!fs_is_dir(parent)) return false;
+  if (fs_exists(path)) return false;
+  fs[parent].children.push(fname);
+  fs[path] = { type:'file', content: content };
+  return true;
+}
+function fs_add_dir(path) {
+  let parent = fs_parent(path);
+  let dname = path.split('/').pop();
+  if (!fs_is_dir(parent)) return false;
+  if (fs_exists(path)) return false;
+  fs[parent].children.push(dname);
+  fs[path] = { type:'dir', children: [] };
+  return true;
+}
+function fs_remove(path) {
+  if (!fs_exists(path)) return false;
+  let parent = fs_parent(path);
+  let name = path.split('/').pop();
+  if (parent && fs_is_dir(parent)) {
+    fs[parent].children = fs[parent].children.filter(c => c!==name);
+  }
+  delete fs[path];
+  Object.keys(fs).forEach(f => {
+    if (f.startsWith(path + '/')) delete fs[f];
+  });
+  return true;
+}
+function fs_is_empty_dir(path) {
+  return fs_is_dir(path) && fs[path].children.length === 0;
+}
+const SYSTEM = {
+  hostname: 'linuxsim',
+  ip: '192.168.1.35',
+  netmask: '255.255.255.0',
+  broadcast: '192.168.1.255',
+  mac: '02:42:ac:11:00:02',
+  gateway: '192.168.1.1',
+  dns: '8.8.8.8',
+  processes: [
+    { pid: 1, user: 'root', cmd: 'init', cpu: "0.0", mem:"0.4" },
+    { pid: 103, user: 'user', cmd: 'bash', cpu: "0.1", mem:"0.6" },
+    { pid: 242, user: 'user', cmd: 'node', cpu: "1.8", mem:"1.3" },
+    { pid: 398, user: 'user', cmd: '/usr/bin/python3', cpu: "0.2", mem:"0.9" },
+    { pid: 406, user: 'user', cmd: 'vim', cpu: "0.0", mem:"1.2" },
+    { pid: 515, user: 'nobody', cmd: 'sshd', cpu: "0.0", mem:"0.6" },
+    { pid: 888, user: 'user', cmd: 'chrome', cpu: "7.6", mem:"5.3" },
+    { pid: 1020, user: 'root', cmd: 'cron', cpu: "0.0", mem:"0.4" }
+  ]
+};
+
+//--------------------------------------------
+// Pipeline Support Implementation
+//--------------------------------------------
+function runPipeline(commandLine) {
+  // Split by | but not inside quotes
+  let segments = [];
+  let current = '';
+  let inSingle = false, inDouble = false;
+  for (let i = 0; i < commandLine.length; i++) {
+    let c = commandLine[i];
+    if (c === "'" && !inDouble) inSingle = !inSingle;
+    else if (c === '"' && !inSingle) inDouble = !inDouble;
+    else if (c === '|' && !inSingle && !inDouble) {
+      segments.push(current.trim());
+      current = '';
+      continue;
+    }
+    current += c;
+  }
+  if (current.trim().length) segments.push(current.trim());
+
+  let pipedInput = null;
+
+  for (let i = 0; i < segments.length; i++) {
+    let isLast = i === segments.length - 1;
+    let cmd = segments[i];
+    pipedInput = simulateCommand(cmd, pipedInput, isLast);
+  }
+  return pipedInput;
+}
+//--------------------------------------------
+// Pipeline-aware simulateCommand
+//--------------------------------------------
+function simulateCommand(cmdline, pipedIn, isFinalInPipeline) {
+  // Accept pipedIn: either null, string, or array of string lines (normalized internally)
+  cmdline = cmdline.replace(/(^\s+|\s+$)/g,'');
+  if (!cmdline.length) return null;
+
+  // simple redirection support: only last stage
+  let outputRedirect = null;
+  let match = cmdline.match(/([^>]+)>(>?)\s*([^\s]+)/);
+  if(match) {
+    cmdline = match[1].trim();
+    outputRedirect = { file: match[3], append: match[2]==='>' };
+  }
+
+  let [cmd, ...args] = splitArgs(cmdline);
+  cmd = cmd.trim();
+
+  //----------------------------------------
+  // Helper to convert input string/array to array lines
+  function linesArr(input) {
+    if (!input) return [];
+    if (Array.isArray(input)) return input;
+    return String(input).split(/\r?\n/);
+  }
+  //----------------------------------------
+
+  switch(cmd) {
+    case 'ls': {
+      let showAll = args.includes('-a');
+      let longFmt = args.includes('-l');
+      let targetArg = args.find(arg => !arg.startsWith('-')) || '.';
+      let dir = fs_resolve(targetArg);
+      if (!fs_exists(dir))
+        return outputError(`ls: cannot access '${targetArg}': No such file or directory`);
+      if (fs_is_file(dir))
+        return `<span class="file">${targetArg}</span>`;
+      let children = fs_list(dir).slice();
+      if (dir==='/') children.unshift('..');
+      if (dir !== '/') children.unshift('.');
+      let out = [];
+      children.forEach(name => {
+        let full = dir+(dir.endsWith('/')?'':'/')+name;
+        if (fs_is_dir(full)) out.push(name);
+        else if (fs_is_file(full)) out.push(name);
+      });
+      let lsOut = out.join('  ');
+      // For pipeline: return as text, not HTML
+      return (pipedIn ? lsOut.split('  ') : `<span class="cmd-stdout">${escapeHtml(lsOut)}</span>`);
+    }
+    case 'pwd':
+      return (pipedIn ? currDir.replace(homeDir,'~') : `${currDir.replace(homeDir,'~')}`);
+    case 'cd': {
+      let dir = fs_resolve(args[0]||'~');
+      if (!fs_is_dir(dir))
+        return outputError(`cd: no such file or directory: ${args[0]||'~'}`);
+      currDir = dir;
+      return '';
+    }
+    case 'whoami':
+      return user;
+    case 'cat': {
+      if (!args.length && pipedIn) {
+        // read from pipe
+        return Array.isArray(pipedIn) ? pipedIn.join('\n') : (pipedIn||'');
+      } else if (!args.length) {
+        return outputError('cat: missing file operand');
+      }
+      let out = [];
+      for (let f of args) {
+        let path = fs_resolve(f);
+        if (!fs_exists(path))
+          return outputError(`cat: ${f}: No such file or directory`);
+        if (fs_is_dir(path)) return outputError(`cat: ${f}: Is a directory`);
+        out.push(fs[path].content);
+      }
+      return out.join('\n');
+    }
+    case 'head': {
+      // Usage: head -n NUM file or head file
+      let numLines = 10;
+      let fileArgs = [];
+      for (let i = 0; i < args.length; i++) {
+        if (args[i] === '-n' && args[i+1]) {
+          numLines = Math.max(0, parseInt(args[i+1]) || 10);
+          i++;
+        } else {
+          fileArgs.push(args[i]);
+        }
+      }
+      if (fileArgs.length===0 && pipedIn) {
+        // pipeline: act on piped input
+        let lines = linesArr(pipedIn);
+        return lines.slice(0, numLines).join('\n');
+      } else if (fileArgs.length) {
+        let out = [];
+        for (let f of fileArgs) {
+          let path = fs_resolve(f);
+          if (!fs_exists(path)) return outputError(`head: cannot open '${f}' for reading: No such file or directory`);
+          if (fs_is_dir(path)) return outputError(`head: error reading '${f}': Is a directory`);
+          let contentLines = linesArr(fs[path].content);
+          out.push(contentLines.slice(0, numLines).join('\n'));
+        }
+        return out.join(fileArgs.length > 1 ? '\n' : '');
+      } else {
+        return outputError('head: missing file operand');
+      }
+    }
+    case 'tail': {
+      // Usage: tail -n NUM file or tail file
+      let numLines = 10;
+      let fileArgs = [];
+      for (let i = 0; i < args.length; i++) {
+        if (args[i] === '-n' && args[i+1]) {
+          numLines = Math.max(0, parseInt(args[i+1]) || 10);
+          i++;
+        } else {
+          fileArgs.push(args[i]);
+        }
+      }
+      if (fileArgs.length===0 && pipedIn) {
+        // pipeline: act on piped input
+        let lines = linesArr(pipedIn);
+        return lines.slice(-numLines).join('\n');
+      } else if (fileArgs.length) {
+        let out = [];
+        for (let f of fileArgs) {
+          let path = fs_resolve(f);
+          if (!fs_exists(path)) return outputError(`tail: cannot open '${f}' for reading: No such file or directory`);
+          if (fs_is_dir(path)) return outputError(`tail: error reading '${f}': Is a directory`);
+          let contentLines = linesArr(fs[path].content);
+          out.push(contentLines.slice(-numLines).join('\n'));
+        }
+        return out.join(fileArgs.length > 1 ? '\n' : '');
+      } else {
+        return outputError('tail: missing file operand');
+      }
+    }
+    case 'touch': {
+      if (!args.length) return outputError('touch: missing file operand');
+      let touched = [];
+      for (let f of args) {
+        let path = fs_resolve(f);
+        if (!fs_exists(path)) {
+          fs_add_file(path, '');
+          touched.push(f);
+        } else if (fs_is_file(path)) {
+          touched.push(f);
+        } else return outputError(`touch: cannot touch '${f}': Is a directory`);
+      }
+      return '';
+    }
+    case 'mkdir': {
+      if (!args.length) return outputError('mkdir: missing operand');
+      let created = [];
+      for (let d of args) {
+        let path = fs_resolve(d);
+        if (fs_exists(path)) return outputError(`mkdir: cannot create directory '${d}': File exists`);
+        fs_add_dir(path);
+        created.push(d);
+      }
+      return '';
+    }
+    case 'rm': {
+      if (!args.length) return outputError('rm: missing operand');
+      for (let f of args) {
+        let path = fs_resolve(f);
+        if (!fs_exists(path)) return outputError(`rm: cannot remove '${f}': No such file or directory`);
+        if (fs_is_dir(path)) return outputError(`rm: cannot remove '${f}': Is a directory`);
+        fs_remove(path);
+      }
+      return '';
+    }
+    case 'rmdir': {
+      if (!args.length) return outputError('rmdir: missing operand');
+      for (let d of args) {
+        let path = fs_resolve(d);
+        if (!fs_is_dir(path)) return outputError(`rmdir: failed to remove '${d}': Not a directory`);
+        if (!fs_is_empty_dir(path)) return outputError(`rmdir: failed to remove '${d}': Directory not empty`);
+        fs_remove(path);
+      }
+      return '';
+    }
+    case 'clear':
+      terminal.innerHTML = '';
+      return null;
+    case 'help':
+      return renderHelp(true);
+    case 'date':
+      return new Date().toString();
+    case 'tree': {
+      let target = args[0] || '.';
+      let dir = fs_resolve(target);
+      if (!fs_is_dir(dir)) return outputError(`tree: '${target}': Not a directory`);
+      return tree_dir(dir, '', true).map(e =>
+        e.replace(/<[^>]+>/g,'')
+      ).join('\n');
+    }
+    case 'vim': {
+      if (!args.length) return outputError('vim: missing file operand');
+      let fileArg = args[0];
+      let path = fs_resolve(fileArg);
+      if (fs_is_dir(path)) return outputError(`vim: '${fileArg}': Is a directory`);
+      openVimModal(path, fileArg);
+      return '';
+    }
+    //-------------------------------------
+    // Simulated Network/System Commands (unchanged)
+    case 'ifconfig':
+      return (
+        `eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n`+
+        `    inet ${SYSTEM.ip}  netmask ${SYSTEM.netmask}  broadcast ${SYSTEM.broadcast}\n`+
+        `    ether ${SYSTEM.mac}  txqueuelen 1000  (Ethernet)\n`+
+        `    RX packets 9231  bytes 8431712 (8.0 MiB)\n`+
+        `    TX packets 8135  bytes 9213759 (8.7 MiB)`
+      );
+
+    case 'ping': {
+      let host = args[0] || '';
+      let cIdx = args.findIndex(x=>x==="-c");
+      let count = 4;
+      if(cIdx>=0 && args[cIdx+1]) {
+        count = parseInt(args[cIdx+1])||count;
+      }
+      if(!host || host[0]==='-') return outputError('ping: usage: ping <host> [-c count]');
+      if(["localhost","127.0.0.1","linuxsim","::1"].includes(host)) {
+        let lines = [];
+        for(let i=0;i<count;i++) lines.push(`Reply from 127.0.0.1: icmp_seq=${i+1} ttl=64 time=0.${Math.floor(Math.random()*5+1)} ms`);
+        lines.push(`--- ${host} ping statistics ---`);
+        lines.push(`${count} packets transmitted, ${count} received, 0% packet loss, time ${count*10}ms`);
+        return lines.join('\n');
+      } else {
+        let fakeip = Array(4).fill().map(()=>Math.floor(Math.random()*240+10)).join('.');
+        let lines = [];
+        for(let i=0;i<count;i++) lines.push(`Reply from ${fakeip}: icmp_seq=${i+1} ttl=57 time=${(Math.random()*45+10).toFixed(1)} ms`);
+        lines.push(`--- ${host} ping statistics ---`);
+        lines.push(`${count} packets transmitted, ${count} received, 0% packet loss, time ${count*13}ms`);
+        return lines.join('\n');
+      }
+    }
+    case 'nslookup': {
+      let host = args[0]||'';
+      if(!host) return outputError('nslookup: usage: nslookup <host>');
+      let ip;
+      if(["localhost","127.0.0.1","linuxsim"].includes(host)) ip = '127.0.0.1';
+      else ip = Array(4).fill().map(()=>Math.floor(Math.random()*240+10)).join('.');
+      return (
+        `Server: \t${SYSTEM.dns}\n`+
+        `Address: \t${SYSTEM.dns}#53\n\n`+
+        `Name:   ${host}\n`+
+        `Address: ${ip}`
+      );
+    }
+    case 'ps': {
+      let lines = [];
+      lines.push(' PID  USER     %CPU  %MEM   COMMAND');
+      for(let proc of SYSTEM.processes) {
+        lines.push(` ${proc.pid.toString().padEnd(4)} ${proc.user.padEnd(8)} ${proc.cpu.padEnd(5)} ${proc.mem.padEnd(5)} ${proc.cmd}`);
+      }
+      return lines.join('\n');
+    }
+    case 'top': {
+      let lines = [];
+      lines.push(`top - 12:34:56 up 3 days,  5:24,  2 users,  load average: 0.08, 0.10, 0.09`);
+      lines.push(`Tasks:  ${SYSTEM.processes.length} total,   1 running,   0 sleeping,   0 stopped,   0 zombie`);
+      lines.push(`%Cpu(s): ${(Math.random()*10+6).toFixed(1)} us, ${(Math.random()*2+1).toFixed(1)} sy,  0.0 ni, ${(Math.random()).toFixed(1)} id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st`);
+      lines.push(`MiB Mem :  7280.0 total,  2720.2 free,  1897.3 used,  2662.5 buff/cache`);
+      lines.push('  PID USER      PR  NI    VIRT    RES   SHR S  %CPU %MEM     TIME+ COMMAND');
+      for(let p of SYSTEM.processes) {
+        lines.push(`${p.pid.toString().padStart(5)} ${p.user.padEnd(8)}  20   0   12060   2004   780 S   ${p.cpu.padEnd(4)} ${p.mem.padEnd(4)}   0:00.00 ${p.cmd}`);
+      }
+      return lines.join('\n');
+    }
+    default:
+      if (cmd==='') return '';
+      return outputError(`${cmd}: command not found`);
+  }
+}
+function outputError(msg) {
+  return `<span class="cmd-error">${msg}</span>`;
+}
+function renderHelp(isPipeline) {
+  return `<span class='cmd-info'>Linux Simulator. Supported commands:${isPipeline?'<br><b>Supports pipes: ls | cat, head, tail, cd ...</b>':''}</span>\n<pre>ls        List directory contents\ncd        Change directory\npwd       Print working directory\nwhoami    Show the current user\ncat       Print file contents\necho      Echo input\ntouch     Create a new file\nmkdir     Create a new directory\nrm        Remove a file\nrmdir     Remove an empty directory\nclear     Clear the terminal\nhead      Output first part of files\ntail      Output last part of files\nhelp      Display this help\ndate      Show current date\ntree      Pretty print directory tree\nvim       Edit file with Vim Simulator\nifconfig  Show network interface config\nping      Simulated network ping\nnslookup  Simulated DNS lookup\nps        List processes\ntop       Task/process manager</pre>`;
+}
+function tree_dir(path, prefix='', isRoot=false) {
+  let out = [];
+  let name = path.split('/').pop() || '/';
+  let label = (isRoot ? '.' : name);
+  out.push(prefix + (isRoot ? '' : '└── ') + `<span class="${fs_is_dir(path)?'dir':'file'}">${label}</span>`);
+  if (fs_is_dir(path)) {
+    let children = fs_list(path);
+    for (let i=0;i<children.length;i++) {
+      let child = children[i];
+      let p = path+(path.endsWith('/')?'':'/')+child;
+      let subPrefix = prefix + (isRoot?'':'    ');
+      out = out.concat(tree_dir(p, subPrefix, false));
+    }
+  }
+  return out;
+}
+function splitArgs(s) {
+  let re = /["']([^"']*)["']|([^\s]+)/g;
+  let res = [], m;
+  while ((m = re.exec(s))) {
+    res.push(m[1]!==undefined ? m[1] : m[2]);
+  }
+  return res;
+}
+let terminal = document.getElementById('terminal');
+function printLine(html) {
+  let div = document.createElement('div');
+  div.className = 'output';
+  div.innerHTML = html;
+  terminal.appendChild(div);
+}
+// Pipeline-aware runCommand
+function runCommand(cmdline) {
+  let promptHtml = getPrompt();
+  let inputDiv = document.createElement('div');
+  inputDiv.className = 'input-line';
+  inputDiv.innerHTML = promptHtml +
+    '<span style="flex:1" class="typed-cmd">'+escapeHtml(cmdline)+'</span>';
+  terminal.appendChild(inputDiv);
+
+  let result = runPipeline(cmdline);
+  // always print HTML for outputs
+  if (result!==null && result!=='') {
+    if (/<span|<[a-z][^>]*>/i.test(result))
+      printLine(result);
+    else
+      printLine('<span class="cmd-stdout">'+escapeHtml(result)+'<\/span>');
+  }
+  addInputLine();
+  scrollToBottom();
+}
+// ... Escape and input line handling remain unchanged
+function escapeHtml(s) {
+  return (s+'').replace(/[&<>"]|'/g, function(m) {
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]);
+  });
+}
+function addInputLine() {
+  let promptHtml = getPrompt();
+  let inputDiv = document.createElement('div');
+  inputDiv.className = 'input-line';
+  inputDiv.innerHTML = promptHtml + '<input class="command-input" />';
+  terminal.appendChild(inputDiv);
+
+  let input = inputDiv.querySelector('input');
+  input.focus();
+
+  // Tab completion
+  input.addEventListener('keydown', function(ev) {
+    if (ev.key === 'Tab') {
+      ev.preventDefault();
+      let val = input.value;
+      let [cmd, ...rest] = splitArgs(val);
+      if (rest.length===0) {
+        let candidates = commandList.filter(c=>c.startsWith(cmd||''));
+        if (candidates.length===1) {
+          input.value = candidates[0] + ' ';
+          setTimeout(()=>input.setSelectionRange(input.value.length, input.value.length),1);
+        }
+      } else {
+        let frag = rest[rest.length-1]||'';
+        let resolved = fs_resolve(frag);
+        let dir, part;
+        if (fs_is_dir(resolved)) {
+          dir = resolved;
+          part = '';
+        } else {
+          dir = fs_parent(resolved);
+          part = frag.split('/').pop();
+        }
+        let candidates = fs_is_dir(dir)?fs_list(dir).filter(x=>x.startsWith(part)):[ ];
+        if (candidates.length===1) {
+          let path = frag.split('/').slice(0,-1).concat(candidates[0]).join('/');
+          let first = val.lastIndexOf(frag);
+          input.value = val.substring(0,first)+path;
+          setTimeout(()=>input.setSelectionRange(input.value.length, input.value.length),1);
+        }
+      }
+    }
+  });
+
+  // History navigation
+  let hist = commandHistory;
+  let hpos = hist.length;
+  input.addEventListener('keydown', function(ev) {
+    if (ev.key === 'ArrowUp') {
+      if (hpos > 0) { hpos--; input.value = hist[hpos]; }
+      ev.preventDefault();
+    } else if (ev.key === 'ArrowDown') {
+      if (hpos < hist.length-1) { hpos++; input.value = hist[hpos]; }
+      else { hpos=hist.length; input.value=''; }
+      ev.preventDefault();
+    }
+  });
+  input.addEventListener('keydown',function(e){
+    if(e.key==="Enter"){
+      let value = input.value;
+      if (value.length) commandHistory.push(value);
+      input.setAttribute('disabled','disabled');
+      input.className="command-input finished";
+      runCommand(value);
+      e.preventDefault();
+      return false;
+    }
+  });
+}
+function scrollToBottom() {
+  setTimeout(()=>{
+    terminal.scrollTop = terminal.scrollHeight;
+    window.scrollTo(0,document.body.scrollHeight);
+  },0);
+}
+let commandHistory = [];
+
+// VIM MODAL IMPLEMENTATION is unchanged (except for pipeline support in cat)
+const vimModal = document.getElementById('vim-modal');
+const vimBuffer = document.getElementById('vim-buffer');
+const vimStatus = document.getElementById('vim-statusbar');
+
+let _vimFilePath = '';
+let _vimOriginalContent = '';
+let _vimMode = 'normal';
+let _vimCmdLine = '';
+function openVimModal(fsPath, fileArg) {
+  if (!fs_exists(fsPath)) {
+    fs_add_file(fsPath, ''); 
+  }
+  _vimFilePath = fsPath;
+  _vimOriginalContent = fs[fsPath].content;
+  vimBuffer.value = _vimOriginalContent;
+  _vimCmdLine = '';
+  setVimMode('normal');
+  vimModal.style.display = 'flex';
+  vimBuffer.readOnly = true;
+  awayFromTerminal = true;
+  vimBuffer.selectionStart = 0;
+  vimBuffer.selectionEnd = 0;
+  setTimeout(()=>{
+    vimBuffer.blur();
+    vimBuffer.focus();
+    updateVimStatus();
+  }, 30);
+}
+function closeVimModal(force = false, save = false) {
+  if (save) {
+    let newContent = vimBuffer.value;
+    fs[_vimFilePath].content = newContent;
+    printLine(`<span class='cmd-info'>[vim] File saved.</span>`);
+  }
+  vimModal.style.display = 'none';
+  awayFromTerminal = false;
+  _vimCmdLine = '';
+  setVimMode('normal');
+  addInputLine();
+  scrollToBottom();
+}
+function setVimMode(mode) {
+  _vimMode = mode;
+  vimBuffer.readOnly = (mode !== 'insert');
+  if (mode === 'insert') {
+    vimBuffer.focus();
+  } else {
+    vimBuffer.blur();
+    setTimeout(()=>vimBuffer.focus(),5);
+  }
+  updateVimStatus();
+}
+function updateVimStatus() {
+  if (_vimMode === 'insert') {
+    vimStatus.textContent = '-- INSERT --';
+    vimStatus.style.color = '#60f090';
+  } else if (_vimMode === 'ex') {
+    vimStatus.innerHTML = `:<span style="color:#ffe447;">${escapeHtml(_vimCmdLine)}</span>` +
+      "<span style='color:#666; opacity:.7;'> (wq: save&quit, q!: quit, w: save, q: quit if unchanged)</span>";
+    vimStatus.style.color = '#ffe447';
+  } else {
+    vimStatus.textContent = '-- NORMAL --';
+    vimStatus.style.color = '#30d178';
+  }
+}
+document.addEventListener('keydown', function(e) {
+  if (!vimModal || vimModal.style.display!=='flex') return;
+  if (_vimMode === 'insert') {
+    if (e.key === 'Escape') {
+      setVimMode('normal');
+      e.preventDefault();
+      return;
+    } else {
+      return;
+    }
+  } else if (_vimMode === 'normal') {
+    if (e.key === 'i') {
+      setVimMode('insert');
+      e.preventDefault();
+      return;
+    } else if (e.key === ':') {
+      _vimCmdLine = '';
+      setVimMode('ex');
+      e.preventDefault();
+      return;
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      return;
+    } else if (e.key === 'ArrowDown' || e.key === 'j') {
+      moveCursor(1);
+      e.preventDefault();
+      return;
+    } else if (e.key === 'ArrowUp' || e.key === 'k') {
+      moveCursor(-1);
+      e.preventDefault();
+      return;
+    } else if (e.key === 'ArrowLeft' || e.key === 'h') {
+      moveCol(-1);
+      e.preventDefault();
+      return;
+    } else if (e.key === 'ArrowRight' || e.key === 'l') {
+      moveCol(1);
+      e.preventDefault();
+      return;
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      return;
+    } else if (e.key === 'q' && e.ctrlKey) {
+      closeVimModal(false,true);
+      e.preventDefault();
+      return;
+    } else if (e.key === 'q') {
+      e.preventDefault();
+      return;
+    } else if (e.key === 's') {
+      e.preventDefault();
+      return;
+    } else {
+      return;
+    }
+  } else if (_vimMode === 'ex') {
+    if (e.key.length===1 && e.key.match(/[a-zA-Z0-9!]/)) {
+      _vimCmdLine += e.key;
+      updateVimStatus();
+      e.preventDefault();
+    } else if (e.key === 'Backspace') {
+      _vimCmdLine = _vimCmdLine.slice(0,-1);
+      updateVimStatus();
+      e.preventDefault();
+    } else if (e.key === 'Enter') {
+      processExCommand(_vimCmdLine);
+      e.preventDefault();
+    } else if (e.key === 'Escape') {
+      setVimMode('normal');
+      e.preventDefault();
+    }
+  }
+});
+function moveCursor(delta) {
+  let lines = vimBuffer.value.split(/\n/);
+  let pos = vimBuffer.selectionStart;
+  let upTo = vimBuffer.value.substr(0,pos).split(/\n/);
+  let row = upTo.length-1;
+  let col = upTo[upTo.length-1].length;
+  let newRow = row+delta;
+  if (newRow < 0) newRow = 0;
+  if (newRow >= lines.length) newRow = lines.length-1;
+  let newCol = Math.min(col, lines[newRow].length);
+  let idx = 0;
+  for (let i=0;i<newRow;i++) idx += lines[i].length+1;
+  idx += newCol;
+  vimBuffer.selectionStart = vimBuffer.selectionEnd = idx;
+}
+function moveCol(delta) {
+  let pos = vimBuffer.selectionStart;
+  vimBuffer.selectionStart = vimBuffer.selectionEnd = Math.max(0,Math.min(vimBuffer.value.length,pos+delta));
+}
+function processExCommand(line) {
+  let act = line.trim();
+  if (act === 'wq') {
+    closeVimModal(false, true);
+  } else if (act === 'w') {
+    let newContent = vimBuffer.value;
+    fs[_vimFilePath].content = newContent;
+    printLine(`<span class='cmd-info'>[vim] File saved.</span>`);
+    setVimMode('normal');
+  } else if (act === 'q!') {
+    closeVimModal(true, false);
+  } else if (act === 'q') {
+    if (vimBuffer.value !== _vimOriginalContent) {
+      printLine(`<span class='cmd-error'>E37: No write since last change (add ! to override)</span>`);
+      setVimMode('normal');
+    } else {
+      closeVimModal(false, false);
+    }
+  } else {
+    printLine(`<span class='cmd-error'>Not an editor command: ${act}</span>`);
+    setVimMode('normal');
+  }
+}
+let awayFromTerminal = false;
+vimModal && vimModal.addEventListener('mousedown', function(ev) { ev.stopPropagation(); vimBuffer.focus(); });
+vimBuffer && vimBuffer.addEventListener('keydown', function(e) {
+  if (_vimMode==='insert' && e.key==='Tab') {
+    let start = vimBuffer.selectionStart, end = vimBuffer.selectionEnd;
+    let val = vimBuffer.value;
+    vimBuffer.value = val.substring(0,start) + '  ' + val.substring(end);
+    vimBuffer.selectionStart = vimBuffer.selectionEnd = start + 2;
+    e.preventDefault();
+  }
+});
+function showWelcome() {
+  printLine(`<span class="cmd-info">Welcome to the Linux Simulator!<br>Type <b>help</b> for a list of supported commands.<br><br>Try <b>ls | head</b>, <b>cat file.txt | tail -n 2</b>!<br>Supports command chaining with pipes, including head and tail and cd.</span>`);
+}
+showWelcome();
+addInputLine();
+terminal.addEventListener('mousedown',function(){
+  if (awayFromTerminal) return;
+  let inputs = terminal.querySelectorAll('input');
+  if (inputs.length) setTimeout(()=>inputs[inputs.length-1].focus(),1);
+});
+window.addEventListener('keydown',function(e){
+  if (awayFromTerminal) return;
+  if (e.ctrlKey && e.key==='l') {
+    terminal.innerHTML = '';
+    addInputLine();
+    e.preventDefault();
+  } else if (!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) {
+    let inputs = terminal.querySelectorAll('input');
+    if (inputs.length) inputs[inputs.length-1].focus();
+  }
+});
+  </script>
+</body>
+</html>

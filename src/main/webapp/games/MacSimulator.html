@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Mac OS Simulator</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body {
+      background: #25292e;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'San Francisco', 'Segoe UI', Arial, sans-serif;
+      user-select: none;
+    }
+    .mac-window {
+      position: absolute;
+      min-width: 340px;
+      min-height: 220px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+      overflow: hidden;
+      border: 1px solid #d0d0d0;
+      animation: appear 0.25s cubic-bezier(.46,.03,.52,.96);
+      z-index: 99;
+      resize: both;
+      display: flex;
+      flex-direction: column;
+      min-width: 260px;
+      min-height: 180px;
+    }
+    @keyframes appear { from { transform: scale(0.95); opacity: 0;} to { transform: scale(1); opacity: 1;}}
+    .mac-titlebar {
+      height: 32px;
+      background: linear-gradient(#ececec 60%, #e5e5e5);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      cursor: grab;
+      user-select: none;
+      border-bottom: 1px solid #ede9e9;
+    }
+    .mac-traffic-lights {
+      display: flex;
+      gap: 6px;
+      margin-right: 12px;
+    }
+    .mac-traffic {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-top: 2px;
+      border: 1px solid #ccc;
+      box-shadow: 0 1px 1px #aaa1;
+    }
+    .mac-traffic.close { background: #fb6058; }
+    .mac-traffic.min { background: #fbc02e; }
+    .mac-traffic.max { background: #36be4d; }
+    .mac-title {
+      flex: 1;
+      font-weight: bold;
+      font-size: 15px;
+      color: #2a2a2a;
+      text-align: center;
+      letter-spacing: 0.02em;
+      padding-right: 24px;
+    }
+    .mac-content {
+      flex: 1;
+      background: #f8f8fa;
+      padding: 16px;
+      overflow: auto;
+      font-size: 15px;
+      color: #333;
+    }
+    /* Dock styles */
+    .mac-dock {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 68px;
+      border-radius: 18px;
+      background: rgba(245,245,247,0.94);
+      box-shadow: 0 6px 32px 8px rgba(0,0,8,0.13);
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      padding: 9px 26px 11px 26px;
+      z-index: 1001;
+      border: 1px solid #dddddd;
+    }
+    .mac-dock-app {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.13s;
+      font-size: 11px;
+      color: #262626;
+    }
+    .mac-dock-app:hover img {
+      transform: scale(1.22) translateY(-7px);
+      box-shadow: 0 10px 22px #a9e4ff60;
+    }
+    .mac-dock-app img {
+      height: 44px;
+      width: 44px;
+      object-fit: contain;
+      border-radius: 11px;
+      background: white;
+      transition: transform 0.10s, box-shadow 0.10s;
+      margin-bottom: 4px;
+      border: 1px solid #e4e4e4;
+      box-shadow: 0 4px 8px #0002;
+    }
+    .mac-menu {
+      position: fixed;
+      top: 0; left: 0;
+      height: 38px;
+      width: 100vw;
+      background: linear-gradient(90deg, #f7f7fa 60%, #e2e2e4 100%);
+      box-shadow: 0 2px 2px #afa9a933;
+      display: flex;
+      align-items: center;
+      z-index: 2000;
+      font-size: 16px;
+      color: #232324;
+      letter-spacing: 0.07em;
+      padding-left: 18px;
+      padding-right: 25px;
+      justify-content: space-between;
+    }
+    .mac-status {
+      font-size: 14px;
+      color: #555;
+      font-weight: 350;
+      padding: 0 10px;
+      letter-spacing: 0.01em;
+    }
+    /* App Icons */
+    .mac-user-pic {
+      width: 22px;
+      margin-left: 18px;
+      border-radius: 14px;
+    }
+    /* Clock on menu */
+    #mac-clock { font-family:monospace;font-weight:500;}
+    /* Finder Desktop Folders */
+    .mac-desktop-folder {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      z-index: 0;
+    }
+    .mac-desktop-folder img {
+      width: 52px; height: 52px;
+      box-shadow: 0 2px 6px #2221;
+      margin-bottom: 4px;
+    }
+    .mac-desktop-caption {
+      color: #f4f5fb;
+      text-shadow: 1px 1px 2px #222;
+      font-size: 14px;
+      text-align: center;
+      line-height: 1.12;
+      letter-spacing: 0.02em;
+      font-weight: 400;
+      background: rgba(34,38,51,0.12);
+      border-radius: 6px;
+      padding: 1px 6px 2px 6px;
+    }
+    /* z-index manager hack for windows */
+    .mac-window.active {
+      z-index: 9999;
+      box-shadow: 0 24px 48px 4px rgba(0,0,0,0.19);
+    }
+    /* Responsive Dock Below Menu */
+    @media (max-width: 1050px) {
+      .mac-dock {
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 7px 3vw;
+        height: auto;
+      }
+    }
+    @media (max-width: 650px) {
+      .mac-dock {
+        bottom: 6px;
+        padding: 7px 4vw;
+      }
+      .mac-dock-app img {
+        width: 37px; height: 37px;
+      }
+    }
+    /* Extra styling for Clear button */
+    .calc-clear-btn {
+      background: #f34343!important;
+      color: #fff!important;
+      font-weight: 600!important;
+      border: none!important;
+      border-radius: 9px!important;
+      transition: background 0.12s;
+      box-shadow: 0 2px 7px #ce7f7f12;
+    }
+    .calc-clear-btn:hover {
+      background: #da1111!important;
+    }
+    /* Photos app in grid */
+    .photos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 8px;
+      padding-top: 10px;
+    }
+    .photos-grid img {
+      width: 100%;
+      border-radius: 7px;
+      box-shadow: 0 2px 10px #4441;
+      cursor: pointer;
+      transition: transform .13s;
+    }
+    .photos-grid img:hover {
+      transform: scale(1.12);
+      box-shadow: 0 6px 15px #6662;
+      z-index: 2;
+    }
+    .photos-viewer {
+      width: 100%; height: 220px; display: flex; align-items: center; justify-content: center;
+      background: #1111; border-radius: 9px; margin-bottom: 12px; overflow: hidden;
+    }
+    .photos-viewer img { max-width: 100%; max-height: 210px; }
+    /* Music player */
+    .music-album-art {
+      width: 88px; height: 88px; border-radius: 16px; margin-right: 22px; box-shadow: 0 4px 15px #4556;
+    }
+    .music-song-title { font-weight: 600; font-size: 18px; }
+    .music-song-artist { color: #444; font-size: 14px;}
+    .music-controls button { background:#f5f5f5; border:none; border-radius: 34%; font-size: 18px; margin:0 7px; cursor:pointer; box-shadow:0 1px 3px #bbb2; padding:6px 17px;}
+    .music-controls button.active { background: #23baff; color: #fff; }
+    /* Terminal */
+    .terminal {
+      background: #111a1f;
+      color: #28ff2c;
+      font-family: "Fira Mono",Monaco,monospace; font-size: 15px;
+      border-radius: 8px; padding: 6px 9px; height: 170px; overflow-y: auto;
+    }
+    .terminal-input {
+      width: 96%; padding: 6px 6px 6px 13px; background: #0a0d11; color: #2dff6f; border: none; font-size: 15px;
+      font-family: "Fira Mono",Monaco,monospace; border-radius: 7px; margin-top: 6px;
+    }
+    /* Calendar */
+    .calendar-table {
+      width:100%;border-collapse:collapse;font-size:15px;margin-top:12px;background:#f7f9fc;border-radius:8px;box-shadow:0 2px 8px #acd6fa13;
+    }
+    .calendar-table th,.calendar-table td {padding:6px;text-align:center;}
+    .calendar-table th {color:#416bff;font-size:15px; font-weight:600;letter-spacing:0.08em;}
+    .calendar-table td.today {background:#ffe950;color:#3d3863;border-radius:5px;}
+    .calendar-table tr {transition:background 0.10s;}
+    .calendar-app-header {font-size:20px;font-weight:500; text-align:center;margin-bottom:6px;}
+  </style>
+</head>
+<body>
+  <!-- Mac Menu Bar -->
+  <div class="mac-menu">
+    <span style="font-weight:700;font-size:18px"> Mac OS Mini</span>
+    <div class="mac-status">
+      <span id="mac-clock"></span>
+      <img src="https://randomuser.me/api/portraits/men/10.jpg" class="mac-user-pic" alt="User" />
+    </div>
+  </div>
+  <!-- Desktop Folder Shortcuts -->
+  <div class="mac-desktop-folder" style="top:70px;left:36px" onclick="openApp('finder')">
+    <img src="https://img.icons8.com/?size=80&id=43795&format=png" alt="Finder Icon">
+    <span class="mac-desktop-caption">Finder</span>
+  </div>
+  <div class="mac-desktop-folder" style="top:160px;left:41px" onclick="openApp('notes')">
+    <img src="https://img.icons8.com/?size=80&id=3729&format=png" alt="Notes Icon">
+    <span class="mac-desktop-caption">Notes</span>
+  </div>
+  <div class="mac-desktop-folder" style="top:250px;left:44px" onclick="openApp('calculator')">
+    <img src="https://img.icons8.com/?size=80&id=53143&format=png" alt="Calculator Icon">
+    <span class="mac-desktop-caption">Calculator</span>
+  </div>
+  <div class="mac-desktop-folder" style="top:340px;left:46px" onclick="openApp('photos')">
+    <img src="https://img.icons8.com/?size=80&id=w6ku45k2r9Do&format=png" alt="Photos Icon">
+    <span class="mac-desktop-caption">Photos</span>
+  </div>
+  <div class="mac-desktop-folder" style="top:430px;left:48px" onclick="openApp('music')">
+    <img src="https://img.icons8.com/?size=80&id=dcgJ6AalI4gn&format=png" alt="Music Icon">
+    <span class="mac-desktop-caption">Music</span>
+  </div>
+  <div class="mac-desktop-folder" style="top:70px;left:130px" onclick="openApp('terminal')">
+    <img src="https://img.icons8.com/?size=80&id=59874&format=png" alt="Terminal Icon">
+    <span class="mac-desktop-caption">Terminal</span>
+  </div>
+  <div class="mac-desktop-folder" style="top:160px;left:135px" onclick="openApp('calendar')">
+    <img src="https://img.icons8.com/?size=80&id=44214&format=png" alt="Calendar Icon">
+    <span class="mac-desktop-caption">Calendar</span>
+  </div>
+
+  <!-- Dock Bar -->
+  <div class="mac-dock" id="mac-dock">
+    <div class="mac-dock-app" onclick="openApp('finder')">
+      <img src="https://img.icons8.com/?size=96&id=43795&format=png" alt="Finder">
+      <span>Finder</span>
+    </div>
+    <div class="mac-dock-app" onclick="openApp('notes')">
+      <img src="https://img.icons8.com/?size=96&id=3729&format=png" alt="Notes">
+      <span>Notes</span>
+    </div>
+    <div class="mac-dock-app" onclick="openApp('calculator')">
+      <img src="https://img.icons8.com/?size=96&id=53143&format=png" alt="Calculator">
+      <span>Calculator</span>
+    </div>
+    <div class="mac-dock-app" onclick="openApp('photos')">
+      <img src="https://img.icons8.com/?size=96&id=w6ku45k2r9Do&format=png" alt="Photos">
+      <span>Photos</span>
+    </div>
+    <div class="mac-dock-app" onclick="openApp('music')">
+      <img src="https://img.icons8.com/?size=96&id=dcgJ6AalI4gn&format=png" alt="Music">
+      <span>Music</span>
+    </div>
+    <div class="mac-dock-app" onclick="openApp('terminal')">
+      <img src="https://img.icons8.com/?size=96&id=59874&format=png" alt="Terminal">
+      <span>Terminal</span>
+    </div>
+    <div class="mac-dock-app" onclick="openApp('calendar')">
+      <img src="https://img.icons8.com/?size=96&id=44214&format=png" alt="Calendar">
+      <span>Calendar</span>
+    </div>
+    <div class="mac-dock-app" onclick="openApp('safari')">
+      <img src="https://img.icons8.com/?size=96&id=QEQUtCZS9Ddk&format=png" alt="Safari">
+      <span>Safari</span>
+    </div>
+    <div class="mac-dock-app" onclick="openApp('about')">
+      <img src="https://img.icons8.com/?size=96&id=49321&format=png" alt="About">
+      <span>About</span>
+    </div>
+  </div>
+  <!-- Windows here -->
+  <div id="mac-windows"></div>
+  <script>
+    // Update the clock
+    function updateClock() {
+      const now = new Date();
+      let h = now.getHours(), m = now.getMinutes();
+      let d = now.getDate(), w = now.toLocaleString('en', {weekday:'short'}), mo = now.toLocaleString('en',{month:'short'});
+      document.getElementById('mac-clock').innerText = `${w} ${mo} ${d}  ${(h+'').padStart(2,'0')}:${(m+'').padStart(2,'0')}`;
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    // Demo images for Photos app
+    const PHOTOS_IMAGES = [
+      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=500&q=80",
+      "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=500&q=80",
+      "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=500&q=80",
+      "https://images.unsplash.com/photo-1465101178521-c1a9136a54c6?auto=format&fit=crop&w=500&q=80",
+      "https://images.unsplash.com/photo-1416339306562-f3d12fefd36f?auto=format&fit=crop&w=500&q=80"
+    ];
+    const PHOTOS_NAMES = ["Mountains","Lake Mirror","Desert","Forest","Sunset"];
+    // Demo music tracks
+    const MUSIC_TRACKS = [
+      {
+        title:"Swaying Trees", artist:"Stock Audio", src:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", art:"https://img.icons8.com/color/96/000000/musical-notes.png"
+      },
+      {
+        title:"Dream Atmos", artist:"Stock Audio", src:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", art:"https://img.icons8.com/emoji/96/orange-circle-emoji.png"
+      },
+      {
+        title:"Breezy Chimes", artist:"Stock Audio", src:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", art:"https://img.icons8.com/fluency/96/flower-crown.png"
+      },
+    ];
+    // Simple terminal demo - accepted commands
+    const TERMINAL_WELCOME = "Welcome to mini-Mac Terminal!\nType 'help' for list of commands."
+    const TERMINAL_COMMANDS = {
+      help: ()=>`Available commands:\nhelp - show this help\ndate - current date\necho [text] - print text\nclear - clear screen\nabout - About your Mac\n`,
+      date: ()=>new Date().toString(),
+      about: ()=>"Mini MacOS JS Terminal by ChatGPT!",
+      clear: ()=>null,
+      echo: (text)=>text
+    };
+    // Calendar utils
+    function getCalendarMonth(year, month) {
+      // Returns 2D array weeks: days or null for blanks
+      let d = new Date(year, month, 1);
+      let first = d.getDay();
+      let result = [[]];
+      let week = Array(first).fill(null);
+      let today = new Date();
+      for(let i=1; ;++i) {
+        d = new Date(year, month, i);
+        if(d.getMonth()!==month) break;
+        week.push(i);
+        if(week.length===7){result.push(week);week=[];}
+      }
+      if(week.length) result.push(week);
+      if(result[0].length===0) result.shift();
+      return result;
+    }
+    const mac_apps = {
+      finder: {
+        name: 'Finder',
+        icon: 'https://img.icons8.com/?size=96&id=43795&format=png',
+        html: `<div style='font-size:20px;font-weight:500;margin-bottom:13px'>Welcome to Finder</div>
+        <div>
+          <b>Folders:</b><ul style='line-height:1.8'><li>Documents</li><li>Downloads</li><li>Pictures</li></ul>
+          <div style="margin-top:14px;border-radius:8px;border:1px solid #e9e9e9;box-shadow:0 2px 6px #0001;padding:10px;background:#fcfcfc">
+          (This is a mini demo Finder &mdash; click desktop folders, try launching multiple apps, or use Dock below!)</div>
+        </div>`
+      },
+      notes: {
+        name: 'Notes',
+        icon: 'https://img.icons8.com/?size=96&id=3729&format=png',
+        html: `<div style='font-size:20px;font-weight:500;margin-bottom:10px'>Notes</div>
+        <textarea id='notes-area' style='width:98%;height:160px;padding:8px;border-radius:7px;font-size:16px;resize:vertical;box-sizing:border-box;background:#ffffef;border:1px solid #ece9c2;'>This is your Mac Notes!\n\nTry writing something...\n\nYour notes will be saved until you reload the page.</textarea>`
+      },
+      calculator: {
+        name: 'Calculator',
+        icon: 'https://img.icons8.com/?size=96&id=53143&format=png',
+        html: `<div style='font-size:19px;font-weight:500;margin-bottom:14px'>Calculator</div>
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <input id='calc-display' style='background:#fcfcfd;border-radius:7px;font-size:22px;padding:8px;width:160px;margin-bottom:10px;text-align:right' disabled value="0">
+            <div id='calc-keypad' style='display:grid;grid-template-columns:repeat(4,43px);gap:8px;'>
+              <button>7</button><button>8</button><button>9</button><button>/</button>
+              <button>4</button><button>5</button><button>6</button><button>*</button>
+              <button>1</button><button>2</button><button>3</button><button>-</button>
+              <button class='calc-clear-btn'>C</button><button>0</button><button>.</button><button>=</button><button>+</button>
+            </div>
+          </div>`
+      },
+      photos: {
+        name: 'Photos',
+        icon: 'https://img.icons8.com/?size=96&id=w6ku45k2r9Do&format=png',
+        html: `<div style='font-size:19px;font-weight:500;margin-bottom:10px;'>Photos</div>
+        <div class='photos-viewer' id='photos-viewer'><img src="${PHOTOS_IMAGES[0]}" alt="Photo"><span style="margin-left:18px;font-size:15px;color:#444">${PHOTOS_NAMES[0]}</span></div>
+        <div class='photos-grid' id='photos-grid'>
+          ${PHOTOS_IMAGES.map((img,i)=>`<img src="${img}" alt="Photo${i}" style="" data-idx="${i}" title="${PHOTOS_NAMES[i]}">`).join('')}
+        </div>`
+      },
+      music: {
+        name: 'Music',
+        icon: 'https://img.icons8.com/?size=96&id=dcgJ6AalI4gn&format=png',
+        html: `<div style="display:flex;flex-direction:row;align-items:center;margin-bottom:13px;">
+        <img src="${MUSIC_TRACKS[0].art}" class="music-album-art" id="music-album-art">
+        <div><div class="music-song-title" id="music-song-title">${MUSIC_TRACKS[0].title}</div>
+        <div class="music-song-artist" id="music-song-artist">${MUSIC_TRACKS[0].artist}</div>
+        </div></div>
+        <audio id="music-audio" src="${MUSIC_TRACKS[0].src}" preload="none"></audio>
+        <div class="music-controls" style="display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
+          <button id="music-prev" title="Previous">⏮</button>
+          <button id="music-play" title="Play/Pause">▶️</button>
+          <button id="music-next" title="Next">⏭</button>
+        </div>
+        <div style="font-size:13px;color:#6793fa;text-align:center">Enjoy a demo music player! (tracks: Stock Audio)</div>`
+      },
+      terminal: {
+        name: 'Terminal',
+        icon: 'https://img.icons8.com/?size=96&id=59874&format=png',
+        html: `<div style="font-size:17px;font-weight:600;margin-bottom:9px;">Terminal</div>
+        <div class="terminal" id="terminal-window"></div>
+        <input class="terminal-input" id="terminal-input" placeholder="Type here and press [Enter]..." autocomplete="off">`
+      },
+      calendar: {
+        name: 'Calendar',
+        icon: 'https://img.icons8.com/?size=96&id=44214&format=png',
+        html: `<div class="calendar-app-header">Calendar</div>
+        <div style="display:flex;align-items:center;justify-content:center;margin-bottom:9px;gap:15px;">
+          <button id="cal-prev" style="border-radius:8px;font-size:17px;">&lt;</button>
+          <span id="calendar-month-label"></span>
+          <button id="cal-next" style="border-radius:8px;font-size:17px;">&gt;</button>
+        </div>
+        <table class="calendar-table" id="calendar-table"></table>`
+      },
+      safari: {
+        name: 'Safari',
+        icon: 'https://img.icons8.com/?size=96&id=QEQUtCZS9Ddk&format=png',
+        html: `<div style='display:flex;flex-direction:column;align-items:center;'>
+          <div style='font-size:19px;font-weight:500;margin-bottom:12px;'>Safari Browser</div>
+          <input id='safari-url' style='border-radius:6px;border:1px solid #e3e8f2;width:85%;max-width:320px;font-size:15px;padding:7px 9px 7px 24px;background:#fafdff url(https://img.icons8.com/ios-filled/24/719eff/globe--v2.png) no-repeat 4px center;margin-bottom:9px;' value="https://en.wikipedia.org" />
+          <button id='safari-go' style='background:#3ea6f8;color:#fff;border:none;border-radius:5px;padding:6px 14px;font-weight:520;font-size:15px;cursor:pointer'>Go</button>
+          <iframe id='safari-frame' src="https://en.wikipedia.org" style='margin-top:12px;width:97%;height:260px;border:none;border-radius:10px;box-shadow:0 1px 6px #abc2fa60;'></iframe>
+          </div>`
+      },
+      about: {
+        name: 'About Mac',
+        icon: 'https://img.icons8.com/?size=96&id=49321&format=png',
+        html: `<div style='display:flex;flex-direction:column;align-items:center;text-align:center;font-size:16px;'>
+        <img src="https://img.icons8.com/?size=96&id=43795&format=png" style="margin:16px 0 7px 0;width:52px">
+        <div style="font-size:17px;font-weight:700;">Mac OS Mini Simulator</div>
+        <div style="margin-top:7px;color:#334;margin-bottom:7px;">A playful in-browser demo of a Mac desktop experience.<br><span style='color:#5078fd;font-weight:400'>All in one file!</span></div>
+        <div style="color:#555;font-size:15px;">Made with HTML, CSS, JavaScript <br>🚀 <span style='font-size:21px'></span> <br>By ChatGPT's imagination.<br><br>
+        <span style="font-size:13px;color:#444">Icons by icons8.com.<br>Not affiliated with Apple Inc.</span></div></div>`
+      }
+    };
+    // Active windows state
+    let macWindows = [];
+    let zCounter = 100;
+    // Helper: check if given app already open
+    function getAppWindow(app) {
+      return macWindows.find(w => w.app === app);
+    }
+    function openApp(app) {
+      let win = getAppWindow(app);
+      if(win) {
+        focusWindow(win.id);
+        return;
+      }
+      let appDef = mac_apps[app];
+      if(!appDef) return;
+      // Center new window
+      const winId = 'win-'+Date.now()+app;
+      const winDiv = document.createElement('div');
+      winDiv.className = 'mac-window';
+      winDiv.id = winId;
+      winDiv.style.top = `${80 + Math.random()*30}px`;
+      winDiv.style.left = `${150 + Math.random()*70}px`;
+      winDiv.style.width = '370px';
+      winDiv.style.height = '290px';
+      winDiv.style.zIndex = (++zCounter);
+      // Window drag
+      winDiv.innerHTML = `<div class="mac-titlebar" onmousedown="macBeginDrag(event,'${winId}')">
+        <div class="mac-traffic-lights">
+          <span class="mac-traffic close" title="Close" onclick="macCloseWindow('${winId}')"></span>
+          <span class="mac-traffic min" title="Minimize" onclick="macMinWindow('${winId}')"></span>
+          <span class="mac-traffic max" title="Zoom" onclick="macMaxWindow('${winId}')"></span>
+        </div>
+        <span class="mac-title">${appDef.name}</span>
+      </div><div class="mac-content" id="${winId}-content">${appDef.html}</div>`;
+      document.getElementById('mac-windows').appendChild(winDiv);
+      macWindows.push({id:winId, app});
+      focusWindow(winId);
+      winDiv.classList.add('active');
+      // Special: notes save/load
+      if(app==='notes') {
+        const area=winDiv.querySelector('#notes-area');
+        if(localStorage.getItem('mini_mac_notes')) area.value=localStorage.getItem('mini_mac_notes');
+        area.oninput=()=>localStorage.setItem('mini_mac_notes',area.value);
+      }
+      // Special: calculator
+      if(app==='calculator') initCalculator(winId);
+      // Special: safari browser
+      if(app==='safari') initSafariBrowser(winId);
+      // Special: Photos
+      if(app==='photos') initPhotos(winId);
+      // Special: Music
+      if(app==='music') initMusic(winId);
+      // Special: Terminal
+      if(app==='terminal') initTerminal(winId);
+      // Special: Calendar
+      if(app==='calendar') initCalendar(winId);
+    }
+    function focusWindow(winId) {
+      zCounter++;
+      document.querySelectorAll('.mac-window').forEach(win=>win.classList.remove('active'));
+      let win = document.getElementById(winId);
+      if(win) {
+        win.style.zIndex = zCounter;
+        win.classList.add('active');
+      }
+    }
+    function macCloseWindow(id) {
+      let winIdx = macWindows.findIndex(w=>w.id===id);
+      if(winIdx>=0) macWindows.splice(winIdx,1);
+      let w = document.getElementById(id);
+      if(w) w.remove();
+    }
+    function macMinWindow(id) {
+      let w = document.getElementById(id); if(!w) return;
+      w.style.display = 'none';
+      setTimeout(()=>{w.style.display='';focusWindow(id)}, 700)
+    }
+    function macMaxWindow(id) {
+      let w = document.getElementById(id); if(!w) return;
+      if(w.dataset.maximized==='1'){
+        w.style.width = '370px'; w.style.height='290px'; w.dataset.maximized='0';
+      } else {
+        w.style.width = '84vw'; w.style.height = '67vh'; w.style.top = '46px'; w.style.left = '8vw';
+        w.dataset.maximized = '1';
+      }
+      focusWindow(id);
+    }
+    // Dragging Mac windows
+    let macDragWin=null,macDragX=0,macDragY=0,macDragDx=0,macDragDy=0;
+    function macBeginDrag(e,id){
+      macDragWin = document.getElementById(id);if(!macDragWin)return;
+      let r = macDragWin.getBoundingClientRect();
+      macDragX = e.clientX; macDragY = e.clientY; macDragDx = r.left; macDragDy = r.top;
+      macDragWin.classList.add('active');
+      window.addEventListener('mousemove',macDragging);
+      window.addEventListener('mouseup',macEndDrag);
+      e.preventDefault();
+    }
+    function macDragging(e){
+      if(!macDragWin) return;
+      let x = macDragDx + (e.clientX - macDragX);
+      let y = Math.max(37, macDragDy + (e.clientY - macDragY));
+      macDragWin.style.left = x+"px"; macDragWin.style.top = y+"px";
+    }
+    function macEndDrag(){
+      if(macDragWin) macDragWin.classList.remove('active');
+      macDragWin=null;
+      window.removeEventListener('mousemove',macDragging);
+      window.removeEventListener('mouseup',macEndDrag);
+    }
+    // Calculator logic
+    function initCalculator(winId){
+      const display = document.querySelector(`#${winId} #calc-display`);
+      let expr = "";
+      document.querySelectorAll(`#${winId} #calc-keypad button`).forEach(btn=>{
+        btn.onclick = function(){
+          let v = btn.innerText;
+          if(v==="="){
+            try { expr = eval(expr)+""; }
+            catch { expr = "Error"; }
+            display.value = expr;
+          } else if(v === "C") {
+            expr = "";
+            display.value = "0";
+          } else if("0123456789.".includes(v)) {
+            if(expr == "0" || expr == "Error") expr = v; else expr+=v;
+            display.value = expr;
+          } else if(["+","-","/","*"].includes(v)){
+            if(expr!==''&& !/[+\-*/]$/.test(expr)) expr += v;
+          }
+        }
+      });
+    }
+    // Safari window logic
+    function initSafariBrowser(winId){
+      const go = document.querySelector(`#${winId} #safari-go`), url = document.querySelector(`#${winId} #safari-url`), frame = document.querySelector(`#${winId} #safari-frame`);
+      function setUrl(){
+        let u = url.value.trim();
+        if(!/^https?:/.test(u)) u = 'https://' + u;
+        frame.src = u;
+      }
+      go.onclick = setUrl;
+      url.onkeydown = function(e){if(e.key==="Enter") setUrl();};
+    }
+    // Photos App
+    function initPhotos(winId) {
+      const grid = document.querySelector(`#${winId} #photos-grid`);
+      const viewer = document.querySelector(`#${winId} #photos-viewer`);
+      let cur = 0;
+      function view(imgIdx) {
+        cur = imgIdx;
+        viewer.innerHTML = `<img src='${PHOTOS_IMAGES[cur]}' alt='Photo${cur}'><span style="margin-left:18px;font-size:15px;color:#444">${PHOTOS_NAMES[cur]}</span>`;
+      }
+      grid.querySelectorAll('img').forEach((img,i)=>{
+        img.onclick = ()=>view(i);
+      });
+    }
+    // Music App logic
+    function initMusic(winId) {
+      let idx = 0;
+      const audio = document.querySelector(`#${winId} #music-audio`);
+      const title = document.querySelector(`#${winId} #music-song-title`);
+      const artist = document.querySelector(`#${winId} #music-song-artist`);
+      const art = document.querySelector(`#${winId} #music-album-art`);
+      const btnPrev = document.querySelector(`#${winId} #music-prev`);
+      const btnPlay = document.querySelector(`#${winId} #music-play`);
+      const btnNext = document.querySelector(`#${winId} #music-next`);
+      function setTrack(i) {
+        idx = i;
+        audio.src = MUSIC_TRACKS[idx].src;
+        art.src = MUSIC_TRACKS[idx].art;
+        title.textContent = MUSIC_TRACKS[idx].title;
+        artist.textContent = MUSIC_TRACKS[idx].artist;
+        audio.pause();
+        btnPlay.innerText = "▶️";
+      }
+      btnPrev.onclick = ()=>setTrack((idx-1+MUSIC_TRACKS.length)%MUSIC_TRACKS.length);
+      btnNext.onclick = ()=>setTrack((idx+1)%MUSIC_TRACKS.length);
+      btnPlay.onclick = ()=>{
+        if(audio.paused) { audio.play(); btnPlay.innerText = "⏸️"; } else { audio.pause(); btnPlay.innerText = "▶️"; }
+      };
+      audio.onended = ()=>btnPlay.innerText = "▶️";
+    }
+    // Terminal App logic
+    function initTerminal(winId) {
+      const output = document.querySelector(`#${winId} #terminal-window`);
+      const input = document.querySelector(`#${winId} #terminal-input`);
+      function print(txt) {
+        output.innerHTML += `<div>${txt.replace(/</g,'&lt;').replace(/\n/g,"<br>")}</div>`;
+        output.scrollTop = output.scrollHeight;
+      }
+      function handle(cmd) {
+        if(!cmd.trim()) return;
+        let args = cmd.split(' ');
+        let base = args[0];
+        if(base==='echo') print(TERMINAL_COMMANDS.echo(args.slice(1).join(' ')));
+        else if(base==='clear') output.innerHTML = '';
+        else if(base in TERMINAL_COMMANDS) print(TERMINAL_COMMANDS[base]());
+        else print("Command not found: " + base);
+      }
+      print(TERMINAL_WELCOME);
+      input.addEventListener('keydown', function(e){
+        if(e.key==="Enter"){
+          print(`<span style='color:#34fffd'>mini-mac:$</span> ${input.value}`);
+          handle(input.value);
+          input.value = '';
+        }
+      });
+    }
+    // Calendar App
+    function initCalendar(winId){
+      let d = new Date();
+      let y = d.getFullYear(), m = d.getMonth();
+      const table = document.querySelector(`#${winId} #calendar-table`);
+      const label = document.querySelector(`#${winId} #calendar-month-label`);
+      function draw(){
+        label.textContent = `${d.toLocaleString('en',{month:'long'})} ${y}`;
+        let weeks = getCalendarMonth(y,m);
+        let today = new Date();
+        let todayD = (today.getFullYear()===y&&today.getMonth()===m)? today.getDate() : null;
+        table.innerHTML = '<tr>'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(q=>`<th>${q}</th>`).join('')+'</tr>'+
+          weeks.map(week=>'<tr>'+
+            Array.from({length:7},(_,i)=>{
+              let v = week[i];
+              if(!v) return `<td></td>`;
+              let cls = v===todayD?"today":"";
+              return `<td class='${cls}'>${v}</td>`;
+            }).join('')+ '</tr>').join('');
+      }
+      draw();
+      document.querySelector(`#${winId} #cal-prev`).onclick = function(){ m--; if(m<0){m=11;y--;} d=new Date(y,m); draw(); };
+      document.querySelector(`#${winId} #cal-next`).onclick = function(){ m++;if(m>11){m=0;y++;} d=new Date(y,m); draw(); };
+    }
+    // Focus on window click
+    document.addEventListener('mousedown', function(e){
+      let winDiv = e.target.closest('.mac-window');
+      if(winDiv) focusWindow(winDiv.id);
+    });
+    // Open Finder on load
+    setTimeout(()=>openApp('finder'),900);
+  </script>
+</body>
+</html>
