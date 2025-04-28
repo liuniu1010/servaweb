@@ -25,6 +25,7 @@ insert into configs(id, version, configname, configvalue, comments) values(uuid(
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'assistantModel', 'gpt-4.1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'taskModel', 'gpt-4.1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'gameModel', 'gpt-4.1', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'utilityModel', 'gpt-4.1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'speechToTextModel', 'whisper-1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'textToSpeechModel', 'tts-1-hd', '');
 
@@ -54,6 +55,7 @@ insert into configs(id, version, configname, configvalue, comments) values(uuid(
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'consumedCreditsOnCoderBot', '50', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'consumedCreditsOnSpeechSplit', '10', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'consumedCreditsOnGameBot', '10', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'consumedCreditsOnUtilityBot', '10', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyMaintenance', '0', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyUsername', '1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyIP', '0', '');

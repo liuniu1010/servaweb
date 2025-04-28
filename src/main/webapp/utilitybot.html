@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Game Bot</title>
+    <title>Utility Bot</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -219,18 +219,19 @@
                        Previous Step
                     </button>
                     <button onclick="downloadIframeContent()" style="padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
-                       ⬇️ Download Game
+                       ⬇️ Download
                     </button>
                 </div>
 
                 <div id="RichChatRecord" contenteditable="false" class="chatRecordArea">
                 </div>
+                <input type="file" id="fileInput" name="file" style="color: #000000;" accept=".html,.htm">
                 <div style="display: flex;">
-                    <textarea id="UserInput" placeholder="Type your game requirement here..."></textarea>
+                    <textarea id="UserInput" placeholder="Type your utility requirement here..."></textarea>
                     <button id="ButtonSendAudio" type="button" class="button-send" onclick="sendAudio()">
                         <img id="recordButtonImage" src="images/micphone.png" alt="Record" draggable="false">
                     </button>
-                    <button id="ButtonSend" type="button" class="button-send" onclick="streamsend()">
+                    <button id="ButtonSend" type="button" class="button-send" onclick="encodeInputFileAndSend()">
                         <img src="images/send.png" alt="Send" draggable="false">
                     </button>
                 </div>
@@ -299,6 +300,7 @@
             document.getElementById("ButtonSendAudio").disabled = false;
             document.getElementById("ButtonSend").disabled = false;
             document.getElementById("UserInput").disabled = false;
+            document.getElementById('fileInput').value = "";
             document.getElementById("UserInput").value = "";
             document.getElementById("UserInput").focus();
         }
@@ -324,7 +326,7 @@
         }
 
         function refresh() {
-            var refreshUrl = "api/aigamebot/refresh";
+            var refreshUrl = "api/aiutilitybot/refresh";
             var userInput = document.getElementById("UserInput").value;
             $.ajax({
                 url: refreshUrl,
@@ -357,7 +359,7 @@
         }
 
         function newChat() {
-            var newChatUrl = "api/aigamebot/newchat";
+            var newChatUrl = "api/aiutilitybot/newchat";
             var userInput = document.getElementById("UserInput").value;
             $.ajax({
                 url: newChatUrl,
@@ -383,7 +385,7 @@
         }
 
         function previousstep() {
-            var previousstepUrl = "api/aigamebot/previousstep";
+            var previousstepUrl = "api/aiutilitybot/previousstep";
             var userInput = "";
             disableSend();
             $.ajax({
@@ -456,18 +458,18 @@
         }
 
         var xhr;
-        function streamsend() {
-            var streamsendUrl = "api/aigamebot/streamsend";
+        function streamsend(base64String) {
+            var streamsendUrl = "api/aiutilitybot/streamsend";
             var userInput = document.getElementById("UserInput").value;
             disableSend();
-            if(isStringEmptyOrWhitespace(userInput)) {
+            if(isStringEmptyOrWhitespace(userInput) && isStringEmptyOrWhitespace(base64String)) {
                 enableSend();
                 return false;
             }
             xhr = $.ajax({
                 url: streamsendUrl,
                 type: "POST",
-                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
+                data: JSON.stringify({session: getLoginSession(), userInput: userInput, fileAsBase64: base64String}),
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 xhrFields: {
@@ -499,7 +501,7 @@
         }
 
         function streamrefresh() {
-            var streamrefreshUrl = "api/aigamebot/streamrefresh";
+            var streamrefreshUrl = "api/aiutilitybot/streamrefresh";
             var userInput = "";
             disableSend();
             $.ajax({
@@ -538,7 +540,7 @@
         }
 
         function sendEcho() {
-            var echoUrl = "api/aigamebot/echo";
+            var echoUrl = "api/aiutilitybot/echo";
             var userInput = document.getElementById("UserInput").value;
             disableSend();
             if(isStringEmptyOrWhitespace(userInput)) {
@@ -575,7 +577,7 @@
         }
 
         function sendChat() {
-            var sendUrl = "api/aigamebot/send";
+            var sendUrl = "api/aiutilitybot/send";
             var userInput = document.getElementById("UserInput").value;
             if(isStringEmptyOrWhitespace(userInput)) {
                 enableSend();
@@ -634,7 +636,7 @@
             }
             disableSendPasswordButton();
 
-            var sendpasswordUrl = "api/aiclientlogin/sendpassword";
+            var sendpasswordUrl = "api/aiadminlogin/sendpassword";
             $.ajax({
                 url: sendpasswordUrl,
                 type: "POST",
@@ -662,7 +664,7 @@
             if(isStringEmptyOrWhitespace(username)) {
                 return false;
             }
-            var loginUrl = "api/aiclientlogin/login";
+            var loginUrl = "api/aiadminlogin/login";
             $.ajax({
                 url: loginUrl,
                 type: "POST",
@@ -694,7 +696,7 @@
         }
 
         function logout() {
-            var logoutUrl = "api/aiclientlogin/logout";
+            var logoutUrl = "api/aiadminlogin/logout";
             $.ajax({
                 url: logoutUrl,
                 type: "POST",
@@ -748,7 +750,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = "game.html";
+            a.download = "utility.html";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -768,6 +770,34 @@
 
             // Consider it complete HTML if explicitly HTML tags exist and successfully parsed
             return hasHtmlTags && explicitlyHtml;
+        }
+
+        async function getFileBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function encodeInputFileAndSend() {
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+
+            if (file) {
+                getFileBase64(file)
+                    .then(base64String => {
+                        streamsend(base64String);
+                    })
+                .catch(error => {
+                    console.error('Error converting file to base64:', error);
+                    enableSend();
+                });
+            }
+            else {
+                streamsend("");
+            }
         }
 
         let isRecording = false;
@@ -851,6 +881,24 @@
 
             return input.split(regex);
         }
+
+        document.getElementById('fileInput').addEventListener('change', function() {
+            var file = this.files[0];
+            if (file) {
+                var fileType = file.name.split('.').pop().toLowerCase();
+                if (fileType !== 'htm' && fileType !== 'html') {
+                    alert('Only html files are allowed.');
+                    this.value = '';
+                }
+                else if (file.size > 10 * 1024 * 1024) {
+                    alert("The selected html file exceeds the 10MB limit. Please choose a smaller file.");
+                    this.value = '';
+                }
+                else {
+                    document.getElementById("UserInput").value = file.name;
+                }
+            }
+        });
     </script>
 </body>
 </html>
