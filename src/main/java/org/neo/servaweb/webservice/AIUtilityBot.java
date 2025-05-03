@@ -128,11 +128,17 @@ public class AIUtilityBot extends AbsAIChat {
         try {
             notifyCallback.registerWorkingThread();
             String loginSession = params.getSession();
-            super.streamsend(params, notifyCallback);
-            consume(loginSession);
+            WSModel.AIChatResponse wsChatResponse = super.streamsend(params, notifyCallback);
+            if(wsChatResponse.getIsSuccess()) {
+                consume(loginSession);
+            }
+            else {
+                notifyCallback.notify(wsChatResponse.getMessage() + ENDOFCODE);
+            }
         }
         catch(Exception ex) {
-            logger.warn(ex.getMessage(), ex);
+            logger.error(ex.getMessage(), ex);
+            notifyCallback.notify(ex.getMessage() + ENDOFCODE);
             standardHandleException(ex, response);
         }
         finally {
@@ -198,42 +204,6 @@ public class AIUtilityBot extends AbsAIChat {
     }
 
     @POST
-    @Path("/send")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse send(@Context HttpServletResponse response, WSModel.AIChatParams params) {
-        try {
-            String loginSession = params.getSession();
-            checkAccessibilityOnAdminAction(loginSession);
-            WSModel.AIChatResponse chatResponse = super.send(params);
-            consume(loginSession);
-            return chatResponse;
-        }
-        catch(Exception ex) {
-            logger.error(ex.getMessage());
-            standardHandleException(ex, response);
-        }
-        return null;
-    }
-
-    @POST
-    @Path("/echo")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse echo(@Context HttpServletResponse response, WSModel.AIChatParams params) {
-        try {
-            String loginSession = params.getSession();
-            checkAccessibilityOnAdminAction(loginSession);
-            return super.echo(params);
-        }
-        catch(Exception ex) {
-            logger.error(ex.getMessage());
-            standardHandleException(ex, response);
-        }
-        return null;
-    }
-
-    @POST
     @Path("/newchat")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -290,23 +260,6 @@ public class AIUtilityBot extends AbsAIChat {
             logger.error(ex.getMessage());
             standardHandleException(ex, response);
         }
-    }
-
-    @POST
-    @Path("/refresh")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse refresh(@Context HttpServletResponse response, WSModel.AIChatParams params) {
-        try {
-            String loginSession = params.getSession();
-            checkAccessibilityOnAdminAction(loginSession);
-            return super.refresh(params);
-        }
-        catch(Exception ex) {
-            logger.error(ex.getMessage());
-            standardHandleException(ex, response);
-        }
-        return null;
     }
 
     private void consume(String loginSession) {

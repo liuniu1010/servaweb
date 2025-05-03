@@ -325,39 +325,6 @@
             container.appendChild(iframe);
         }
 
-        function refresh() {
-            var refreshUrl = "api/aiutilitybot/refresh";
-            var userInput = document.getElementById("UserInput").value;
-            $.ajax({
-                url: refreshUrl,
-                type: "POST",
-                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
-                cache: false,
-                contentType: "application/json; charset=utf-8",
-                success: function (data) {
-                    showEmbeddedContent(data.message); 
-    
-                    // Delay the scrolling code by 100ms to ensure that the content is fully loaded
-                    setTimeout(function() {
-                        chatRecordEditor = document.getElementById("RichChatRecord");
-                        chatRecordEditor.scrollTop = chatRecordEditor.scrollHeight;
-                        enableSend();
-                    }, 100);
-                },
-                error: function(xhr, status, error) {
-                    if (xhr.status === 401) {
-                        document.getElementById("loginDialog").style.display = "block";
-                    }
-                    else {
-                        alertError(xhr, status, error);
-                    }
-                    document.getElementById('RichChatRecord').innerHTML = error;
-                    enableSend();
-                }
-            });
-            logoutMenu.style.display = "none";
-        }
-
         function newChat() {
             var newChatUrl = "api/aiutilitybot/newchat";
             var userInput = document.getElementById("UserInput").value;
@@ -426,14 +393,6 @@
             }
         }
 
-        function removePartText(wholeText, partText) {
-            const index = wholeText.indexOf(partText);
-            if (index === -1) {
-                return wholeText; // partText not found, return original wholeText
-            }
-            return wholeText.slice(0, index) + wholeText.slice(index + partText.length);
-        }
-
         function handleOnProcessText(newText) {
             if(isStringEmptyOrWhitespace(newText)) {
                 enableSend();
@@ -476,12 +435,6 @@
                     onprogress: function(e) {
                         var newText = e.target.responseText;
                         handleOnProcessText(newText);
-
-                        // Delay the scrolling code by 100ms to ensure that the content is fully loaded
-                        setTimeout(function() {
-                            chatRecordEditor = document.getElementById("RichChatRecord");
-                            chatRecordEditor.scrollTop = chatRecordEditor.scrollHeight;
-                        }, 100);
                     }
                 },
                 success: function (data) {
@@ -514,12 +467,6 @@
                     onprogress: function(e) {
                         var newText = e.target.responseText;
                         handleOnProcessText(newText);
-                        
-                        // Delay the scrolling code by 100ms to ensure that the content is fully loaded
-                        setTimeout(function() {
-                            chatRecordEditor = document.getElementById("RichChatRecord");
-                            chatRecordEditor.scrollTop = chatRecordEditor.scrollHeight;
-                        }, 100);
                     }
                 },
                 success: function (data) {
@@ -537,83 +484,6 @@
                 }
             });
             logoutMenu.style.display = "none";
-        }
-
-        function sendEcho() {
-            var echoUrl = "api/aiutilitybot/echo";
-            var userInput = document.getElementById("UserInput").value;
-            disableSend();
-            if(isStringEmptyOrWhitespace(userInput)) {
-                enableSend();
-                return false;
-            }
-            $.ajax({
-                url: echoUrl,
-                type: "POST",
-                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
-                cache: false,
-                contentType: "application/json; charset=utf-8",
-                success: function (data) {
-                    document.getElementById("RichChatRecord").innerHTML = data.message;
-                    // Delay the scrolling code by 100ms to ensure that the content is fully loaded
-                    setTimeout(function() {
-                        chatRecordEditor = document.getElementById("RichChatRecord");
-                        chatRecordEditor.scrollTop = chatRecordEditor.scrollHeight;
-                        sendChat();
-                    }, 100);
-                },
-                error: function(xhr, status, error) {
-                    if (xhr.status === 401) {
-                        document.getElementById("loginDialog").style.display = "block";
-                    }
-                    else {
-                        alertError(xhr, status, error);
-                    }
-                    document.getElementById("RichChatRecord").innerHTML = error;
-                    document.getElementById("UserInput").value = "";
-                    enableSend();
-                }
-            });
-        }
-
-        function sendChat() {
-            var sendUrl = "api/aiutilitybot/send";
-            var userInput = document.getElementById("UserInput").value;
-            if(isStringEmptyOrWhitespace(userInput)) {
-                enableSend();
-                return false;
-            }
-            $.ajax({
-                url: sendUrl,
-                type: "POST",
-                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
-                cache: false,
-                contentType: "application/json; charset=utf-8",
-                success: function (data) {
-                    showEmbeddedContent(data.message); 
-
-                    // Delay the scrolling code by 100ms to ensure that the content is fully loaded
-                    setTimeout(function() {
-                        chatRecordEditor = document.getElementById("RichChatRecord");
-                        chatRecordEditor.scrollTop = chatRecordEditor.scrollHeight;
-                        enableSend();
-                    }, 100);
-                },
-                error: function(xhr, status, error) {
-                    if (xhr.status === 401) {
-                        document.getElementById("loginDialog").style.display = "block";
-                    }
-                    else {
-                        alertError(xhr, status, error);
-                    }
-                    document.getElementById("RichChatRecord").innerHTML = error;
-                    document.getElementById("UserInput").value = "";
-                    enableSend();
-                },
-                complete: function() {
-                    document.getElementById("UserInput").value = "";
-                }
-            });
         }
 
         function disableSendPasswordButton() {
@@ -732,6 +602,7 @@
                 logoutMenu.style.display = "block";
             }
         });
+
         document.getElementById("ButtonNew").addEventListener("click", function() {
             newChat();
         });
@@ -755,21 +626,6 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-        }
-
-        function isCompleteHTML(inputText) {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(inputText, "text/html");
-
-            // Check if the parsed document has any HTML tags (other than <html><head><body>)
-            const hasHtmlTags = Array.from(doc.body.children).length > 0;
-
-            // Check if input contains typical HTML tags explicitly
-            const htmlTagPattern = /<\/?[a-z][\s\S]*>/i;
-            const explicitlyHtml = htmlTagPattern.test(inputText);
-
-            // Consider it complete HTML if explicitly HTML tags exist and successfully parsed
-            return hasHtmlTags && explicitlyHtml;
         }
 
         async function getFileBase64(file) {
