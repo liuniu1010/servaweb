@@ -47,6 +47,7 @@ insert into configs(id, version, configname, configvalue, comments) values(uuid(
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'mail.smtp.port', '587', '');
 
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'sessionExpireMinutes', '60', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'jobExpireMinutes', '30', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'creditsExpireMonths', '6', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'topupOnRegister', '500', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'retryTimesOnLLMException', '4', '');
@@ -125,13 +126,13 @@ consumefunction  varchar(20),
 foreign key (accountid) references useraccount(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-create table jobs(
+create table neojob(
 id               char(36)        not null primary key,
 version          int             not null,
 jobid            varchar(10)     not null,
 jobtype          varchar(10)     not null,
 jobstatus        varchar(10)     not null,
-jobparam         text            not null,
+jobparams        text            not null,
 joboutcome       text,
 createtime       datetime        not null,
 expiretime       datetime        not null
