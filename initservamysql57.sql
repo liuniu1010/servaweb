@@ -124,3 +124,15 @@ consumetime      datetime        not null,
 consumefunction  varchar(20),
 foreign key (accountid) references useraccount(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+create table jobs(
+id               char(36)        not null primary key,
+version          int             not null,
+jobid            varchar(10)     not null,
+jobtype          varchar(10)     not null,
+jobstatus        varchar(10)     not null,
+jobparam         text            not null,
+joboutcome       text,
+createtime       datetime        not null,
+expiretime       datetime        not null
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
