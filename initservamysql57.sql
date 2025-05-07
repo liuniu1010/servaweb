@@ -130,7 +130,7 @@ create table neojob(
 id               char(36)        not null primary key,
 version          int             not null,
 jobid            varchar(10)     not null,
-jobtype          varchar(10)     not null,
+jobtype          varchar(20)     not null,
 jobstatus        varchar(10)     not null,
 jobparams        text            not null,
 joboutcome       text,
