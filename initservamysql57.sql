@@ -134,6 +134,7 @@ jobtype          varchar(20)     not null,
 jobstatus        varchar(10)     not null,
 jobparams        text            not null,
 joboutcome       text,
+message          text,
 createtime       datetime        not null,
 expiretime       datetime        not null
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
