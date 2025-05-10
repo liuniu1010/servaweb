@@ -87,7 +87,7 @@ public class AIUtilityBot extends AbsAIChat {
         String userInput = params.getUserInput();
         logger.info("loginSession: " + loginSession + " try to streamsend with input: " + userInput);
         try {
-            checkAccessibilityOnAdminAction(loginSession);
+            checkAccessibilityOnClientAction(loginSession);
             if(!super.isBase64SizeValid(params.getFileAsBase64())) {
                 throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_FILESIZE_EXCEED_UPPERLIMIT);
             }
@@ -160,7 +160,7 @@ public class AIUtilityBot extends AbsAIChat {
         String alignedSession = super.alignSession(loginSession);
         logger.info("loginSession: " + loginSession + " try to streamrefresh");
         try {
-            checkAccessibilityOnAdminAction(loginSession);
+            checkAccessibilityOnClientAction(loginSession);
 
             NotifyCallbackIFC notifyCallback = StreamCache.getInstance().get(alignedSession);
 
@@ -212,7 +212,7 @@ public class AIUtilityBot extends AbsAIChat {
         String alignedSession = super.alignSession(loginSession);
         logger.info("loginSession: " + loginSession + " try to newchat");
         try {
-            checkAccessibilityOnAdminAction(loginSession);
+            checkAccessibilityOnClientAction(loginSession);
             StreamCache.getInstance().remove(alignedSession);
             super.newchat(params);
         }
@@ -230,7 +230,7 @@ public class AIUtilityBot extends AbsAIChat {
     public void previousstep(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnAdminAction(loginSession);
+            checkAccessibilityOnClientAction(loginSession);
 
             String alignedSession = super.alignSession(loginSession);
             StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
