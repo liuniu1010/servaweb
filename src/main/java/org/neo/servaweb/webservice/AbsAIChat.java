@@ -218,7 +218,11 @@ abstract public class AbsAIChat {
         if(accessAgent.verifyAdminByLoginSession(dbConnection, loginSession)) {
             return;
         }
-        accessAgent.verifyMaintenance(dbConnection);
+        if(accessAgent.verifyMaintenance(dbConnection)) {
+            return;
+        }
+
+        // by default, pass
     }
 
     protected void checkAccessibilityOnAdminAction(String loginSession) {

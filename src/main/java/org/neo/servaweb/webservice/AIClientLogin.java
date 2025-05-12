@@ -168,6 +168,10 @@ public class AIClientLogin {
         if(accessAgent.verifyIP(dbConnection, sourceIP)) {
             return;
         }
-        accessAgent.verifyRegion(dbConnection, sourceIP);
+        if(accessAgent.verifyRegion(dbConnection, sourceIP)) {
+            return;
+        }
+
+        // by default, pass
     }
 }
