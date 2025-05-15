@@ -36,7 +36,7 @@ insert into configs(id, version, configname, configvalue, comments) values(uuid(
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'bashlinuxSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'cmakegcclinuxSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'taskSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'gameFactoryUrl', 'http://<gamefactoryip>:18080/api/aigamefactory', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'gameFactoryUrl', 'http://<gamefactoryip>:18080/api/v1/aigamefactory', '');
 
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'email.username', '<username>', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'email.password', '<password>', '');
