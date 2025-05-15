@@ -1,1 +1,1 @@
-docker build -f Dockerfile_nginx -t nginx_ssl:0.1 .
+docker build -f Dockerfile_nginx -t nginx_web:0.1 .

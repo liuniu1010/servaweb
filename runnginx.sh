@@ -4,4 +4,4 @@ docker run -d \
 --restart=unless-stopped \
 -v <conffileonhost>:/etc/nginx/nginx.conf:ro \
 -v <sslpathonhost>:/etc/nginx/ssl:ro \
-nginx_ssl:0.1
+nginx_web:0.1
