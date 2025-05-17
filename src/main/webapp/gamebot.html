@@ -215,8 +215,8 @@
             </div>
             <div class="right-window">
                 <div style="display: flex; justify-content: flex-end; margin-bottom: 5px;">
-                    <button id="PreviousStep" onclick="previousstep()" style="margin-right:5px; padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
-                       Previous Step
+                    <button id="undo" onclick="undo()" style="margin-right:5px; padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
+                       Undo
                     </button>
                     <button onclick="downloadIframeContent()" style="padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
                        ⬇️ Download
@@ -286,7 +286,7 @@
 
         function enableSendWithInput(input) {
             isRecording = false;
-            document.getElementById("PreviousStep").disabled = false;
+            document.getElementById("undo").disabled = false;
             document.getElementById("ButtonSendAudio").disabled = false;
             document.getElementById("ButtonSend").disabled = false;
             document.getElementById("UserInput").disabled = false;
@@ -296,7 +296,7 @@
 
         function enableSend() {
             isRecording = false;
-            document.getElementById("PreviousStep").disabled = false;
+            document.getElementById("undo").disabled = false;
             document.getElementById("ButtonSendAudio").disabled = false;
             document.getElementById("ButtonSend").disabled = false;
             document.getElementById("UserInput").disabled = false;
@@ -306,7 +306,7 @@
         }
 
         function disableSend() {
-            document.getElementById("PreviousStep").disabled = true;
+            document.getElementById("undo").disabled = true;
             document.getElementById("ButtonSendAudio").disabled = true;
             document.getElementById("ButtonSend").disabled = true;
             document.getElementById("UserInput").disabled = true;
@@ -351,12 +351,12 @@
             });
         }
 
-        function previousstep() {
-            var previousstepUrl = "api/aiutilitybot/previousstep";
+        function undo() {
+            var undoUrl = "api/aiutilitybot/undo";
             var userInput = "";
             disableSend();
             $.ajax({
-                url: previousstepUrl,
+                url: undoUrl,
                 type: "POST",
                 data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
                 cache: false,

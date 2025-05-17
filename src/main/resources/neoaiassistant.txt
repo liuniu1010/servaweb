@@ -30,7 +30,7 @@ Q: How does GameBot work?
 A:
 - Submit your idea in one sentence.
 - GameBot generates a complete HTML/JS/CSS game and renders it in your browser.
-- You may adjust or refine the result. A “Previous Step” button is available to revert changes, and you can download the game using the “Download Game” button.
+- You may adjust or refine the result. An “Undo” button is available to revert changes, and you can download the game using the “Download Game” button.
 
 Q: How does LinguaSlice work?
 A:

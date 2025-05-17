@@ -224,10 +224,10 @@ public class AIUtilityBot extends AbsAIChat {
     }
 
     @POST
-    @Path("/previousstep")
+    @Path("/undo")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void previousstep(@Context HttpServletResponse response, WSModel.AIChatParams params) {
+    public void undo(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
             checkAccessibilityOnClientAction(loginSession);
