@@ -19,6 +19,7 @@ insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'Dat
 insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'TimeFormat', 'HH:mm:ss');
 insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'DateTimeFormat', 'dd/MM/yyyy HH:mm:ss');
 insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'GoogleApiKey', '<apiKey>');
+insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'X-RapidAPI-Proxy-Secret', '<secretKey>');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'AIInstance', 'OpenAIImpl', 'option of GoogleAIImpl/OpenAIImpl');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'codeModel', 'gpt-4.1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'adminModel', 'gpt-4.1', '');
