@@ -57,6 +57,7 @@ insert into configs(id, version, configname, configvalue, comments) values(uuid(
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'consumedCreditsOnCoderBot', '50', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'consumedCreditsOnSpeechSplit', '10', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'consumedCreditsOnUtilityBot', '10', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'interfaceThreadPoolSize', '32', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyMaintenance', '0', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyUsername', '1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyIP', '1', '');
@@ -135,5 +136,6 @@ jobparams        text            not null,
 joboutcome       text,
 message          text,
 createtime       datetime        not null,
-expiretime       datetime        not null
+expiretime       datetime        not null,
+unique key uq_jobid (jobid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
