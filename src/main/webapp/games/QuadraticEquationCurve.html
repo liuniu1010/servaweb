@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Plot of y = a·x² + b·x + c</title>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background: #fff;
+    color: #222;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  #container {
+    position: relative;
+    width: 600px;
+    height: 600px;
+    background: #f9f9f9;
+    border: 2px solid #42a5f5;
+    border-radius: 8px;
+    box-shadow: 0 0 20px #42a5f5aa;
+  }
+  #canvas {
+    display: block;
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(45deg, #eee 25%, transparent 25%),
+      linear-gradient(-45deg, #eee 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #eee 75%),
+      linear-gradient(-45deg, transparent 75%, #eee 75%);
+    background-size: 40px 40px;
+    background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+  }
+  #description {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: bold;
+    color: #42a5f5;
+    text-shadow: 0 0 5px #42a5f5;
+    user-select: none;
+  }
+  #controls {
+    margin: 20px 0;
+    width: 600px;
+    display: flex;
+    justify-content: space-around;
+    background: #f0f8ff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #42a5f5aa;
+  }
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-weight: 600;
+    color: #3178c6;
+  }
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 160px;
+    height: 8px;
+    border-radius: 5px;
+    background: #d0e3ff;
+    outline: none;
+    margin: 5px 0 3px 0;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #42a5f5;
+    cursor: pointer;
+    border: none;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #42a5f5;
+    cursor: pointer;
+    border: none;
+  }
+  input[type=number] {
+    width: 60px;
+    font-size: 16px;
+    text-align: center;
+    border: 1.5px solid #42a5f5;
+    border-radius: 5px;
+    color: #3178c6;
+    padding: 2px 5px;
+  }
+</style>
+</head>
+<body>
+  <div id="container">
+    <div id="description">Plot of y = a·x² + b·x + c</div>
+    <canvas id="canvas" width="600" height="600"></canvas>
+  </div>
+  <div id="controls">
+    <div class="control-group">
+      <label for="aRange">a:</label>
+      <input type="range" id="aRange" min="-5" max="5" step="0.01" value="1" />
+      <input type="number" id="aNumber" min="-5" max="5" step="0.01" value="1" />
+    </div>
+    <div class="control-group">
+      <label for="bRange">b:</label>
+      <input type="range" id="bRange" min="-10" max="10" step="0.01" value="1" />
+      <input type="number" id="bNumber" min="-10" max="10" step="0.01" value="1" />
+    </div>
+    <div class="control-group">
+      <label for="cRange">c:</label>
+      <input type="range" id="cRange" min="-50" max="50" step="0.1" value="1" />
+      <input type="number" id="cNumber" min="-50" max="50" step="0.1" value="1" />
+    </div>
+  </div>
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+
+  // Initial coefficients
+  let a = 1, b = 1, c = 1;
+
+  // Mapping functions
+  // x from -10 to 10
+  // y range dynamic but set from -60 to 60 to accommodate c and quadratic
+
+  function mapX(x) {
+    return ((x + 10) / 20) * width;
+  }
+  function mapY(y) {
+    // y ranges -60 to 60, map to canvas height
+    // clamp y to the range for drawing
+    const minY = -60;
+    const maxY = 60;
+    if (y < minY) y = minY;
+    if (y > maxY) y = maxY;
+    return height - ((y - minY) / (maxY - minY)) * height;
+  }
+
+  const description = document.getElementById('description');
+
+  // Draw grid
+  function drawGrid() {
+    ctx.clearRect(0, 0, width, height);
+
+    ctx.strokeStyle = '#ccc';
+    ctx.lineWidth = 1;
+    
+    // vertical grid lines every 1
+    for(let x = -10; x <= 10; x++) {
+      const xpos = mapX(x);
+      ctx.beginPath();
+      ctx.moveTo(xpos, 0);
+      ctx.lineTo(xpos, height);
+      // Major lines darker
+      ctx.strokeStyle = (x % 5 === 0) ? '#bbb' : '#eee';
+      ctx.stroke();
+    }
+
+    // horizontal grid lines every 10 units y from -60 to 60
+    for(let y = -60; y <= 60; y += 10) {
+      const ypos = mapY(y);
+      ctx.beginPath();
+      ctx.moveTo(0, ypos);
+      ctx.lineTo(width, ypos);
+      ctx.strokeStyle = (y % 30 === 0) ? '#bbb' : '#eee';
+      ctx.stroke();
+    }
+
+    // axes
+    ctx.strokeStyle = '#42a5f5';
+    ctx.lineWidth = 2;
+
+    // X axis (y=0)
+    ctx.beginPath();
+    ctx.moveTo(mapX(-10), mapY(0));
+    ctx.lineTo(mapX(10), mapY(0));
+    ctx.stroke();
+
+    // Y axis (x=0)
+    ctx.beginPath();
+    ctx.moveTo(mapX(0), mapY(-60));
+    ctx.lineTo(mapX(0), mapY(60));
+    ctx.stroke();
+
+    // arrows
+    const arrowSize = 10;
+
+    // x axis arrow
+    ctx.beginPath();
+    const arrowXBase = mapX(10);
+    const arrowYBase = mapY(0);
+    ctx.moveTo(arrowXBase, arrowYBase);
+    ctx.lineTo(arrowXBase - arrowSize, arrowYBase - arrowSize/2);
+    ctx.lineTo(arrowXBase - arrowSize, arrowYBase + arrowSize/2);
+    ctx.closePath();
+    ctx.fillStyle = '#42a5f5';
+    ctx.fill();
+
+    // y axis arrow
+    ctx.beginPath();
+    const arrowXBaseY = mapX(0);
+    const arrowYBaseY = mapY(60);
+    ctx.moveTo(arrowXBaseY, arrowYBaseY);
+    ctx.lineTo(arrowXBaseY - arrowSize/2, arrowYBaseY + arrowSize);
+    ctx.lineTo(arrowXBaseY + arrowSize/2, arrowYBaseY + arrowSize);
+    ctx.closePath();
+    ctx.fill();
+
+    // labels
+    ctx.fillStyle = '#42a5f5';
+    ctx.font = '18px Segoe UI, sans-serif';
+    ctx.fillText('x', arrowXBase - 15, arrowYBase + 25);
+    ctx.fillText('y', arrowXBaseY + 10, arrowYBaseY + 20);
+    ctx.fillText('0', mapX(0) - 20, mapY(0) + 15);
+
+    // y axis numeric labels every 20
+    ctx.fillStyle = '#3178c6';
+    ctx.font = '14px Segoe UI, sans-serif';
+    for(let y = -60; y <= 60; y += 20) {
+      const ypos = mapY(y);
+      if (y !== 0) ctx.fillText(y.toString(), mapX(0) - 40, ypos + 5);
+    }
+    // x axis numeric labels every 5
+    for(let x = -10; x <= 10; x += 5) {
+      const xpos = mapX(x);
+      if (x !== 0) ctx.fillText(x.toString(), xpos - 10, mapY(0) + 20);
+    }
+  }
+
+  // Draw curve
+  function drawCurve() {
+    ctx.strokeStyle = '#f49f42';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    let first = true;
+    for(let x = -10; x <= 10; x += 0.01) {
+      let y = a*x*x + b*x + c;
+      let px = mapX(x);
+      let py = mapY(y);
+      if (first) {
+        ctx.moveTo(px, py);
+        first = false;
+      } else {
+        ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+  }
+
+  function draw() {
+    drawGrid();
+    drawCurve();
+    // update description
+    const aStr = (a % 1 === 0) ? a.toFixed(0) : a.toFixed(2);
+    const bStr = (b % 1 === 0) ? b.toFixed(0) : b.toFixed(2);
+    const cStr = (c % 1 === 0) ? c.toFixed(0) : c.toFixed(2);
+    description.textContent = `Plot of y = ${aStr}·x + ${bStr}·x + ${cStr}`;
+  }
+
+  // Event handlers for inputs
+  const aRange = document.getElementById('aRange');
+  const bRange = document.getElementById('bRange');
+  const cRange = document.getElementById('cRange');
+  const aNumber = document.getElementById('aNumber');
+  const bNumber = document.getElementById('bNumber');
+  const cNumber = document.getElementById('cNumber');
+
+  function syncInputs(rangeInput, numberInput, coefSetter) {
+    function onInput() {
+      let val = parseFloat(rangeInput.value);
+      coefSetter(val);
+      numberInput.value = val;
+      draw();
+    }
+    function onNumberInput() {
+      let val = parseFloat(numberInput.value);
+      if (isNaN(val)) return;
+      // Clamp values to input min/max
+      const rmin = parseFloat(rangeInput.min);
+      const rmax = parseFloat(rangeInput.max);
+      if (val < rmin) val = rmin;
+      if (val > rmax) val = rmax;
+      coefSetter(val);
+      rangeInput.value = val;
+      draw();
+    }
+    rangeInput.addEventListener('input', onInput);
+    numberInput.addEventListener('change', onNumberInput);
+  }
+
+  syncInputs(aRange, aNumber, v => a = v);
+  syncInputs(bRange, bNumber, v => b = v);
+  syncInputs(cRange, cNumber, v => c = v);
+
+  // Initial draw
+  draw();
+</script>
+</body>
+</html>
