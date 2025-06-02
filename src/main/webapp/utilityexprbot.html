@@ -219,14 +219,22 @@
                     </button>
                 </div>
             </div>
+
             <div class="right-window">
-                <div style="display: flex; justify-content: flex-end; margin-bottom: 5px;">
-                    <button id="undo" onclick="undo()" style="margin-right:5px; padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
-                       ↶ Undo
-                    </button>
-                    <button onclick="downloadIframeContent()" style="padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
-                       ⬇️ Download
-                    </button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 16px;">
+                    <div>
+                        <button id="undo" onclick="undo()" style="margin-right:5px; padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
+                            ↶ Undo
+                        </button>
+                        <button onclick="downloadIframeContent()" style="padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
+                            ⬇️ Download
+                        </button>
+                    </div>
+
+                    <div id="creditInfo" style="display: flex; align-items: center; gap: 10px;">
+                        <span id="creditCount">Credits: ...</span>
+                        <a href="https://buy.stripe.com/test_xxx" id="buyLink" style="text-decoration: none; color: #007bff;">➕ Buy Credits</a>
+                    </div>
                 </div>
 
                 <div id="RichChatRecord" contenteditable="false" class="chatRecordArea">
