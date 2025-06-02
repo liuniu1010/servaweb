@@ -87,7 +87,7 @@ public class AIUtilityExprBot extends AbsAIChat {
         String userInput = params.getUserInput();
         logger.info("loginSession: " + loginSession + " try to streamsend with input: " + userInput);
         try {
-            checkAccessibilityOnExprTest();
+            checkAccessibilityOnExprTest(loginSession);
             if(!super.isBase64SizeValid(params.getFileAsBase64())) {
                 throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_FILESIZE_EXCEED_UPPERLIMIT);
             }
@@ -157,7 +157,7 @@ public class AIUtilityExprBot extends AbsAIChat {
         String alignedSession = super.alignSession(loginSession);
         logger.info("loginSession: " + loginSession + " try to streamrefresh");
         try {
-            checkAccessibilityOnExprTest();
+            checkAccessibilityOnExprTest(loginSession);
 
             NotifyCallbackIFC notifyCallback = StreamCache.getInstance().get(alignedSession);
 
@@ -209,7 +209,7 @@ public class AIUtilityExprBot extends AbsAIChat {
         String alignedSession = super.alignSession(loginSession);
         logger.info("loginSession: " + loginSession + " try to newchat");
         try {
-            checkAccessibilityOnExprTest();
+            checkAccessibilityOnExprTest(loginSession);
             StreamCache.getInstance().remove(alignedSession);
             super.newchat(params);
         }
@@ -227,7 +227,7 @@ public class AIUtilityExprBot extends AbsAIChat {
     public void undo(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
             String loginSession = params.getSession();
-            checkAccessibilityOnExprTest();
+            checkAccessibilityOnExprTest(loginSession);
 
             String alignedSession = super.alignSession(loginSession);
             StorageIFC storageIFC = StorageInMemoryImpl.getInstance();
@@ -259,10 +259,12 @@ public class AIUtilityExprBot extends AbsAIChat {
         }
     }
 
-    private void checkAccessibilityOnExprTest() {
+    private void checkAccessibilityOnExprTest(String loginSession) {
         int iValue = CommonUtil.getConfigValueAsInt("blockExprTest");
         if(iValue != 0) {
             throw new NeoAIException("expr test blocked!");
         }
+
+        checkAccessibilityOnClientAction(loginSession);
     }
 }

@@ -207,13 +207,17 @@
                 <button id="ButtonNew" type="button" class="leftpanel-button">
                     <img id="NewButtonImage" src="images/newstart.webp" alt="New" draggable="false">
                 </button>
-<!--
+
+                <input type="file" id="fileInputEdit" accept=".html,.htm" style="display: none;">
+                <button id="ButtonEdit" type="button" class="leftpanel-button">
+                    <img id="EditButtonImage" src="images/fileedit.webp" alt="Edit" draggable="false">
+                </button>
+
                 <div class="logout-button-container">
                     <button id="ButtonAccount" type="button" class="leftpanel-button">
                         <img id="AccountButtonImage" src="images/robot4.webp" alt="Account" draggable="false">
                     </button>
                 </div>
--->
             </div>
             <div class="right-window">
                 <div style="display: flex; justify-content: flex-end; margin-bottom: 5px;">
@@ -227,7 +231,8 @@
 
                 <div id="RichChatRecord" contenteditable="false" class="chatRecordArea">
                 </div>
-                <input type="file" id="fileInput" name="file" style="color: #000000;" accept=".html,.htm">
+                <input type="file" id="imgInput" name="file" style="color: #000000;" accept=".png,.webp,.jpg">
+
                 <div style="display: flex;">
                     <textarea id="UserInput" placeholder="Type your requirement here..."></textarea>
                     <button id="ButtonSendAudio" type="button" class="button-send" onclick="sendAudio()">
@@ -240,14 +245,12 @@
             </div>
         </div>
     </div>
-<!--
     <div id="logoutMenu" class="logout-menu">
         <button onclick="logout()">
             <img src="images/logout-icon.webp" alt="Logout Icon">
             Log out
         </button>
     </div>
--->
     <div id="loginDialog" class="login-dialog">
         <h3>Login</h3>
         <label for="username">Email address:</label>
@@ -302,7 +305,7 @@
             document.getElementById("ButtonSendAudio").disabled = false;
             document.getElementById("ButtonSend").disabled = false;
             document.getElementById("UserInput").disabled = false;
-            document.getElementById('fileInput').value = "";
+            document.getElementById('imgInput').value = "";
             document.getElementById("UserInput").value = "";
             document.getElementById("UserInput").focus();
         }
@@ -342,7 +345,7 @@
                 },
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {
-                        // document.getElementById("loginDialog").style.display = "block";
+                        document.getElementById("loginDialog").style.display = "block";
                     }
                     else {
                         alertError(xhr, status, error);
@@ -373,7 +376,7 @@
                 },
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {
-                        // document.getElementById("loginDialog").style.display = "block";
+                        document.getElementById("loginDialog").style.display = "block";
                     }
                     else {
                         alertError(xhr, status, error);
@@ -383,7 +386,7 @@
                     enableSend();
                 }
             });
-            // logoutMenu.style.display = "none";
+            logoutMenu.style.display = "none";
         }
 
         function isStringEmptyOrWhitespace(str) {
@@ -443,7 +446,7 @@
                 },
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {
-                        // document.getElementById("loginDialog").style.display = "block";
+                        document.getElementById("loginDialog").style.display = "block";
                     }
                     else {
                         alertError(xhr, status, error);
@@ -475,7 +478,7 @@
                 },
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {
-                        // document.getElementById("loginDialog").style.display = "block";
+                        document.getElementById("loginDialog").style.display = "block";
                     }
                     else {
                         alertError(xhr, status, error);
@@ -485,7 +488,7 @@
                     enableSend();
                 }
             });
-            // logoutMenu.style.display = "none";
+            logoutMenu.style.display = "none";
         }
 
         function disableSendPasswordButton() {
@@ -595,7 +598,7 @@
             var re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
             return re.test(String(email).toLowerCase());
         }
-/*
+
         document.getElementById("ButtonAccount").addEventListener("click", function() {
             var logoutMenu = document.getElementById("logoutMenu");
             if (logoutMenu.style.display === "block") {
@@ -604,9 +607,16 @@
                 logoutMenu.style.display = "block";
             }
         });
-*/
+
         document.getElementById("ButtonNew").addEventListener("click", function() {
-            newChat();
+            const userConfirmed = confirm("Current content will be cleared, do you really want to start a new game?");
+            if(userConfirmed) {
+                newChat();
+            }
+        });
+
+        document.getElementById("ButtonEdit").addEventListener("click", function() {
+            document.getElementById('fileInputEdit').click();
         });
 
         function downloadIframeContent() {
@@ -640,8 +650,8 @@
         }
 
         function encodeInputFileAndSend() {
-            var fileInput = document.getElementById('fileInput');
-            var file = fileInput.files[0];
+            var fileInputEdit = document.getElementById('fileInputEdit');
+            var file = fileInputEdit.files[0];
 
             if (file) {
                 getFileBase64(file)
@@ -717,7 +727,7 @@
                 },
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {
-                        // document.getElementById("loginDialog").style.display = "block";
+                        document.getElementById("loginDialog").style.display = "block";
                     }
                     else {
                         alertError(xhr, status, error);
@@ -740,7 +750,12 @@
             return input.split(regex);
         }
 
-        document.getElementById('fileInput').addEventListener('change', function() {
+        document.getElementById('fileInputEdit').addEventListener('change', function () {
+            const userConfirmed = confirm("Current content will be cleared, do you really want to open this file?");
+            if(!userConfirmed) {
+                return;
+            }
+
             var file = this.files[0];
             if (file) {
                 var fileType = file.name.split('.').pop().toLowerCase();
@@ -754,6 +769,21 @@
                 }
                 else {
                     document.getElementById("UserInput").value = file.name;
+                }
+            }
+        });
+
+        document.getElementById('imgInput').addEventListener('change', function() {
+            var file = this.files[0];
+            if (file) {
+                var fileType = file.name.split('.').pop().toLowerCase();
+                if (fileType !== 'png' && fileType !== 'webp' && fileType !== 'jpg') {
+                    alert('Only image files are allowed.');
+                    this.value = '';
+                }
+                else if (file.size > 10 * 1024 * 1024) {
+                    alert("The selected image file exceeds the 10MB limit. Please choose a smaller file.");
+                    this.value = '';
                 }
             }
         });
