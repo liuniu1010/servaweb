@@ -207,6 +207,12 @@
                 <button id="ButtonNew" type="button" class="leftpanel-button">
                     <img id="NewButtonImage" src="images/newstart.webp" alt="New" draggable="false">
                 </button>
+
+                <input type="file" id="fileInputEdit" accept=".html,.htm" style="display: none;">
+                <button id="ButtonEdit" type="button" class="leftpanel-button">
+                    <img id="EditButtonImage" src="images/fileedit.webp" alt="Edit" draggable="false">
+                </button>
+
                 <div class="logout-button-container">
                     <button id="ButtonAccount" type="button" class="leftpanel-button">
                         <img id="AccountButtonImage" src="images/robot4.webp" alt="Account" draggable="false">
@@ -216,7 +222,7 @@
             <div class="right-window">
                 <div style="display: flex; justify-content: flex-end; margin-bottom: 5px;">
                     <button id="undo" onclick="undo()" style="margin-right:5px; padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
-                       Undo
+                       ↶ Undo
                     </button>
                     <button onclick="downloadIframeContent()" style="padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
                        ⬇️ Download
@@ -225,27 +231,26 @@
 
                 <div id="RichChatRecord" contenteditable="false" class="chatRecordArea">
                 </div>
-                <input type="file" id="fileInput" name="file" style="color: #000000;" accept=".html,.htm">
+                <input type="file" id="imgInput" name="file" style="color: #000000;" accept=".png,.webp,.jpg" hidden>
+
                 <div style="display: flex;">
                     <textarea id="UserInput" placeholder="Type your requirement here..."></textarea>
                     <button id="ButtonSendAudio" type="button" class="button-send" onclick="sendAudio()">
                         <img id="recordButtonImage" src="images/micphone.png" alt="Record" draggable="false">
                     </button>
-                    <button id="ButtonSend" type="button" class="button-send" onclick="encodeInputFileAndSend()">
+                    <button id="ButtonSend" type="button" class="button-send" onclick="streamsend('')">
                         <img src="images/send.png" alt="Send" draggable="false">
                     </button>
                 </div>
             </div>
         </div>
     </div>
-
     <div id="logoutMenu" class="logout-menu">
         <button onclick="logout()">
             <img src="images/logout-icon.webp" alt="Logout Icon">
             Log out
         </button>
     </div>
-
     <div id="loginDialog" class="login-dialog">
         <h3>Login</h3>
         <label for="username">Email address:</label>
@@ -300,7 +305,7 @@
             document.getElementById("ButtonSendAudio").disabled = false;
             document.getElementById("ButtonSend").disabled = false;
             document.getElementById("UserInput").disabled = false;
-            document.getElementById('fileInput').value = "";
+            document.getElementById('imgInput').value = "";
             document.getElementById("UserInput").value = "";
             document.getElementById("UserInput").focus();
         }
@@ -604,7 +609,16 @@
         });
 
         document.getElementById("ButtonNew").addEventListener("click", function() {
-            newChat();
+            const userConfirmed = confirm("Current content will be cleared, do you really want to start a new game?");
+            if(userConfirmed) {
+                newChat();
+            }
+        });
+
+        document.getElementById("ButtonEdit").addEventListener("click", function() {
+            const fileInput = document.getElementById('fileInputEdit');
+            fileInput.value = "";
+            fileInput.click();
         });
 
         function downloadIframeContent() {
@@ -638,8 +652,8 @@
         }
 
         function encodeInputFileAndSend() {
-            var fileInput = document.getElementById('fileInput');
-            var file = fileInput.files[0];
+            var fileInputEdit = document.getElementById('fileInputEdit');
+            var file = fileInputEdit.files[0];
 
             if (file) {
                 getFileBase64(file)
@@ -650,9 +664,6 @@
                     console.error('Error converting file to base64:', error);
                     enableSend();
                 });
-            }
-            else {
-                streamsend("");
             }
         }
 
@@ -738,7 +749,12 @@
             return input.split(regex);
         }
 
-        document.getElementById('fileInput').addEventListener('change', function() {
+        document.getElementById('fileInputEdit').addEventListener('change', function () {
+            const userConfirmed = confirm("Current content will be cleared, do you really want to open this file?");
+            if(!userConfirmed) {
+                return;
+            }
+
             var file = this.files[0];
             if (file) {
                 var fileType = file.name.split('.').pop().toLowerCase();
@@ -751,7 +767,22 @@
                     this.value = '';
                 }
                 else {
-                    document.getElementById("UserInput").value = file.name;
+                    encodeInputFileAndSend();
+                }
+            }
+        });
+
+        document.getElementById('imgInput').addEventListener('change', function() {
+            var file = this.files[0];
+            if (file) {
+                var fileType = file.name.split('.').pop().toLowerCase();
+                if (fileType !== 'png' && fileType !== 'webp' && fileType !== 'jpg') {
+                    alert('Only image files are allowed.');
+                    this.value = '';
+                }
+                else if (file.size > 10 * 1024 * 1024) {
+                    alert("The selected image file exceeds the 10MB limit. Please choose a smaller file.");
+                    this.value = '';
                 }
             }
         });
