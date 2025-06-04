@@ -129,7 +129,14 @@ public class AIUtilityExprBot extends AbsAIChat {
             notifyCallback.registerWorkingThread();
             String loginSession = params.getSession();
             WSModel.AIChatResponse wsChatResponse = super.streamsend(params, notifyCallback);
-            if(!wsChatResponse.getIsSuccess()) {
+            if(wsChatResponse.getIsSuccess()) {
+                String fileAsBase64 = params.getFileAsBase64();
+                if(fileAsBase64 == null || fileAsBase64.trim().equals("")) {
+                    // temp logic, in case there is no file attached, it will trigger calling on LLM
+                    consume(loginSession);
+                }
+            }
+            else {
                 notifyCallback.notify(wsChatResponse.getMessage() + ENDOFCODE);
             }
         }
@@ -266,5 +273,28 @@ public class AIUtilityExprBot extends AbsAIChat {
         }
 
         checkAccessibilityOnClientAction(loginSession);
+    }
+
+    private void consume(String loginSession) {
+        try {
+            innerConsume(loginSession);
+        }       
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+    }       
+
+    private void innerConsume(String loginSession) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                int consumedCreditsOnUtilityBot = CommonUtil.getConfigValueAsInt(dbConnection, "consumedCreditsOnUtilityBot");
+                String consumeFunction = "utilitybot";
+                AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+                accountAgent.consumeCreditsWithSession(dbConnection, loginSession, consumedCreditsOnUtilityBot, consumeFunction);
+                return null;
+            }
+        });
     }
 }

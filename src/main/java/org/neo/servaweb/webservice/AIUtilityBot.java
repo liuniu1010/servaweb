@@ -130,7 +130,11 @@ public class AIUtilityBot extends AbsAIChat {
             String loginSession = params.getSession();
             WSModel.AIChatResponse wsChatResponse = super.streamsend(params, notifyCallback);
             if(wsChatResponse.getIsSuccess()) {
-                consume(loginSession);
+                String fileAsBase64 = params.getFileAsBase64();
+                if(fileAsBase64 == null || fileAsBase64.trim().equals("")) {
+                    // temp logic, in case there is no file attached, it will trigger calling on LLM
+                    consume(loginSession);
+                }
             }
             else {
                 notifyCallback.notify(wsChatResponse.getMessage() + ENDOFCODE);

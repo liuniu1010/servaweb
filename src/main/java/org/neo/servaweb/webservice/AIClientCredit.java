@@ -26,14 +26,14 @@ public class AIClientCredit {
     final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AIClientCredit.class);
 
     @POST
-    @Path("/getcredits")
+    @Path("/getcreditcount")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse getCredits(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
+    public WSModel.AIChatResponse getCreditCount(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
         String loginSession = params.getSession();
         String sourceIP = getSourceIP(request);
 
-        logger.info("loginSession: " + loginSession + " from " + sourceIP + " try to get credits");
+        logger.info("loginSession: " + loginSession + " from " + sourceIP + " try to get credit count");
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         try {
@@ -110,6 +110,8 @@ public class AIClientCredit {
 
     private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String loginSession, String sourceIP) {
         AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        accountAgent.checkSessionValid(dbConnection, loginSession);
         if(accessAgent.verifyAdminByLoginSession(dbConnection, loginSession)) {
             return;
         }
