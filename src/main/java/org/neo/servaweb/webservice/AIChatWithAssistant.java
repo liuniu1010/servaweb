@@ -8,9 +8,19 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
 import javax.servlet.http.HttpServletResponse;
 
+import org.neo.servaframe.interfaces.DBConnectionIFC;
+import org.neo.servaframe.interfaces.DBSaveTaskIFC;
+import org.neo.servaframe.interfaces.DBServiceIFC;
+import org.neo.servaframe.ServiceFactory;
 
+import org.neo.servaaibase.util.CommonUtil;
+import org.neo.servaaibase.NeoAIException;
 
+import org.neo.servaaiagent.ifc.AccountAgentIFC;
+import org.neo.servaaiagent.ifc.AccessAgentIFC;
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
+import org.neo.servaaiagent.impl.AccountAgentImpl;
+import org.neo.servaaiagent.impl.AccessAgentImpl;
 import org.neo.servaaiagent.impl.ChatWithAssistantInMemoryForUIImpl;
 
 @Path("/aichatwithassistant")
@@ -33,7 +43,9 @@ public class AIChatWithAssistant extends AbsAIChat {
         try {
             String loginSession = params.getSession();
             checkAccessibilityOnClientAction(loginSession);
-            return super.send(params);
+            WSModel.AIChatResponse chatResponse = super.send(params);
+            consume(loginSession);
+            return chatResponse;
         }
         catch(Exception ex) {
             logger.error(ex.getMessage());
@@ -91,5 +103,28 @@ public class AIChatWithAssistant extends AbsAIChat {
             standardHandleException(ex, response);
         }
         return null;
+    }
+
+    private void consume(String loginSession) {
+        try {
+            innerConsume(loginSession);
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+    }       
+     
+    private void innerConsume(String loginSession) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                int consumedCreditsOnChatWithAssistant = CommonUtil.getConfigValueAsInt(dbConnection, "consumedCreditsOnChatWithAssistant");
+                String consumeFunction = "chatwithassistant";
+                AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+                accountAgent.consumeCreditsWithSession(dbConnection, loginSession, consumedCreditsOnChatWithAssistant, consumeFunction);
+                return null;
+            }
+        });
     }
 }

@@ -15,7 +15,7 @@ public class WSModel {
         }
 
         public String getUserInput() {
-            return userInput;
+            return (userInput == null)?"":userInput;
         }
 
         public void setUserInput(String inputUserInput) {
@@ -23,7 +23,7 @@ public class WSModel {
         }
 
         public String getFileAsBase64() {
-            return fileAsBase64;
+            return (fileAsBase64 == null)?"":fileAsBase64;
         }
 
         public void setFileAsBase64(String inputFileAsBase64) {
@@ -49,7 +49,7 @@ public class WSModel {
         }
 
         public String getMessage() {
-            return message;
+            return (message == null)?"":message;
         }
 
         public void setMessage(String inputMessage) {

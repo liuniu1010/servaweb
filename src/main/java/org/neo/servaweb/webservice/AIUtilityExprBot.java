@@ -202,7 +202,7 @@ public class AIUtilityExprBot extends AbsAIChat {
             }, 0, 10, TimeUnit.SECONDS);
         }
         catch(Exception ex) {
-            logger.error(ex.getMessage());
+            logger.error(ex.getMessage(), ex);
             standardHandleException(ex, response);
         }
     }
