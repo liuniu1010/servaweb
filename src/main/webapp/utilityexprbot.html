@@ -233,7 +233,12 @@
 
                     <div id="creditInfo" style="display: flex; align-items: center; gap: 10px;">
                         <span id="creditCount">Credit Count: ...</span>
-                        <a href="https://buy.stripe.com/test_xxx" id="buyLink" style="text-decoration: none; color: #007bff;">➕ Buy Credits</a>
+                        <a id="purchaseLink"
+                            href="#"
+                            target="_blank"
+                            style="text-decoration: none; color: #007bff;">
+                            Purchase Credits
+                        </a>
                     </div>
                 </div>
 
@@ -491,6 +496,29 @@
             });
         }
 
+        function showPaymentLink() {
+            var getPaymentLinkUrl = "api/aiclientcredit/getpaymentlink";
+            $.ajax({
+                url: getPaymentLinkUrl,
+                type: "POST",
+                data: JSON.stringify({session: getLoginSession()}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    const a = document.getElementById("purchaseLink");
+                    a.href = data.message;
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
+                    }
+                }
+            });
+        }
+
         function streamrefresh() {
             var streamrefreshUrl = "api/aiutilityexprbot/streamrefresh";
             var userInput = "";
@@ -523,6 +551,7 @@
             });
             logoutMenu.style.display = "none";
             showCreditCount();
+            showPaymentLink();
         }
 
         function disableSendPasswordButton() {

@@ -14,6 +14,7 @@ import org.neo.servaframe.interfaces.DBQueryTaskIFC;
 import org.neo.servaframe.interfaces.DBServiceIFC;
 import org.neo.servaframe.ServiceFactory;
 
+import org.neo.servaaibase.util.CommonUtil;
 import org.neo.servaaibase.NeoAIException;
 
 import org.neo.servaaiagent.ifc.AccountAgentIFC;
@@ -40,6 +41,32 @@ public class AIClientCredit {
             checkAccessibilityOnAction(loginSession, sourceIP);
             int credits = accountAgent.getLeftCreditsWithSession(loginSession);
             WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, String.valueOf(credits));
+            return chatResponse;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null; 
+    }
+
+    @POST
+    @Path("/getpaymentlink")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public WSModel.AIChatResponse getPaymentLink(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
+        String loginSession = params.getSession();
+        String sourceIP = getSourceIP(request);
+
+        logger.info("loginSession: " + loginSession + " from " + sourceIP + " try to get payment link");
+
+        AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+        try {
+            checkAccessibilityOnAction(loginSession, sourceIP);
+            String userName = accountAgent.getUserNameWithSession(loginSession);
+            String paymentLink = CommonUtil.getConfigValue("paymentLinkOnStripe");
+            paymentLink = paymentLink + "?prefilled_email=" + userName;
+            WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, paymentLink);
             return chatResponse;
         }
         catch(Exception ex) {
