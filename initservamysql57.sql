@@ -70,6 +70,7 @@ insert into configs(id, version, configname, configvalue, comments) values(uuid(
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'maxFileSizeForUpload', '10', 'unit M');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'blockExprTest', '1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'paymentLinkOnStripe', '<paymentLinkOnStripe>', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'paymentSigningSecretOnStripe', '<paymentSigningSecretOnStripe>', '');
 
 create table chatrecord(
 id               char(36)        not null primary key,
@@ -115,6 +116,7 @@ version          int             not null,
 accountid        char(36)        not null,
 credits          int             not null default 0,
 expiretime       datetime        not null,
+chasedsource     varchar(20),
 foreign key (accountid) references useraccount(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
