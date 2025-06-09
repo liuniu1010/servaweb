@@ -117,6 +117,7 @@ accountid        char(36)        not null,
 credits          int             not null default 0,
 expiretime       datetime        not null,
 chasedsource     varchar(20),
+transactionid    varchar(40)              unique,
 foreign key (accountid) references useraccount(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
