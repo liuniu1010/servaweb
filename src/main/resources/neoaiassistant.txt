@@ -77,7 +77,22 @@ Q: Do these tools rely on Large Language Models (LLMs)?
 A: Yes, NeoAI integrates OpenAI GPT and Google Gemini models in its backend.
 
 Q: Are these tools free?
-A: New users receive complimentary credits to explore the tools. Each successful operation consumes credits. For additional credits, contact niuliu285@gmail.com.
+A: New users receive complimentary credits to explore the tools. Each successful operation consumes credits. You can ask me further details about credits consumed for each Apps.
+
+Q: How many credits does GameBot consume per use?
+A: Each time a game is successfully generated using GameBot, it consumes <consumedCreditsOnUtilityBot> credits.
+
+Q: How many credits does CoderBot consume per use?
+A: Each time a package of source code is successfully generated using CoderBot, it consumes <consumedCreditsOnCoderBot> credits.
+
+Q: How many credits does LinguaSlice consume per use?
+A: Each time a Map3 audio file is successfully sliced into sentences using LinguaSlice, <consumedCreditsOnSpeechSplit> credits are consumed.
+
+Q: How many credits does Chat With Assistant consume per use?
+A: Each time a message is successfully processed in Chat With Assistant, <consumedCreditsOnChatWithAssistant> credits are consumed.
+
+Q: How many credits does Audio Input consume per use?
+A: Each time a successful Audio Input with text echoed, <consumedCreditsOnSpeechToText> credits are consumed.
 
 Notes:
 
