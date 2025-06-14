@@ -58,6 +58,7 @@ insert into configs(id, version, configname, configvalue, comments) values(uuid(
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'consumedCreditsOnSpeechSplit', '10', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'consumedCreditsOnUtilityBot', '5', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'consumedCreditsOnChatWithAssistant', '0', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'consumedCreditsOnSpeechToText', '0', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'interfaceThreadPoolSize', '32', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyMaintenance', '0', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'verifyUsername', '1', '');

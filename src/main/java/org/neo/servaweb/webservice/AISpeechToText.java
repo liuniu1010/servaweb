@@ -10,9 +10,17 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
 import javax.servlet.http.HttpServletResponse;
 
+import org.neo.servaframe.interfaces.DBConnectionIFC;
+import org.neo.servaframe.interfaces.DBSaveTaskIFC;
+import org.neo.servaframe.interfaces.DBServiceIFC;
+import org.neo.servaframe.ServiceFactory;
 
+import org.neo.servaaibase.util.CommonUtil;
+import org.neo.servaaibase.NeoAIException;
 
+import org.neo.servaaiagent.ifc.AccountAgentIFC;
 import org.neo.servaaiagent.ifc.ChatForUIIFC;
+import org.neo.servaaiagent.impl.AccountAgentImpl;
 import org.neo.servaaiagent.impl.SpeechToTextInMemoryForUIImpl;
 
 @Path("/aispeechtotext")
@@ -47,12 +55,37 @@ public class AISpeechToText extends AbsAIChat {
         try {
             String loginSession = params.getSession();
             checkAccessibilityOnClientAction(loginSession);
-            return super.sendAudio(params);
+            WSModel.AIChatResponse chatResponse = super.sendAudio(params);
+            consume(loginSession);
+            return chatResponse;
         }
         catch(Exception ex) {
             logger.error(ex.getMessage());
             standardHandleException(ex, response);
         }
         return null;
+    }
+
+    private void consume(String loginSession) {
+        try {
+            innerConsume(loginSession); 
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        }
+    }    
+     
+    private void innerConsume(String loginSession) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeSaveTask(new DBSaveTaskIFC() {
+            @Override
+            public Object save(DBConnectionIFC dbConnection) {
+                int consumedCreditsOnSpeechToText = CommonUtil.getConfigValueAsInt(dbConnection, "consumedCreditsOnSpeechToText"); 
+                String consumeFunction = "speechToText";
+                AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+                accountAgent.consumeCreditsWithSession(dbConnection, loginSession, consumedCreditsOnSpeechToText, consumeFunction);
+                return null;
+            }
+        });
     }
 }
