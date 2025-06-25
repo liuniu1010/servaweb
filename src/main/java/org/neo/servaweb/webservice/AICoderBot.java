@@ -81,7 +81,7 @@ public class AICoderBot extends AbsAIChat {
         response.setHeader("Connection", "keep-alive");
 
         NotifyCallbackIFC notifyCallback = null;
-        String loginSession = params.getSession();
+        String loginSession = params.getLoginSession();
         String alignedSession = super.alignSession(loginSession);
         String requirement = params.getUserInput();
         logger.info("loginSession: " + loginSession + " try to streamsend with requirement: " + requirement);
@@ -126,7 +126,7 @@ public class AICoderBot extends AbsAIChat {
         HttpServletResponse response = (HttpServletResponse) asyncContext.getResponse();
         try {
             notifyCallback.registerWorkingThread();
-            String loginSession = params.getSession();
+            String loginSession = params.getLoginSession();
             WSModel.AIChatResponse chatResponse = super.streamsend(params, notifyCallback);
             String information = "";
             if(chatResponse.getIsSuccess()) {
@@ -158,7 +158,7 @@ public class AICoderBot extends AbsAIChat {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse echo(WSModel.AIChatParams params) {
-        String loginSession = params.getSession();
+        String loginSession = params.getLoginSession();
         checkAccessibilityOnClientAction(loginSession);
         return super.echo(params);
     }
@@ -168,7 +168,7 @@ public class AICoderBot extends AbsAIChat {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse newchat(@Context HttpServletResponse response, WSModel.AIChatParams params) {
-        String loginSession = params.getSession();
+        String loginSession = params.getLoginSession();
         String alignedSession = super.alignSession(loginSession);
         logger.info("loginSession: " + loginSession + " try to newchat");
         try {
@@ -192,7 +192,7 @@ public class AICoderBot extends AbsAIChat {
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Connection", "keep-alive");
 
-        String loginSession = params.getSession();
+        String loginSession = params.getLoginSession();
         String alignedSession = super.alignSession(loginSession);
         logger.info("loginSession: " + loginSession + " try to streamrefresh");
 
@@ -245,7 +245,7 @@ public class AICoderBot extends AbsAIChat {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse refresh(WSModel.AIChatParams params) {
-        String loginSession = params.getSession();
+        String loginSession = params.getLoginSession();
         checkAccessibilityOnClientAction(loginSession);
         return super.refresh(params);
     }

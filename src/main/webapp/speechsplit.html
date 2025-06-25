@@ -288,7 +288,7 @@
             $.ajax({
                 url: sendpasswordUrl,
                 type: "POST",
-                data: JSON.stringify({session: username, userInput: ""}),
+                data: JSON.stringify({loginSession: username, userInput: ""}),
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
@@ -316,7 +316,7 @@
             $.ajax({
                 url: loginUrl,
                 type: "POST",
-                data: JSON.stringify({session: username, userInput: password}),
+                data: JSON.stringify({loginSession: username, userInput: password}),
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
@@ -349,7 +349,7 @@
             $.ajax({
                 url: refreshUrl,
                 type: "POST",
-                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
+                data: JSON.stringify({loginSession: getLoginSession(), userInput: userInput}),
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
@@ -380,7 +380,7 @@
             $.ajax({
                 url: newChatUrl,
                 type: "POST",
-                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
+                data: JSON.stringify({loginSession: getLoginSession(), userInput: userInput}),
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
@@ -429,7 +429,7 @@
             $.ajax({
                 url: echoUrl,
                 type: "POST",
-                data: JSON.stringify({session: getLoginSession(), userInput: userInput}),
+                data: JSON.stringify({loginSession: getLoginSession(), userInput: userInput}),
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
@@ -493,7 +493,7 @@
             $.ajax({
                 url: sendUrl,
                 type: "POST",
-                data: JSON.stringify({session: getLoginSession(), userInput: userInput, fileAsBase64: base64String}),
+                data: JSON.stringify({loginSession: getLoginSession(), userInput: userInput, fileAsBase64: base64String}),
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {

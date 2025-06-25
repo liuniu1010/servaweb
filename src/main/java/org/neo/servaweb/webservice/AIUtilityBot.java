@@ -82,7 +82,7 @@ public class AIUtilityBot extends AbsAIChat {
         response.setHeader("Connection", "keep-alive");
 
         NotifyCallbackIFC notifyCallback = null;
-        String loginSession = params.getSession();
+        String loginSession = params.getLoginSession();
         String alignedSession = super.alignSession(loginSession);
         String userInput = params.getUserInput();
         logger.info("loginSession: " + loginSession + " try to streamsend with input: " + userInput);
@@ -127,7 +127,7 @@ public class AIUtilityBot extends AbsAIChat {
         HttpServletResponse response = (HttpServletResponse) asyncContext.getResponse();
         try {
             notifyCallback.registerWorkingThread();
-            String loginSession = params.getSession();
+            String loginSession = params.getLoginSession();
             WSModel.AIChatResponse wsChatResponse = super.streamsend(params, notifyCallback);
             if(wsChatResponse.getIsSuccess()) {
                 String fileAsBase64 = params.getFileAsBase64();
@@ -160,7 +160,7 @@ public class AIUtilityBot extends AbsAIChat {
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Connection", "keep-alive");
 
-        String loginSession = params.getSession();
+        String loginSession = params.getLoginSession();
         String alignedSession = super.alignSession(loginSession);
         logger.info("loginSession: " + loginSession + " try to streamrefresh");
         try {
@@ -212,7 +212,7 @@ public class AIUtilityBot extends AbsAIChat {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse newchat(@Context HttpServletResponse response, WSModel.AIChatParams params) {
-        String loginSession = params.getSession();
+        String loginSession = params.getLoginSession();
         String alignedSession = super.alignSession(loginSession);
         logger.info("loginSession: " + loginSession + " try to newchat");
         try {
@@ -233,7 +233,7 @@ public class AIUtilityBot extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public void undo(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
-            String loginSession = params.getSession();
+            String loginSession = params.getLoginSession();
             checkAccessibilityOnClientAction(loginSession);
 
             String alignedSession = super.alignSession(loginSession);

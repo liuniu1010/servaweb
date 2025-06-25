@@ -31,7 +31,7 @@ public class AIClientCredit {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse getCreditCount(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
-        String loginSession = params.getSession();
+        String loginSession = params.getLoginSession();
         String sourceIP = getSourceIP(request);
 
         logger.info("loginSession: " + loginSession + " from " + sourceIP + " try to get credit count");
@@ -55,7 +55,7 @@ public class AIClientCredit {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse getPaymentLink(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
-        String loginSession = params.getSession();
+        String loginSession = params.getLoginSession();
         String sourceIP = getSourceIP(request);
 
         logger.info("loginSession: " + loginSession + " from " + sourceIP + " try to get payment link");

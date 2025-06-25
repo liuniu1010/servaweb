@@ -17,13 +17,13 @@ public class AISandBox {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse executeCommand(WSModel.AIChatParams params) {
-        String session = params.getSession();
+        String loginSession = params.getLoginSession();
         String command = params.getUserInput();
         WSModel.AIChatResponse chatResponse = null;
 
         try {
             ShellAgentIFC shellAgent = ShellAgentInMemoryImpl.getInstance();
-            String result = shellAgent.execute(session, command);
+            String result = shellAgent.execute(loginSession, command);
             chatResponse = new WSModel.AIChatResponse(true, result);
         }
         catch(Exception ex) {
@@ -37,12 +37,12 @@ public class AISandBox {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse terminateShell(WSModel.AIChatParams params) {
-        String session = params.getSession();
+        String loginSession = params.getLoginSession();
         WSModel.AIChatResponse chatResponse = null;
 
         try {
             ShellAgentIFC shellAgent = ShellAgentInMemoryImpl.getInstance();
-            shellAgent.terminateShell(session);
+            shellAgent.terminateShell(loginSession);
             chatResponse = new WSModel.AIChatResponse(true, "shell closed success");
         }
         catch(Exception ex) {
@@ -56,12 +56,12 @@ public class AISandBox {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse isUnix(WSModel.AIChatParams params) {
-        String session = params.getSession();
+        String loginSession = params.getLoginSession();
         WSModel.AIChatResponse chatResponse = null;
 
         try {
             ShellAgentIFC shellAgent = ShellAgentInMemoryImpl.getInstance();
-            boolean isUnix = shellAgent.isUnix(session);
+            boolean isUnix = shellAgent.isUnix(loginSession);
             chatResponse = new WSModel.AIChatResponse(true, isUnix?"yes":"no");
         }
         catch(Exception ex) {
@@ -75,15 +75,15 @@ public class AISandBox {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse downloadProject(WSModel.AIChatParams params) {
-        String session = params.getSession();
+        String loginSession = params.getLoginSession();
         String projectPath = params.getUserInput();
         WSModel.AIChatResponse chatResponse = null;
 
         try {
             ShellAgentIFC shellAgent = ShellAgentInMemoryImpl.getInstance();
-            String tarFilePath = "/tmp/" + session + ".tar.gz"; 
+            String tarFilePath = "/tmp/" + loginSession + ".tar.gz"; 
             String command = "cd " + projectPath + "/../ && tar -zcvf " + tarFilePath + " myProject/";
-            shellAgent.execute(session, command);
+            shellAgent.execute(loginSession, command);
 
             String base64 = IOUtil.fileToRawBase64(tarFilePath);
             chatResponse = new WSModel.AIChatResponse(true, base64);

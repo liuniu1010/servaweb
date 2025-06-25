@@ -41,7 +41,7 @@ public class AIChatWithAssistant extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse send(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
-            String loginSession = params.getSession();
+            String loginSession = params.getLoginSession();
             checkAccessibilityOnClientAction(loginSession);
             WSModel.AIChatResponse chatResponse = super.send(params);
             consume(loginSession);
@@ -60,7 +60,7 @@ public class AIChatWithAssistant extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse echo(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
-            String loginSession = params.getSession();
+            String loginSession = params.getLoginSession();
             checkAccessibilityOnClientAction(loginSession);
             return super.echo(params);
         }
@@ -77,7 +77,7 @@ public class AIChatWithAssistant extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse newchat(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
-            String loginSession = params.getSession();
+            String loginSession = params.getLoginSession();
             checkAccessibilityOnClientAction(loginSession);
             return super.newchat(params);
         }
@@ -94,7 +94,7 @@ public class AIChatWithAssistant extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse refresh(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
-            String loginSession = params.getSession();
+            String loginSession = params.getLoginSession();
             checkAccessibilityOnClientAction(loginSession);
             return super.refresh(params);
         }

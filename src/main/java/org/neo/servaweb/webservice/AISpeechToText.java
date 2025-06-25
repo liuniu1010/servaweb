@@ -53,7 +53,7 @@ public class AISpeechToText extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse sendAudio(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
-            String loginSession = params.getSession();
+            String loginSession = params.getLoginSession();
             checkAccessibilityOnClientAction(loginSession);
             WSModel.AIChatResponse chatResponse = super.sendAudio(params);
             consume(loginSession);

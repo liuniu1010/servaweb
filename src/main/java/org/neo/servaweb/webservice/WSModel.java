@@ -2,16 +2,16 @@ package org.neo.servaweb.webservice;
 
 public class WSModel {
     public static class AIChatParams {
-        String session;
+        String loginSession;
         String userInput;
         String fileAsBase64;
 
-        public String getSession() {
-            return session;
+        public String getLoginSession() {
+            return loginSession;
         }
 
-        public void setSession(String inputSession) {
-            session = inputSession;
+        public void setLoginSession(String inputLoginSession) {
+            loginSession = inputLoginSession;
         }
 
         public String getUserInput() {

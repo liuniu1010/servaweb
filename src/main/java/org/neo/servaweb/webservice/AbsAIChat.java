@@ -22,6 +22,7 @@ import org.neo.servaaiagent.ifc.AccountAgentIFC;
 import org.neo.servaaiagent.ifc.AccessAgentIFC;
 import org.neo.servaaiagent.impl.AccountAgentImpl;
 import org.neo.servaaiagent.impl.AccessAgentImpl;
+import org.neo.servaaiagent.model.AgentModel;
 
 abstract public class AbsAIChat {
     final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AbsAIChat.class);
@@ -41,14 +42,14 @@ abstract public class AbsAIChat {
         return relevantResourcePath;
     }
 
-    protected String alignSession(String session) {
-        return getHook() + session;
+    protected String alignSession(String loginSession) {
+        return getHook() + loginSession;
     }
 
     public WSModel.AIChatResponse send(WSModel.AIChatParams params) {
         try {
-            String session = params.getSession();
-            String alignedSession = alignSession(session);
+            String loginSession = params.getLoginSession();
+            String alignedSession = alignSession(loginSession);
             String userInput = params.getUserInput();
             String fileAsBase64 = params.getFileAsBase64();
 
@@ -58,7 +59,12 @@ abstract public class AbsAIChat {
                 attachFiles = new ArrayList<String>();
                 attachFiles.add(fileAsBase64.trim());
             }
-            String renderedResponse = getChatForUIInstance().fetchResponse(alignedSession, userInput, attachFiles);
+            AgentModel.UIParams uiParams = new AgentModel.UIParams();
+            uiParams.setAlignedSession(alignedSession);
+            uiParams.setLoginSession(loginSession);
+            uiParams.setUserInput(userInput);
+            uiParams.setAttachFiles(attachFiles);
+            String renderedResponse = getChatForUIInstance().fetchResponse(uiParams);
 
             WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
             return response;
@@ -71,8 +77,8 @@ abstract public class AbsAIChat {
 
     public WSModel.AIChatResponse sendAudio(WSModel.AIChatParams params) {
         try {
-            String session = params.getSession();
-            String alignedSession = alignSession(session);
+            String loginSession = params.getLoginSession();
+            String alignedSession = alignSession(loginSession);
             String userInput = params.getUserInput();
             String fileAsBase64 = params.getFileAsBase64();
 
@@ -82,7 +88,12 @@ abstract public class AbsAIChat {
                 attachFiles = new ArrayList<String>();
                 attachFiles.add(fileAsBase64.trim());
             }
-            String renderedResponse = getChatForUIInstance().sendAudio(alignedSession, userInput, attachFiles);
+            AgentModel.UIParams uiParams = new AgentModel.UIParams();
+            uiParams.setAlignedSession(alignedSession);
+            uiParams.setLoginSession(loginSession);
+            uiParams.setUserInput(userInput);
+            uiParams.setAttachFiles(attachFiles);
+            String renderedResponse = getChatForUIInstance().sendAudio(uiParams);
 
             WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
             return response;
@@ -95,8 +106,8 @@ abstract public class AbsAIChat {
 
     public WSModel.AIChatResponse streamsend(WSModel.AIChatParams params, NotifyCallbackIFC notifyCallback) {
         try {
-            String session = params.getSession();
-            String alignedSession = alignSession(session);
+            String loginSession = params.getLoginSession();
+            String alignedSession = alignSession(loginSession);
             String userInput = params.getUserInput();
             String fileAsBase64 = params.getFileAsBase64();
 
@@ -106,7 +117,13 @@ abstract public class AbsAIChat {
                 attachFiles = new ArrayList<String>();
                 attachFiles.add(fileAsBase64.trim());
             }
-            String renderedResponse = getChatForUIInstance().fetchResponse(alignedSession, notifyCallback, userInput, attachFiles);
+            AgentModel.UIParams uiParams = new AgentModel.UIParams();
+            uiParams.setAlignedSession(alignedSession);
+            uiParams.setLoginSession(loginSession);
+            uiParams.setUserInput(userInput);
+            uiParams.setNotifyCallback(notifyCallback);
+            uiParams.setAttachFiles(attachFiles);
+            String renderedResponse = getChatForUIInstance().fetchResponse(uiParams);
 
             WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
             return response;
@@ -119,10 +136,15 @@ abstract public class AbsAIChat {
 
     public WSModel.AIChatResponse echo(WSModel.AIChatParams params) {
         try {
-            String session = params.getSession();
-            String alignedSession = alignSession(session);
+            String loginSession = params.getLoginSession();
+            String alignedSession = alignSession(loginSession);
             String userInput = params.getUserInput();
-            String renderedResponse = getChatForUIInstance().echo(alignedSession, userInput);
+
+            AgentModel.UIParams uiParams = new AgentModel.UIParams();
+            uiParams.setAlignedSession(alignedSession);
+            uiParams.setLoginSession(loginSession);
+            uiParams.setUserInput(userInput);
+            String renderedResponse = getChatForUIInstance().echo(uiParams);
 
             WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
             return response;
@@ -140,9 +162,14 @@ abstract public class AbsAIChat {
 
     public WSModel.AIChatResponse newchat(WSModel.AIChatParams params, String sayHello) {
         try {
-            String session = params.getSession();
-            String alignedSession = alignSession(session);
-            String renderedResponse = getChatForUIInstance().initNewChat(alignedSession, sayHello);
+            String loginSession = params.getLoginSession();
+            String alignedSession = alignSession(loginSession);
+
+            AgentModel.UIParams uiParams = new AgentModel.UIParams();
+            uiParams.setAlignedSession(alignedSession);
+            uiParams.setLoginSession(loginSession);
+            uiParams.setSayHello(sayHello);
+            String renderedResponse = getChatForUIInstance().initNewChat(uiParams);
 
             WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
             return response;
@@ -155,9 +182,13 @@ abstract public class AbsAIChat {
 
     public WSModel.AIChatResponse refresh(WSModel.AIChatParams params) {
         try {
-            String session = params.getSession();
-            String alignedSession = alignSession(session);
-            String renderedResponse = getChatForUIInstance().refresh(alignedSession);
+            String loginSession = params.getLoginSession();
+            String alignedSession = alignSession(loginSession);
+
+            AgentModel.UIParams uiParams = new AgentModel.UIParams();
+            uiParams.setAlignedSession(alignedSession);
+            uiParams.setLoginSession(loginSession);
+            String renderedResponse = getChatForUIInstance().refresh(uiParams);
 
             WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);
             return response;

@@ -48,13 +48,13 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
     }
 
     @Override
-    protected String alignSession(String session) {
-        if(isAdmin(session)) {
+    protected String alignSession(String loginSession) {
+        if(isAdmin(loginSession)) {
             AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
-            return getHook() + accountAgent.getUserNameWithSession(session);
+            return getHook() + accountAgent.getUserNameWithSession(loginSession);
         }
         else {
-            return super.alignSession(session);
+            return super.alignSession(loginSession);
         }
     }
 
@@ -64,7 +64,7 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse send(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
-            String loginSession = params.getSession();
+            String loginSession = params.getLoginSession();
             checkAccessibilityOnClientAction(loginSession);
             if(!super.isBase64SizeValid(params.getFileAsBase64())) {
                 throw new NeoAIException(NeoAIException.NEOAIEXCEPTION_FILESIZE_EXCEED_UPPERLIMIT);
@@ -86,7 +86,7 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse echo(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
-            String loginSession = params.getSession();
+            String loginSession = params.getLoginSession();
             checkAccessibilityOnClientAction(loginSession);
             return super.echo(params);
         }
@@ -103,7 +103,7 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse newchat(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
-            String loginSession = params.getSession();
+            String loginSession = params.getLoginSession();
             checkAccessibilityOnClientAction(loginSession);
             return super.newchat(params, "Please select an mp3 file and click send");
         }
@@ -120,7 +120,7 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse refresh(@Context HttpServletResponse response, WSModel.AIChatParams params) {
         try {
-            String loginSession = params.getSession();
+            String loginSession = params.getLoginSession();
             checkAccessibilityOnClientAction(loginSession);
             return super.refresh(params);
         }
@@ -154,8 +154,8 @@ public class AIChatWithSpeechSplitExpert extends AbsAIChat {
         });
     }
 
-    private boolean isAdmin(String session) {
+    private boolean isAdmin(String loginSession) {
         AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
-        return accessAgent.verifyAdminByLoginSession(session);
+        return accessAgent.verifyAdminByLoginSession(loginSession);
     }
 }

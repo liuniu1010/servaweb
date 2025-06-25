@@ -30,7 +30,7 @@ public class AIClientLogin {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse sendPassword(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
-        String username = params.getSession();
+        String username = params.getLoginSession();
         String sourceIP = getSourceIP(request);
 
         logger.info("User: " + username + " from " + sourceIP + " try to sendpassword");
@@ -54,7 +54,7 @@ public class AIClientLogin {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse login(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
-        String username = params.getSession();
+        String username = params.getLoginSession();
         String password = params.getUserInput();
         String sourceIP = getSourceIP(request);
 
@@ -79,7 +79,7 @@ public class AIClientLogin {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse logout(@Context HttpServletResponse response, WSModel.AIChatParams params) {
-        String loginSession = params.getSession();
+        String loginSession = params.getLoginSession();
 
         AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
         try {
