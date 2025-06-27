@@ -94,6 +94,9 @@ A: Each time a message is successfully processed in Chat With Assistant, <consum
 Q: How many credits does Audio Input consume per use?
 A: Each time a successful Audio Input with text echoed, <consumedCreditsOnSpeechToText> credits are consumed.
 
+Q: How do I top up credits?
+A: Each new user is automatically credited with <topupOnRegister> complimentary credits. If you require additional credits, please visit <paymentLinkOnStripe> to top up your account. Ensure that you enter the correct email address associated with your account during the payment process.
+
 Notes:
 
 Always respond in plain text format.
