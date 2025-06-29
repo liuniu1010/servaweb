@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Interactive Equation Grapher: y = a * log(x) and y = b * e^x</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    height: 100vh;
+    background: #f0f0f0;
+    color: #222;
+    user-select: none;
+  }
+  #container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+  }
+  #graph-section {
+    background: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-right: 2px solid #ccc;
+    position: relative;
+    /* Fixed square size and align left */
+    width: 1000px;
+    height: 1000px;
+    flex-shrink: 0;
+  }
+  canvas {
+    width: 1000px;
+    height: 1000px;
+    background: #fff;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    cursor: grab;
+    display: block;
+  }
+  canvas:active {
+    cursor: grabbing;
+  }
+  #controls {
+    flex: 1;
+    background: #fafafa;
+    padding: 20px 30px;
+    box-shadow: inset 0 0 15px #ddd;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow-y: auto;
+  }
+  #equation-display {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+    padding: 0 10px;
+    word-break: break-word;
+    background: #eaeaea;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    white-space: pre-wrap;
+  }
+  .coef-control {
+    margin-bottom: 20px;
+  }
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  input[type=range] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 8px;
+    border-radius: 5px;
+    background: #ddd;
+    outline: none;
+    margin-bottom: 4px;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #4285f4;
+    cursor: pointer;
+    border-radius: 50%;
+    border: none;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: #4285f4;
+    cursor: pointer;
+    border-radius: 50%;
+    border: none;
+  }
+  input[type=number] {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+  #intersection-info {
+    margin-top: 20px;
+    font-weight: 600;
+    color: #333;
+    min-height: 60px;
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 1em;
+    white-space: pre-wrap;
+  }
+</style>
+</head>
+<body>
+<div id="container">
+  <section id="graph-section">
+    <canvas id="graphCanvas" width="1000" height="1000" title="Graph of y = a * log(x) and y = b * e^x"></canvas>
+  </section>
+  <section id="controls">
+    <div id="equation-display">y = a * log(x)\ny = b * e^x</div>
+    <div class="coef-control">
+      <label for="coef-a">Coefficient a: <span id="value-a">1</span></label>
+      <input type="range" id="coef-a" min="-10" max="10" step="0.01" value="1" />
+      <input type="number" id="input-a" min="-10" max="10" step="0.01" value="1" />
+    </div>
+    <div class="coef-control">
+      <label for="coef-b">Coefficient b: <span id="value-b">1</span></label>
+      <input type="range" id="coef-b" min="-10" max="10" step="0.01" value="1" />
+      <input type="number" id="input-b" min="-10" max="10" step="0.01" value="1" />
+    </div>
+    <div id="intersection-info"></div>
+  </section>
+</div>
+<script>
+(() => {
+  const canvas = document.getElementById('graphCanvas');
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+
+  // Initial coefficients
+  let a = 1;
+  let b = 1;
+
+  // View state: x and y ranges
+  let view = {
+    centerX: 15, // moved centerX to the right so left side covers larger range at x>0
+    centerY: 0,
+    scale: 25, // smaller scale to enlarge coordinate range
+  };
+
+  const coefAInput = document.getElementById('coef-a');
+  const inputANumber = document.getElementById('input-a');
+  const valueADisplay = document.getElementById('value-a');
+  const coefBInput = document.getElementById('coef-b');
+  const inputBNumber = document.getElementById('input-b');
+  const valueBDisplay = document.getElementById('value-b');
+  const equationDisplay = document.getElementById('equation-display');
+  const intersectionInfo = document.getElementById('intersection-info');
+
+  // Clamp and sync function for coefficient a
+  function setA(newA) {
+    a = Math.min(10, Math.max(-10, newA));
+    coefAInput.value = a;
+    inputANumber.value = a;
+    valueADisplay.textContent = a.toFixed(2);
+    updateEquationDisplay();
+    draw();
+  }
+
+  // Clamp and sync function for coefficient b
+  function setB(newB) {
+    b = Math.min(10, Math.max(-10, newB));
+    coefBInput.value = b;
+    inputBNumber.value = b;
+    valueBDisplay.textContent = b.toFixed(2);
+    updateEquationDisplay();
+    draw();
+  }
+
+  coefAInput.addEventListener('input', e => {
+    setA(parseFloat(e.target.value));
+  });
+  inputANumber.addEventListener('change', e => {
+    setA(parseFloat(e.target.value));
+  });
+
+  coefBInput.addEventListener('input', e => {
+    setB(parseFloat(e.target.value));
+  });
+  inputBNumber.addEventListener('change', e => {
+    setB(parseFloat(e.target.value));
+  });
+
+  function updateEquationDisplay() {
+    equationDisplay.textContent =
+      `y = ${a.toFixed(2)} * log(x)\ny = ${b.toFixed(2)} * e^x`;
+  }
+
+  // Coordinate conversion helpers
+  function xToCanvas(x) {
+    return width / 2 + (x - view.centerX) * view.scale;
+  }
+  function yToCanvas(y) {
+    return height / 2 - (y - view.centerY) * view.scale;
+  }
+  function canvasToX(cx) {
+    return (cx - width / 2) / view.scale + view.centerX;
+  }
+  function canvasToY(cy) {
+    return (height / 2 - cy) / view.scale + view.centerY;
+  }
+
+  // Draw axes with ticks
+  function drawAxes() {
+    ctx.save();
+    ctx.clearRect(0, 0, width, height);
+
+    // Background white
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.strokeStyle = '#666';
+    ctx.lineWidth = 1;
+
+    // X axis
+    let yAxisPos = yToCanvas(0);
+    ctx.beginPath();
+    ctx.moveTo(0, yAxisPos);
+    ctx.lineTo(width, yAxisPos);
+    ctx.stroke();
+
+    // Y axis
+    let xAxisPos = xToCanvas(0);
+    ctx.beginPath();
+    ctx.moveTo(xAxisPos, 0);
+    ctx.lineTo(xAxisPos, height);
+    ctx.stroke();
+
+    // Draw ticks and labels
+    ctx.fillStyle = '#444';
+    ctx.font = '12px Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    // X ticks
+    let xStart = Math.floor(canvasToX(0));
+    let xEnd = Math.ceil(canvasToX(width));
+    let xStep = calcNiceStep((xEnd - xStart) / 10);
+    for (let xTick = Math.ceil(xStart / xStep) * xStep; xTick <= xEnd; xTick += xStep) {
+      if (xTick <= 0) continue; // log(x) undefined for x <= 0, skip ticks there
+      let cx = xToCanvas(xTick);
+      ctx.beginPath();
+      ctx.moveTo(cx, yAxisPos - 5);
+      ctx.lineTo(cx, yAxisPos + 5);
+      ctx.stroke();
+      ctx.fillText(xTick.toFixed(2), cx, yAxisPos + 7);
+    }
+
+    // Y ticks
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    let yStart = Math.floor(canvasToY(height));
+    let yEnd = Math.ceil(canvasToY(0));
+    let yStep = calcNiceStep((yEnd - yStart) / 10);
+    for (let yTick = Math.ceil(yStart / yStep) * yStep; yTick <= yEnd; yTick += yStep) {
+      let cy = yToCanvas(yTick);
+      ctx.beginPath();
+      ctx.moveTo(xAxisPos - 5, cy);
+      ctx.lineTo(xAxisPos + 5, cy);
+      ctx.stroke();
+      if(Math.abs(yTick) > 1e-6) ctx.fillText(yTick.toFixed(2), xAxisPos - 7, cy);
+    }
+
+    ctx.restore();
+  }
+
+  // Calculate a nice step size for ticks (power of 10 * {1,2,5})
+  function calcNiceStep(rawStep) {
+    const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const residual = rawStep / magnitude;
+    if(residual < 1.5) return magnitude;
+    if(residual < 3) return magnitude * 2;
+    return magnitude * 5;
+  }
+
+  // Draw the graph of y = a * log(x) and y = b * e^x
+  function drawGraph() {
+    ctx.save();
+    ctx.lineWidth = 2;
+
+    // Draw y = a * log(x)
+    ctx.strokeStyle = '#4285f4'; // blue
+    ctx.beginPath();
+    let firstPointLog = true;
+    for (let px = 0; px <= width; px++) {
+      let x = canvasToX(px);
+      if (x <= 0) {
+        // skip point, break path
+        firstPointLog = true;
+        continue;
+      }
+      let y = a * Math.log(x);
+      let py = yToCanvas(y);
+      if (firstPointLog) {
+        ctx.moveTo(px, py);
+        firstPointLog = false;
+      } else {
+        ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+
+    // Draw y = b * e^x
+    ctx.strokeStyle = '#e64545'; // red
+    ctx.beginPath();
+    let firstPointexp = true;
+    for (let px = 0; px <= width; px++) {
+      let x = canvasToX(px);
+      let y = b * Math.exp(x);
+      // To avoid drawing absurd values out of canvas range, we limit y
+      if(!isFinite(y) || y > 1e6 || y < -1e6) {
+        firstPointexp = true;
+        continue;
+      }
+      let py = yToCanvas(y);
+      if (firstPointexp) {
+        ctx.moveTo(px, py);
+        firstPointexp = false;
+      } else {
+        ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+
+    // Draw intersection points
+    drawIntersections();
+
+    ctx.restore();
+  }
+
+  // Find and draw intersection points
+  function drawIntersections() {
+    const intersections = findIntersections();
+    ctx.fillStyle = '#0a0';
+    ctx.strokeStyle = '#060';
+    ctx.lineWidth = 1.5;
+    intersections.forEach(pt => {
+      const cx = xToCanvas(pt.x);
+      const cy = yToCanvas(pt.y);
+      // Draw a circle marker
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+    });
+
+    // Display intersection coordinates in controls
+    if(intersections.length === 0) {
+      intersectionInfo.textContent = 'No intersections found in current view.';
+    } else {
+      let txt = 'Intersection points:\n';
+      intersections.forEach((pt, i) => {
+        txt += `(${pt.x.toFixed(4)}, ${pt.y.toFixed(4)})\n`;
+      });
+      intersectionInfo.textContent = txt;
+    }
+  }
+
+  // Find intersections by sampling and binary search
+  function findIntersections() {
+    const intersections = [];
+    const startX = Math.max(0.01, canvasToX(0));
+    const endX = canvasToX(width);
+    const sampleCount = 300; // sample points resolution
+
+    // Evaluate difference function at x
+    function f(x) {
+      return a * Math.log(x) - b * Math.exp(x);
+    }
+
+    // Sample difference at points
+    let samples = [];
+    let step = (endX - startX) / sampleCount;
+    for(let i = 0; i <= sampleCount; i++) {
+      let x = startX + i * step;
+      let val = f(x);
+      samples.push({x: x, val: val});
+    }
+
+    // Look for zero crossing between samples
+    for(let i = 0; i < sampleCount; i++) {
+      let s1 = samples[i].val;
+      let s2 = samples[i+1].val;
+      if(s1 === 0) {
+        intersections.push({x: samples[i].x, y: b * Math.exp(samples[i].x)});
+      } else if(s1 * s2 < 0) {
+        // root in interval, do binary search
+        let left = samples[i].x;
+        let right = samples[i+1].x;
+        let root = null;
+        for(let iter=0; iter<25; iter++) {
+          let mid = (left+right)/2;
+          let valMid = f(mid);
+          if(Math.abs(valMid) < 1e-10) {
+            root = mid;
+            break;
+          }
+          if(valMid * s1 < 0) {
+            right = mid;
+          } else {
+            left = mid;
+          }
+        }
+        if(root === null) root = (left+right)/2;
+        intersections.push({x: root, y: b * Math.exp(root)});
+      }
+    }
+
+    return intersections;
+  }
+
+  // Redraw everything
+  function draw() {
+    drawAxes();
+    drawGraph();
+  }
+
+  // Zoom and pan handlers
+  let isDragging = false;
+  let dragStart = {x: 0, y: 0};
+  let dragStartCenter = {x: view.centerX, y: view.centerY};
+
+  canvas.addEventListener('mousedown', e => {
+    e.preventDefault();
+    isDragging = true;
+    dragStart.x = e.clientX;
+    dragStart.y = e.clientY;
+    dragStartCenter.x = view.centerX;
+    dragStartCenter.y = view.centerY;
+  });
+  window.addEventListener('mouseup', e => {
+    if (isDragging) {
+      isDragging = false;
+    }
+  });
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    let dx = e.clientX - dragStart.x;
+    let dy = e.clientY - dragStart.y;
+    view.centerX = dragStartCenter.x - dx / view.scale;
+    view.centerY = dragStartCenter.y + dy / view.scale;
+
+    // Limit centerX so x>0 range remains visible at least partly
+    if(view.centerX + width / (2 * view.scale) < 0.01) {
+      view.centerX = 0.01 - width / (2 * view.scale);
+    }
+
+    draw();
+  });
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    // Zoom centered on cursor
+    const mouseX = e.offsetX;
+    const mouseY = e.offsetY;
+    const wheel = e.deltaY;
+    const zoomFactor = Math.exp(-wheel * 0.001); // smooth zoom
+
+    let xBeforeZoom = canvasToX(mouseX);
+    let yBeforeZoom = canvasToY(mouseY);
+
+    view.scale *= zoomFactor;
+    view.scale = Math.min(Math.max(view.scale, 10), 500);
+
+    let xAfterZoom = canvasToX(mouseX);
+    let yAfterZoom = canvasToY(mouseY);
+
+    // Adjust center so zoom is centered on mouse
+    view.centerX += xBeforeZoom - xAfterZoom;
+    view.centerY += yBeforeZoom - yAfterZoom;
+
+    // Limit centerX so x>0 range remains visible at least partly
+    if(view.centerX + width / (2 * view.scale) < 0.01) {
+      view.centerX = 0.01 - width / (2 * view.scale);
+    }
+
+    draw();
+  }, {passive: false});
+
+  // Initial draw
+  updateEquationDisplay();
+  draw();
+})();
+</script>
+</body>
+</html>
