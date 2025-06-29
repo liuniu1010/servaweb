@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Utility Expr Bot</title>
+    <title>Equation Curves</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -344,7 +344,7 @@
         }
 
         function newChat() {
-            var newChatUrl = "api/aiutilityexprbot/newchat";
+            var newChatUrl = "api/aiutilitybot/newchat";
             var userInput = document.getElementById("UserInput").value;
             $.ajax({
                 url: newChatUrl,
@@ -370,7 +370,7 @@
         }
 
         function undo() {
-            var undoUrl = "api/aiutilityexprbot/undo";
+            var undoUrl = "api/aiutilitybot/undo";
             var userInput = "";
             disableSend();
             $.ajax({
@@ -436,9 +436,9 @@
 
         var xhr;
         function streamsend(base64String) {
-            var streamsendUrl = "api/aiutilityexprbot/streamsend";
+            var streamsendUrl = "api/aiutilitybot/streamsend";
             var userInput = document.getElementById("UserInput").value;
-            var theFunction = "utilitybot"; 
+            var theFunction = "equationcurves";
             disableSend();
             if(isStringEmptyOrWhitespace(userInput) && isStringEmptyOrWhitespace(base64String)) {
                 enableSend();
@@ -521,7 +521,7 @@
         }
 
         function streamrefresh() {
-            var streamrefreshUrl = "api/aiutilityexprbot/streamrefresh";
+            var streamrefreshUrl = "api/aiutilitybot/streamrefresh";
             var userInput = "";
             disableSend();
             $.ajax({
@@ -699,7 +699,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = "utilityexpr.html";
+            a.download = "equationcurves.html";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

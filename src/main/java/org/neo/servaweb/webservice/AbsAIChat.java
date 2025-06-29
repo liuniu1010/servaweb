@@ -123,6 +123,7 @@ abstract public class AbsAIChat {
             uiParams.setUserInput(userInput);
             uiParams.setNotifyCallback(notifyCallback);
             uiParams.setAttachFiles(attachFiles);
+            uiParams.setTheFunction(params.getTheFunction());
             String renderedResponse = getChatForUIInstance().fetchResponse(uiParams);
 
             WSModel.AIChatResponse response = new WSModel.AIChatResponse(true, renderedResponse);

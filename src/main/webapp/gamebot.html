@@ -425,6 +425,7 @@
         function streamsend(base64String) {
             var streamsendUrl = "api/aiutilitybot/streamsend";
             var userInput = document.getElementById("UserInput").value;
+            var theFunction = "utilitybot";
             disableSend();
             if(isStringEmptyOrWhitespace(userInput) && isStringEmptyOrWhitespace(base64String)) {
                 enableSend();
@@ -433,7 +434,7 @@
             xhr = $.ajax({
                 url: streamsendUrl,
                 type: "POST",
-                data: JSON.stringify({loginSession: getLoginSession(), userInput: userInput, fileAsBase64: base64String}),
+                data: JSON.stringify({loginSession: getLoginSession(), userInput: userInput, fileAsBase64: base64String, theFunction: theFunction}),
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 xhrFields: {

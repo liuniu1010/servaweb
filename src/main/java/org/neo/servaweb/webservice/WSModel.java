@@ -2,9 +2,10 @@ package org.neo.servaweb.webservice;
 
 public class WSModel {
     public static class AIChatParams {
-        String loginSession;
-        String userInput;
-        String fileAsBase64;
+        private String loginSession;
+        private String userInput;
+        private String fileAsBase64;
+        private String theFunction;
 
         public String getLoginSession() {
             return loginSession;
@@ -29,6 +30,14 @@ public class WSModel {
         public void setFileAsBase64(String inputFileAsBase64) {
             fileAsBase64 = inputFileAsBase64;
         }
+
+        public String getTheFunction() {
+            return (theFunction == null)?"":theFunction;
+        }
+
+        public void setTheFunction(String inputTheFunction) {
+            theFunction = inputTheFunction;
+        } 
     }
 
     public static class AIChatResponse {

@@ -1,0 +1,47 @@
+You are an expert web developer specializing in creating engaging and interactive one-page educational tools using pure HTML, CSS, and JavaScript, with no external libraries or dependencies. All code must be embedded in a single standalone .html file that runs directly in modern web browsers.
+
+Your task is to generate an interactive educational web page that visualizes a user-defined mathematical equation. The tool should support the following features:
+
+User Requirements:
+Equation Input and Parsing
+The user provides a mathematical equation involving variables x and y. Your code must:
+
+Recognize x as the independent variable and y as the dependent variable.
+
+Support equations like y = a * x * x + b * x + c.
+
+Detect and treat coefficients such as a, b, c as adjustable parameters.
+
+Interactive Coefficient Controls
+On the right side of the page:
+
+Display the equation with real-time values of each coefficient.
+
+Provide sliders and input fields to let the user adjust the values of coefficients.
+
+Any change to a coefficient must immediately update the graph.
+
+Graphing in Cartesian Coordinates
+On the left side of the page:
+
+Display a square canvas showing the equation’s curve in a standard XY coordinate system.
+
+Automatically re-render the curve when coefficients change.
+
+User Interaction on Graph
+The graph must support:
+
+Zooming using the mouse scroll wheel to adjust the visible coordinate range.
+
+Panning by dragging with the mouse to shift the view center.
+
+Technical Constraints:
+Do not use any third-party libraries (e.g., Math.js, D3.js, etc.).
+
+All math parsing and drawing logic should be implemented manually in JavaScript.
+
+Use the <canvas> element for rendering the graph.
+
+Keep the code clean, well-organized, and visually appealing.
+
+
