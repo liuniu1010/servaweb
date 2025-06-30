@@ -232,7 +232,7 @@
                     </div>
 
                     <div id="creditInfo" style="display: flex; align-items: center; gap: 10px;">
-                        <span id="creditCount">Credit Count: ...</span>
+                        <span id="creditCount">Credits Left: ...</span>
                         <a id="purchaseLink"
                             href="#"
                             target="_blank"
@@ -247,7 +247,7 @@
                 <input type="file" id="imgInput" name="file" style="color: #000000;" accept=".png,.webp,.jpg" hidden>
 
                 <div style="display: flex;">
-                    <textarea id="UserInput" placeholder="Type your requirement here..."></textarea>
+                    <textarea id="UserInput" placeholder="Type your equation or requirement here..."></textarea>
                     <button id="ButtonSendAudio" type="button" class="button-send" onclick="sendAudio()">
                         <img id="recordButtonImage" src="images/micphone.png" alt="Record" draggable="false">
                     </button>
@@ -344,7 +344,7 @@
         }
 
         function newChat() {
-            var newChatUrl = "api/aiutilitybot/newchat";
+            var newChatUrl = "api/aiequationcurves/newchat";
             var userInput = document.getElementById("UserInput").value;
             $.ajax({
                 url: newChatUrl,
@@ -370,7 +370,7 @@
         }
 
         function undo() {
-            var undoUrl = "api/aiutilitybot/undo";
+            var undoUrl = "api/aiequationcurves/undo";
             var userInput = "";
             disableSend();
             $.ajax({
@@ -436,7 +436,7 @@
 
         var xhr;
         function streamsend(base64String) {
-            var streamsendUrl = "api/aiutilitybot/streamsend";
+            var streamsendUrl = "api/aiequationcurves/streamsend";
             var userInput = document.getElementById("UserInput").value;
             var theFunction = "equationcurves";
             disableSend();
@@ -483,7 +483,7 @@
                 success: function (data) {
                     const creditLabel = document.getElementById("creditCount");
                     if (creditLabel) {
-                        creditLabel.innerText = "Credit Count: " + data.message;
+                        creditLabel.innerText = "Credits Left: " + data.message;
                     }
                 },
                 error: function(xhr, status, error) {
@@ -521,7 +521,7 @@
         }
 
         function streamrefresh() {
-            var streamrefreshUrl = "api/aiutilitybot/streamrefresh";
+            var streamrefreshUrl = "api/aiequationcurves/streamrefresh";
             var userInput = "";
             disableSend();
             $.ajax({
