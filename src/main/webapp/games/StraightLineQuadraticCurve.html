@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Interactive Equation Visualizer</title>
+<style>
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: #f4f7fa;
+    color: #222;
+  }
+  #graph-container {
+    flex: 1 1 60%;
+    background: #fff;
+    border-right: 1px solid #ddd;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  canvas {
+    background: #fff;
+    box-shadow: inset 0 0 5px #bbb;
+    cursor: grab;
+    max-width: 100%;
+    max-height: 100%;
+  }
+  canvas:active {
+    cursor: grabbing;
+  }
+  #controls {
+    width: 40%;
+    padding: 24px 28px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    background: #fafafa;
+  }
+  #equation-display {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .coef-control {
+    display: flex;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .coef-label {
+    width: 24px;
+    font-weight: 600;
+    font-size: 16px;
+    user-select: none;
+  }
+  .coef-slider {
+    flex: 1 1 auto;
+    margin: 0 10px;
+  }
+  .coef-input {
+    width: 56px;
+    font-size: 16px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    padding: 4px 7px;
+    text-align: center;
+  }
+  #instructions {
+    font-size: 14px;
+    color: #555;
+    margin-top: auto;
+    line-height: 1.3;
+  }
+  #legend {
+    margin-top: 12px;
+    font-size: 14px;
+    user-select: none;
+  }
+  #legend span {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 12px;
+  }
+  #legend .color-box {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    border-radius: 3px;
+  }
+  #legend .line1 {
+    background: #1574f0;
+  }
+  #legend .line2 {
+    background: #d34040;
+  }
+  #intersection-points {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 14px;
+    color: #333;
+    max-width: 98%;
+    overflow-wrap: break-word;
+    user-select: none;
+  }
+</style>
+</head>
+<body>
+  <div id="graph-container">
+    <canvas id="graph-canvas" width="600" height="600" tabindex="0" aria-label="Graph of the equation"></canvas>
+    <div id="intersection-points" aria-live="polite" aria-atomic="true"></div>
+  </div>
+  <div id="controls" role="region" aria-label="Controls for coefficients and equation">
+    <div id="equation-display" aria-live="polite" aria-atomic="true">y = a * x + b</div>
+    <!-- Controls for first equation y = a * x + b -->
+    <fieldset style="border:none; padding:0; margin:0 0 16px 0;">
+      <legend style="font-weight:600; font-size:16px; margin-bottom:8px;">Equation 1: y = a * x + b</legend>
+      <div class="coef-control">
+        <label for="coef-a" class="coef-label">a</label>
+        <input type="range" id="coef-a" class="coef-slider" min="-10" max="10" step="0.01" value="1" aria-valuemin="-10" aria-valuemax="10" aria-valuenow="1" aria-label="Slider for coefficient a">
+        <input type="number" id="coef-a-input" class="coef-input" min="-10" max="10" step="0.01" value="1" aria-label="Number input for coefficient a">
+      </div>
+      <div class="coef-control">
+        <label for="coef-b" class="coef-label">b</label>
+        <input type="range" id="coef-b" class="coef-slider" min="-10" max="10" step="0.01" value="0" aria-valuemin="-10" aria-valuemax="10" aria-valuenow="0" aria-label="Slider for coefficient b">
+        <input type="number" id="coef-b-input" class="coef-input" min="-10" max="10" step="0.01" value="0" aria-label="Number input for coefficient b">
+      </div>
+    </fieldset>
+    <!-- Controls for second equation y = c * x^2 + d * x + f -->
+    <fieldset style="border:none; padding:0; margin:0 0 16px 0;">
+      <legend style="font-weight:600; font-size:16px; margin-bottom:8px;">Equation 2: y = c * x^2 + d * x + f</legend>
+      <div class="coef-control">
+        <label for="coef-c" class="coef-label">c</label>
+        <input type="range" id="coef-c" class="coef-slider" min="-2" max="2" step="0.001" value="0" aria-valuemin="-2" aria-valuemax="2" aria-valuenow="0" aria-label="Slider for coefficient c">
+        <input type="number" id="coef-c-input" class="coef-input" min="-2" max="2" step="0.001" value="0" aria-label="Number input for coefficient c">
+      </div>
+      <div class="coef-control">
+        <label for="coef-d" class="coef-label">d</label>
+        <input type="range" id="coef-d" class="coef-slider" min="-10" max="10" step="0.01" value="0" aria-valuemin="-10" aria-valuemax="10" aria-valuenow="0" aria-label="Slider for coefficient d">
+        <input type="number" id="coef-d-input" class="coef-input" min="-10" max="10" step="0.01" value="0" aria-label="Number input for coefficient d">
+      </div>
+      <div class="coef-control">
+        <label for="coef-f" class="coef-label">f</label>
+        <input type="range" id="coef-f" class="coef-slider" min="-10" max="10" step="0.01" value="0" aria-valuemin="-10" aria-valuemax="10" aria-valuenow="0" aria-label="Slider for coefficient f">
+        <input type="number" id="coef-f-input" class="coef-input" min="-10" max="10" step="0.01" value="0" aria-label="Number input for coefficient f">
+      </div>
+    </fieldset>
+    <div id="legend">
+      <span><span class="color-box line1" aria-hidden="true"></span> y = a*x + b</span>
+      <span><span class="color-box line2" aria-hidden="true"></span> y = c*x^2 + d*x + f</span>
+    </div>
+    <div id="instructions">
+      <p><strong>Interaction:</strong></p>
+      <ul>
+        <li>Adjust the sliders or inputs to change coefficients <em>a</em>, <em>b</em>, <em>c</em>, <em>d</em>, and <em>f</em>.</li>
+        <li>Zoom the graph with the mouse wheel.</li>
+        <li>Pan the graph by dragging the mouse inside the graph area.</li>
+      </ul>
+    </div>
+  </div>
+<script>
+(() => {
+  // Canvas and context
+  const canvas = document.getElementById('graph-canvas');
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+
+  // Coefficients for first equation: y = a*x + b
+  let a = 1;
+  let b = 0;
+
+  // Coefficients for second equation: y = c*x^2 + d*x + f
+  let c = 0;
+  let d = 0;
+  let f = 0;
+
+  // Graph view parameters
+  let view = {
+    xMin: -10,
+    xMax: 10,
+    yMin: -10,
+    yMax: 10,
+  };
+
+  // Interaction state
+  let isPanning = false;
+  let panStart = { x: 0, y: 0 };
+  let panStartView = { ...view };
+
+  // Controls for equation 1
+  const sliderA = document.getElementById('coef-a');
+  const inputA = document.getElementById('coef-a-input');
+  const sliderB = document.getElementById('coef-b');
+  const inputB = document.getElementById('coef-b-input');
+
+  // Controls for equation 2
+  const sliderC = document.getElementById('coef-c');
+  const inputC = document.getElementById('coef-c-input');
+  const sliderD = document.getElementById('coef-d');
+  const inputD = document.getElementById('coef-d-input');
+  const sliderF = document.getElementById('coef-f');
+  const inputF = document.getElementById('coef-f-input');
+
+  const equationDisplay = document.getElementById('equation-display');
+  const intersectionPointsDiv = document.getElementById('intersection-points');
+
+  function updateEquationDisplay() {
+    const aStr = Number(a).toFixed(2);
+    const bStr = Number(b).toFixed(2);
+    const cStr = Number(c).toFixed(3);
+    const dStr = Number(d).toFixed(2);
+    const fStr = Number(f).toFixed(2);
+
+    let bDisp = b >= 0 ? `+ ${bStr}` : `- ${Math.abs(b).toFixed(2)}`;
+    let dDisp = d >= 0 ? `+ ${dStr}` : `- ${Math.abs(d).toFixed(2)}`;
+    let fDisp = f >= 0 ? `+ ${fStr}` : `- ${Math.abs(f).toFixed(2)}`;
+
+    equationDisplay.textContent =
+      `y = ${aStr} * x ${bDisp}    |    y = ${cStr} * x^2 ${dDisp} * x ${fDisp}`;
+  }
+
+  // Model functions
+  function modelY1(x) {
+    return a * x + b;
+  }
+
+  function modelY2(x) {
+    return c * x * x + d * x + f;
+  }
+
+  // Coordinate mappings
+  function toCanvasX(x) {
+    return ((x - view.xMin) / (view.xMax - view.xMin)) * width;
+  }
+  function toCanvasY(y) {
+    return height - ((y - view.yMin) / (view.yMax - view.yMin)) * height;
+  }
+  function toCoordX(px) {
+    return (px / width) * (view.xMax - view.xMin) + view.xMin;
+  }
+  function toCoordY(py) {
+    return ((height - py) / height) * (view.yMax - view.yMin) + view.yMin;
+  }
+
+  // Draw axes with ticks and labels
+  function drawAxes() {
+    ctx.strokeStyle = '#aaa';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+
+    // Y axis (x=0)
+    if (view.xMin < 0 && view.xMax > 0) {
+      const x0 = toCanvasX(0);
+      ctx.moveTo(x0, 0);
+      ctx.lineTo(x0, height);
+    }
+
+    // X axis (y=0)
+    if (view.yMin < 0 && view.yMax > 0) {
+      const y0 = toCanvasY(0);
+      ctx.moveTo(0, y0);
+      ctx.lineTo(width, y0);
+    }
+
+    ctx.stroke();
+
+    // Draw ticks and labels every integer in view
+    ctx.fillStyle = '#444';
+    ctx.font = '11px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    if (view.yMin < 0 && view.yMax > 0) {
+      let y0 = toCanvasY(0);
+      let startX = Math.ceil(view.xMin);
+      let endX = Math.floor(view.xMax);
+      for (let i = startX; i <= endX; i++) {
+        let cx = toCanvasX(i);
+        ctx.beginPath();
+        ctx.moveTo(cx, y0 - 4);
+        ctx.lineTo(cx, y0 + 4);
+        ctx.stroke();
+        ctx.fillText(i, cx, y0 + 5);
+      }
+    }
+
+    if (view.xMin < 0 && view.xMax > 0) {
+      let x0 = toCanvasX(0);
+      let startY = Math.ceil(view.yMin);
+      let endY = Math.floor(view.yMax);
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      for (let i = startY; i <= endY; i++) {
+        let cy = toCanvasY(i);
+        ctx.beginPath();
+        ctx.moveTo(x0 - 4, cy);
+        ctx.lineTo(x0 + 4, cy);
+        ctx.stroke();
+        if (i !== 0) ctx.fillText(i, x0 - 6, cy);
+      }
+    }
+  }
+
+  // Draw the graphs of the equations
+  function drawGraphs() {
+    // First curve: y = a*x + b in blue
+    ctx.strokeStyle = '#1574f0';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    let first1 = true;
+    for (let px = 0; px <= width; px++) {
+      let x = toCoordX(px);
+      let y = modelY1(x);
+      if (!isFinite(y)) continue;
+      let py = toCanvasY(y);
+      if (first1) {
+        ctx.moveTo(px, py);
+        first1 = false;
+      } else {
+        ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+
+    // Second curve: y = c*x^2 + d*x + f in red
+    ctx.strokeStyle = '#d34040';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    let first2 = true;
+    for (let px = 0; px <= width; px++) {
+      let x = toCoordX(px);
+      let y = modelY2(x);
+      if (!isFinite(y)) continue;
+      let py = toCanvasY(y);
+      if (first2) {
+        ctx.moveTo(px, py);
+        first2 = false;
+      } else {
+        ctx.lineTo(px, py);
+      }
+    }
+    ctx.stroke();
+  }
+
+  // Find intersection points of the two curves
+  // Solve a*x + b = c*x^2 + d*x + f => c*x^2 + (d - a)*x + (f - b) = 0
+  function findIntersections() {
+    let A = c;
+    let B = d - a;
+    let C = f - b;
+    let points = [];
+    if (Math.abs(A) < 1e-14) {
+      // Linear case: (d - a)*x + (f - b) = 0
+      if (Math.abs(B) > 1e-14) {
+        let x = -C / B;
+        let y = modelY1(x);
+        if (isFinite(x) && isFinite(y)) points.push({ x, y });
+      } else {
+        // Lines are parallel or coincident - infinite or no intersections
+        // We do nothing
+      }
+    } else {
+      let discriminant = B*B - 4*A*C;
+      if (discriminant < 0) {
+        // no real roots
+      } else if (Math.abs(discriminant) < 1e-14) {
+        let x = -B/(2*A);
+        let y = modelY1(x);
+        if (isFinite(x) && isFinite(y)) points.push({ x, y });
+      } else {
+        let sqrtD = Math.sqrt(discriminant);
+        let x1 = (-B + sqrtD) / (2*A);
+        let y1 = modelY1(x1);
+        let x2 = (-B - sqrtD) / (2*A);
+        let y2 = modelY1(x2);
+        if (isFinite(x1) && isFinite(y1)) points.push({ x: x1, y: y1 });
+        if (isFinite(x2) && isFinite(y2)) points.push({ x: x2, y: y2 });
+      }
+    }
+    return points;
+  }
+
+  // Draw intersection points and their coordinates
+  function drawIntersections(points) {
+    ctx.fillStyle = '#000';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    points.forEach((point, idx) => {
+      let px = toCanvasX(point.x);
+      let py = toCanvasY(point.y);
+
+      // Draw circle
+      ctx.beginPath();
+      ctx.arc(px, py, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = '#3a3';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#060';
+      ctx.stroke();
+
+      // Draw text offset to top-right
+      const text = `(${point.x.toFixed(2)}, ${point.y.toFixed(2)})`;
+      let offsetX = 8;
+      let offsetY = -8;
+
+      // Keep text inside canvas horizontally
+      let textMetrics = ctx.measureText(text);
+      let textWidth = textMetrics.width;
+      if (px + offsetX + textWidth > width) offsetX = -offsetX - textWidth - 6;
+      if (py + offsetY - 12 < 0) offsetY = 8;
+
+      ctx.fillStyle = '#060';
+      ctx.fillText(text, px + offsetX, py + offsetY);
+    });
+  }
+
+  // Update intersection points text summary
+  function updateIntersectionPointsText(points) {
+    if (points.length === 0) {
+      intersectionPointsDiv.textContent = 'No intersection points.';
+    } else {
+      let text = 'Intersection point' + (points.length > 1 ? 's' : '') + ': ';
+      text += points.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`).join('; ');
+      intersectionPointsDiv.textContent = text;
+    }
+  }
+
+  // Main render function
+  function render() {
+    ctx.clearRect(0, 0, width, height);
+    drawAxes();
+    drawGraphs();
+
+    let intersections = findIntersections();
+    drawIntersections(intersections);
+    updateIntersectionPointsText(intersections);
+
+    updateEquationDisplay();
+  }
+
+  // Sync slider and number inputs
+  function syncInputs(slider, input, value) {
+    slider.value = value;
+    input.value = value;
+    slider.setAttribute('aria-valuenow', value);
+  }
+
+  // Event handlers for equation 1
+  function onAChange(value) {
+    a = Number(value);
+    syncInputs(sliderA, inputA, a);
+    render();
+  }
+  function onBChange(value) {
+    b = Number(value);
+    syncInputs(sliderB, inputB, b);
+    render();
+  }
+
+  // Event handlers for equation 2
+  function onCChange(value) {
+    c = Number(value);
+    syncInputs(sliderC, inputC, c);
+    render();
+  }
+  function onDChange(value) {
+    d = Number(value);
+    syncInputs(sliderD, inputD, d);
+    render();
+  }
+  function onFChange(value) {
+    f = Number(value);
+    syncInputs(sliderF, inputF, f);
+    render();
+  }
+
+  sliderA.addEventListener('input', e => onAChange(e.target.value));
+  inputA.addEventListener('change', e => {
+    let val = Number(e.target.value);
+    if (isNaN(val)) val = a;
+    val = Math.min(10, Math.max(-10, val));
+    onAChange(val);
+  });
+
+  sliderB.addEventListener('input', e => onBChange(e.target.value));
+  inputB.addEventListener('change', e => {
+    let val = Number(e.target.value);
+    if (isNaN(val)) val = b;
+    val = Math.min(10, Math.max(-10, val));
+    onBChange(val);
+  });
+
+  sliderC.addEventListener('input', e => onCChange(e.target.value));
+  inputC.addEventListener('change', e => {
+    let val = Number(e.target.value);
+    if (isNaN(val)) val = c;
+    val = Math.min(2, Math.max(-2, val));
+    onCChange(val);
+  });
+
+  sliderD.addEventListener('input', e => onDChange(e.target.value));
+  inputD.addEventListener('change', e => {
+    let val = Number(e.target.value);
+    if (isNaN(val)) val = d;
+    val = Math.min(10, Math.max(-10, val));
+    onDChange(val);
+  });
+
+  sliderF.addEventListener('input', e => onFChange(e.target.value));
+  inputF.addEventListener('change', e => {
+    let val = Number(e.target.value);
+    if (isNaN(val)) val = f;
+    val = Math.min(10, Math.max(-10, val));
+    onFChange(val);
+  });
+
+  // Zoom with mouse wheel
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const zoomIntensity = 0.15;
+    let mouseX = e.offsetX;
+    let mouseY = e.offsetY;
+
+    let x = toCoordX(mouseX);
+    let y = toCoordY(mouseY);
+
+    let factor = (e.deltaY < 0) ? (1 - zoomIntensity) : (1 + zoomIntensity);
+
+    let newXRange = (view.xMax - view.xMin) * factor;
+    let newYRange = (view.yMax - view.yMin) * factor;
+
+    if (newXRange < 0.1 || newXRange > 1000) return;
+
+    view.xMin = x - (x - view.xMin) * factor;
+    view.xMax = view.xMin + newXRange;
+
+    view.yMin = y - (y - view.yMin) * factor;
+    view.yMax = view.yMin + newYRange;
+
+    render();
+  }, { passive: false });
+
+  // Panning logic
+  canvas.addEventListener('mousedown', e => {
+    isPanning = true;
+    panStart.x = e.clientX;
+    panStart.y = e.clientY;
+    panStartView = { ...view };
+  });
+  window.addEventListener('mouseup', e => {
+    isPanning = false;
+  });
+  window.addEventListener('mousemove', e => {
+    if (!isPanning) return;
+    e.preventDefault();
+    let dx = e.clientX - panStart.x;
+    let dy = e.clientY - panStart.y;
+
+    let xRange = panStartView.xMax - panStartView.xMin;
+    let yRange = panStartView.yMax - panStartView.yMin;
+
+    view.xMin = panStartView.xMin - (dx / width) * xRange;
+    view.xMax = panStartView.xMax - (dx / width) * xRange;
+
+    view.yMin = panStartView.yMin + (dy / height) * yRange;
+    view.yMax = panStartView.yMax + (dy / height) * yRange;
+
+    render();
+  });
+
+  // Initial render
+  render();
+})();
+</script>
+</body>
+</html>
