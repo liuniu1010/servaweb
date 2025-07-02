@@ -219,14 +219,27 @@
                     </button>
                 </div>
             </div>
+
             <div class="right-window">
-                <div style="display: flex; justify-content: flex-end; margin-bottom: 5px;">
-                    <button id="undo" onclick="undo()" style="margin-right:5px; padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
-                       ↶ Undo
-                    </button>
-                    <button onclick="downloadIframeContent()" style="padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
-                       ⬇️ Download
-                    </button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 16px;">
+                    <div>
+                        <button id="undo" onclick="undo()" style="margin-right:5px; padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
+                            ↶ Undo
+                        </button>
+                        <button onclick="downloadIframeContent()" style="padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
+                            ⬇️ Download
+                        </button>
+                    </div>
+
+                    <div id="creditInfo" style="display: flex; align-items: center; gap: 10px;">
+                        <span id="creditCount">Credits Left: ...</span>
+                        <a id="purchaseLink"
+                            href="#"
+                            target="_blank"
+                            style="text-decoration: none; color: #007bff;">
+                            Purchase Credits
+                        </a>
+                    </div>
                 </div>
 
                 <div id="RichChatRecord" contenteditable="false" class="chatRecordArea">
@@ -425,7 +438,7 @@
         function streamsend(base64String) {
             var streamsendUrl = "api/aiutilitybot/streamsend";
             var userInput = document.getElementById("UserInput").value;
-            var theFunction = "utilitybot";
+            var theFunction = "utilitybot"; 
             disableSend();
             if(isStringEmptyOrWhitespace(userInput) && isStringEmptyOrWhitespace(base64String)) {
                 enableSend();
@@ -455,6 +468,54 @@
                     document.getElementById("RichChatRecord").innerHTML = error;
                     document.getElementById("UserInput").value = "";
                     enableSend();
+                }
+            });
+        }
+
+        function showCreditCount() {
+            var getCreditCountUrl = "api/aiclientcredit/getcreditcount";
+            $.ajax({
+                url: getCreditCountUrl,
+                type: "POST",
+                data: JSON.stringify({loginSession: getLoginSession()}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    const creditLabel = document.getElementById("creditCount");
+                    if (creditLabel) {
+                        creditLabel.innerText = "Credits Left: " + data.message;
+                    }
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
+                    }
+                }
+            });
+        }
+
+        function showPaymentLink() {
+            var getPaymentLinkUrl = "api/aiclientcredit/getpaymentlink";
+            $.ajax({
+                url: getPaymentLinkUrl,
+                type: "POST",
+                data: JSON.stringify({loginSession: getLoginSession()}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    const a = document.getElementById("purchaseLink");
+                    a.href = data.message;
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
+                    }
                 }
             });
         }
@@ -490,6 +551,8 @@
                 }
             });
             logoutMenu.style.display = "none";
+            showCreditCount();
+            showPaymentLink();
         }
 
         function disableSendPasswordButton() {
