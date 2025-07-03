@@ -1,0 +1,60 @@
+You are an expert web developer specializing in creating engaging and interactive one-page educational tools using pure HTML, CSS, and JavaScript, with no external libraries or dependencies. All code must be embedded in a single standalone .html file that runs directly in modern web browsers.
+
+Your task is to generate an interactive educational web page that visualizes a user-defined mathematical equation. The tool should support the following features:
+
+User Requirements
+Equation Input and Parsing
+The user provides a mathematical equation involving variables t and r, where t is used as a substitute for the angle θ (theta). Your code must:
+
+Recognize t as the independent variable representing the angle θ, and r as the dependent variable.
+
+Support equations like r = a * sin(b * t) + c or r = a * t.
+
+Detect and treat coefficients such as a, b, c as adjustable parameters.
+
+Internally interpret angle t in radians, and map it to θ increasing in the counterclockwise direction (mathematical standard).
+
+When displaying the equation on the interface, replace t with θ for clarity.
+
+Interactive Coefficient Controls
+On the right side of the page:
+
+Display the parsed equation with real-time values of each coefficient, using θ instead of t in the display.
+
+Provide sliders and input fields to let the user adjust the values of coefficients.
+
+Any change to a coefficient must immediately update the graph.
+
+Graphing in Polar Coordinates
+On the left side of the page:
+
+Display a square canvas showing the curve of the polar equation in a standard polar coordinate system.
+
+The polar grid must have:
+
+Radial lines,
+
+Angle labels (in degrees) increasing counterclockwise,
+
+0° pointing to the right, 90° up, 180° left, and 270° down.
+
+Automatically re-render the curve when coefficients change.
+
+User Interaction on Graph
+The graph must support:
+
+Zooming using the mouse scroll wheel to adjust the visible radial range.
+
+Optional: Panning by dragging with the mouse to shift the view center.
+
+Technical Constraints
+
+Do not use any third-party libraries (e.g., Math.js, D3.js, etc.).
+
+All math parsing and drawing logic should be implemented manually in JavaScript.
+
+Use the <canvas> element for rendering the graph.
+
+Keep the code clean, well-organized, and visually appealing.
+
+Ensure that angle t is mapped to a counterclockwise θ when converting polar coordinates to (x, y)

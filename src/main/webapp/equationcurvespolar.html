@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Equation Curves</title>
+    <title>Equation Curves Polar</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -247,7 +247,7 @@
                 <input type="file" id="imgInput" name="file" style="color: #000000;" accept=".png,.webp,.jpg" hidden>
 
                 <div style="display: flex;">
-                    <textarea id="UserInput" placeholder="Type your equation or requirement here..."></textarea>
+                    <textarea id="UserInput" placeholder="Type your equation(with t/θ and r) or requirement here..."></textarea>
                     <button id="ButtonSendAudio" type="button" class="button-send" onclick="sendAudio()">
                         <img id="recordButtonImage" src="images/micphone.png" alt="Record" draggable="false">
                     </button>
@@ -344,7 +344,7 @@
         }
 
         function newChat() {
-            var newChatUrl = "api/aiequationcurves/newchat";
+            var newChatUrl = "api/aiequationcurvespolar/newchat";
             var userInput = document.getElementById("UserInput").value;
             $.ajax({
                 url: newChatUrl,
@@ -370,7 +370,7 @@
         }
 
         function undo() {
-            var undoUrl = "api/aiequationcurves/undo";
+            var undoUrl = "api/aiequationcurvespolar/undo";
             var userInput = "";
             disableSend();
             $.ajax({
@@ -436,9 +436,9 @@
 
         var xhr;
         function streamsend(base64String) {
-            var streamsendUrl = "api/aiequationcurves/streamsend";
+            var streamsendUrl = "api/aiequationcurvespolar/streamsend";
             var userInput = document.getElementById("UserInput").value;
-            var theFunction = "equationcurves";
+            var theFunction = "equationcurvespolar";
             disableSend();
             if(isStringEmptyOrWhitespace(userInput) && isStringEmptyOrWhitespace(base64String)) {
                 enableSend();
@@ -521,7 +521,7 @@
         }
 
         function streamrefresh() {
-            var streamrefreshUrl = "api/aiequationcurves/streamrefresh";
+            var streamrefreshUrl = "api/aiequationcurvespolar/streamrefresh";
             var userInput = "";
             disableSend();
             $.ajax({
@@ -699,7 +699,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = "equationcurves.html";
+            a.download = "equationcurvespolar.html";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

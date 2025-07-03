@@ -12,10 +12,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletOutputStream;
 import java.nio.charset.StandardCharsets;
 
-@Path("/aiequationcurves")
-public class AIEquationCurves extends AIUtilityBot {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AIEquationCurves.class);
-    final static String HOOK = "aiequationcurves";
+@Path("/aiequationcurvespolar")
+public class AIEquationCurvesPolar extends AIUtilityBot {
+    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AIEquationCurvesPolar.class);
+    final static String HOOK = "aiequationcurvespolar";
 
     @Override
     protected String getHook() {
