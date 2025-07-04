@@ -214,6 +214,18 @@
                 </div>
             </div>
             <div class="right-window">
+                <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px; font-size: 16px;">
+                    <div id="creditInfo" style="display: flex; align-items: center; gap: 10px;">
+                        <span id="creditCount">Credits Left: ...</span>
+                        <a id="purchaseLink"
+                            href="#"
+                            target="_blank"
+                            style="text-decoration: none; color: #007bff;">
+                            Purchase Credits
+                        </a>
+                    </div>
+                </div>
+
                 <div id="RichChatRecord" contenteditable="false" class="chatRecordArea">
                 </div>
                 <div style="display: flex;">
@@ -301,6 +313,54 @@
         function refresh() {
         }
 
+        function showCreditCount() {
+            var getCreditCountUrl = "api/aiclientcredit/getcreditcount";
+            $.ajax({
+                url: getCreditCountUrl,
+                type: "POST",
+                data: JSON.stringify({loginSession: getLoginSession()}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    const creditLabel = document.getElementById("creditCount");
+                    if (creditLabel) {
+                        creditLabel.innerText = "Credits Left: " + data.message;
+                    }
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
+                    }
+                }
+            });
+        }
+
+        function showPaymentLink() {
+            var getPaymentLinkUrl = "api/aiclientcredit/getpaymentlink";
+            $.ajax({
+                url: getPaymentLinkUrl,
+                type: "POST",
+                data: JSON.stringify({loginSession: getLoginSession()}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    const a = document.getElementById("purchaseLink");
+                    a.href = data.message;
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
+                    }
+                }
+            });
+        }
+
         function streamrefresh() {
             disableSend();
             var streamrefreshUrl = "api/aicoderbot/streamrefresh";
@@ -341,6 +401,8 @@
                 }
             });
             logoutMenu.style.display = "none";
+            showCreditCount();
+            showPaymentLink();
         }
 
         function newChat() {
