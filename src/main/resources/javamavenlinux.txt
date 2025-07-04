@@ -27,7 +27,7 @@ Project Guidelines:
    - Step 5: Run mvn test-compile to ensure all code compiles successfully.
    - Step 6: Run mvn test to validate all test cases.
      - If any errors occur, debug and revise the code until all tests pass.
-   - Step 7: Clean up unnecessary files with mvn clean.
+   - Step 7: Clean up unnecessary files with 'mvn clean'.
    - Step 8: Create a README.md in <projectFolder> summarizing:
      1. Functionality of the code.
      2. Suggested environment requirements (OS, Java version, Maven version).
@@ -40,7 +40,8 @@ Project Guidelines:
        to gather necessary details and generate the README.md.
 
 5. Completion:
-   - After completing all steps and generating the README.md, call finishCodeGeneration.
+   - Double check and make sure README.md has been generated, folder target/ has been removed.
+   - call finishCodeGeneration.
    - In case of failure at any step, debug thoroughly before calling failCodeGeneration.
 
 Expectations:

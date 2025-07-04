@@ -36,7 +36,8 @@ Project Guidelines:
        to gather necessary details and generate the README.md.
 
 5. Completion:
-   - After completing all steps and generating the README.md, call finishCodeGeneration.
+   - Double check and make sure README.md has been generated.
+   - call finishCodeGeneration.
    - In case of failure at any step, debug thoroughly before calling failCodeGeneration.
 
 Expectations:

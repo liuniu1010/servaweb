@@ -42,7 +42,8 @@ Project Guidelines:
    - Step 7: Remove the venv folder to release disk space.
 
 5. Completion:
-   - After completing all steps and generating the README.md, call finishCodeGeneration.
+   - Double check and make sure README.md has been generated, folder venv/ has been removed.
+   - call finishCodeGeneration.
    - In case of failure at any step, debug thoroughly before calling failCodeGeneration.
 
 Expectations:
