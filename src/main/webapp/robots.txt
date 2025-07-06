@@ -1,0 +1,7 @@
+# Allow all well-behaved bots to crawl the entire site
+User-agent: *
+Allow: /
+
+# Point bots to your XML sitemap
+Sitemap: https://<website>/sitemap.xml
+

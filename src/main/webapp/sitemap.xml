@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Home page -->
+  <url>
+    <loc>https://<website>/</loc>
+    <lastmod><date></lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Education tools -->
+  <url>
+    <loc>https://<website>/equationcurvescartesian.html</loc>
+    <lastmod><date></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://<website>/equationcurvespolar.html</loc>
+    <lastmod><date></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Base tools -->
+  <url>
+    <loc>https://<website>/gamebot.html</loc>
+    <lastmod><date></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://<website>/coderbot.html</loc>
+    <lastmod><date></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://<website>/speechsplit.html</loc>
+    <lastmod><date></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://<website>/chatwithassistant.html</loc>
+    <lastmod><date></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://<website>/chatwithadmin.html</loc>
+    <lastmod><date></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://<website>/taskbot.html</loc>
+    <lastmod><date></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>
