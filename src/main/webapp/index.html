@@ -1,104 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- ---------- technical basics ---------- -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neo AI Navigation</title>
+
+    <!-- ---------- primary SEO tags ---------- -->
+    <title>Neo AI Education & Base Tools | Interactive Algebra & AI Apps</title>
+    <meta name="description"
+          content="Explore Neo AI’s education tools for visualising algebraic curves and our AI-powered GameBot, CoderBot and more. Watch live demos and start building with AI today.">
+    <link rel="canonical" href="https://neoai.bot/">
+
+    <!-- ---------- Open Graph (Facebook/LinkedIn) ---------- -->
+    <meta property="og:type"        content="website">
+    <meta property="og:site_name"   content="Neo AI">
+    <meta property="og:title"       content="Neo AI Education & Base Tools">
+    <meta property="og:description" content="Interactive curve-visualisation and AI tools with live demos.">
+    <meta property="og:url"         content="https://neoai.bot/">
+    <!-- Replace with a real 1200×630 image -->
+    <meta property="og:image"       content="https://neoai.bot/og-cover.png">
+
+    <!-- ---------- Twitter card ---------- -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="Neo AI Education & Base Tools">
+    <meta name="twitter:description" content="Interactive algebra and AI tools – try the demos now!">
+    <meta name="twitter:image"       content="https://neoai.bot/og-cover.png">
+
+    <!-- ---------- JSON-LD structured data ---------- -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Neo AI",
+      "url": "https://neoai.bot/",
+    }
+    </script>
+
+    <!-- ---------- existing internal stylesheet ---------- -->
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        h2 {
-            text-align: center;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background-color: #0073e6;
-            color: white;
-        }
-        a {
-            text-decoration: none;
-            color: #0073e6;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; padding: 20px; background:#f4f4f4; }
+        h2  { text-align:center; }
+        table { width:100%; border-collapse:collapse; background:#fff; }
+        th,td { border:1px solid #ddd; padding:10px; text-align:left; }
+        th  { background:#0073e6; color:#fff; }
+        a   { text-decoration:none; color:#0073e6; }
+        a:hover { text-decoration:underline; }
     </style>
 </head>
+
 <body>
-    <h2>Neo AI Education Tools</h2>
+    <h2 style="text-align:left;">Neo AI Education Tools</h2>
     <table>
         <tr>
-            <th>Page</th>
-            <th>Description</th>
-            <th style="width: 200px;">Demo Link</th>
+            <th>Page</th><th>Description</th><th style="width:200px;">Demo Link</th>
         </tr>
         <tr>
             <td><a href="equationcurvescartesian.html" target="_blank">EquationCurves (Cartesian)</a></td>
             <td>An interactive tool for visualizing algebraic curves, ideal for middle school students and teachers.</td>
             <td>
-                <a href="video/equationcurvescartesiandemo.mp4" target="_blank">Demo</a>
-                <br>
-                <ul>
-                    <li><a href="games/ExponentialLogarithmicCurves.html" target="_blank">Exponential and Logarithmic Curves</a></li>
-                    <li><a href="games/StraightLineQuadraticCurve.html" target="_blank">Straight Line and Quadratic Curves</a></li>
-                </ul>
+                <a href="video/equationcurvescartesiandemo.mp4" target="_blank">Demo</a><br>
+                <details>
+                    <summary>More samples</summary>
+                    <ul>
+                        <li><a href="games/ExponentialLogarithmicCurves.html" target="_blank">Exponential and Logarithmic Curves</a></li>
+                        <li><a href="games/StraightLineQuadraticCurves.html" target="_blank">Straight Line and Quadratic Curves</a></li>
+                    </ul>
             </td>
         </tr>
         <tr>
             <td><a href="equationcurvespolar.html" target="_blank">EquationCurves (Polar)</a></td>
             <td>An interactive tool for visualizing algebraic curves, ideal for middle school students and teachers.</td>
             <td>
-                <a href="video/equationcurvespolardemo.mp4" target="_blank">Demo</a>
-                <br>
-                <ul>
-                    <li><a href="games/butterflycurve.html" target="_blank">Butterfly Curve</a></li>
-                </ul>
+                <a href="video/equationcurvespolardemo.mp4" target="_blank">Demo</a><br>
+                <details>
+                    <summary>More samples</summary>
+                    <ul>
+                        <li><a href="games/butterflycurve.html" target="_blank">Butterfly Curve</a></li>
+                    </ul>
             </td>
         </tr>
     </table>
     <br><br>
-    <h2>Neo AI Base Tools</h2>
+
+    <h2 style="text-align:left;">Neo AI Base Tools</h2>
     <table>
         <tr>
-            <th>Page</th>
-            <th>Description</th>
-            <th style="width: 200px;">Demo Link</th>
+            <th>Page</th><th>Description</th><th style="width:200px;">Demo Link</th>
         </tr>
         <tr>
             <td><a href="gamebot.html" target="_blank">GameBot</a></td>
-            <td>Create your own game with one sentence.</td>
-            <td><a href="video/gamebotdemo1.mp4" target="_blank">Demo1</a>
-                <br>
-                <a href="video/gamebotdemo2.mp4" target="_blank">Demo2</a>
-		<br><br>
-                <ul>
-                    <li><a href="games/QuadraticEquationCurve.html" target="_blank">Quadratic Equation Curve</a></li>
-                    <li><a href="games/game_gomoku.html" target="_blank">Play Gomoku</a></li>
-                    <li><a href="games/game_billiard.html" target="_blank">Play Billiard</a></li>
-                    <li><a href="games/game_piano.html" target="_blank">Play Piano</a></li>
-                    <li><a href="games/gameoflife.html" target="_blank">Game of Life</a></li>
-                    <li><a href="games/WindowsSimulator.html" target="_blank">Windows Simulator</a></li>
-                    <li><a href="games/LinuxSimulator.html" target="_blank">Linux Simulator</a></li>
-                    <li><a href="games/MacSimulator.html" target="_blank">Mac Simulator</a></li>
-                </ul>
-	    </td>
+            <td>Create your own game/tool with one sentence. Type it. Play it. Tweak it.</td>
+            <td>
+                <a href="video/gamebotdemo1.mp4" target="_blank">Demo1</a><br>
+                <a href="video/gamebotdemo2.mp4" target="_blank">Demo2</a><br>
+                <details>
+                    <summary>More samples</summary>
+                    <ul>
+                        <li><a href="games/QuadraticEquationCurve.html" target="_blank">Quadratic Equation Curve</a></li>
+                        <li><a href="games/game_gomoku.html" target="_blank">Play Gomoku</a></li>
+                        <li><a href="games/game_billiard.html" target="_blank">Play Billiard</a></li>
+                        <li><a href="games/game_piano.html" target="_blank">Play Piano</a></li>
+                        <li><a href="games/gameoflife.html" target="_blank">Game of Life</a></li>
+                        <li><a href="games/WindowsSimulator.html" target="_blank">Windows Simulator</a></li>
+                        <li><a href="games/LinuxSimulator.html" target="_blank">Linux Simulator</a></li>
+                        <li><a href="games/MacSimulator.html" target="_blank">Mac Simulator</a></li>
+                    </ul>
+            </td>
         </tr>
         <tr>
             <td><a href="coderbot.html" target="_blank">CoderBot</a></td>
-            <td>An AI-powered coding assistant that helps generate and debug code.</td>
+            <td>An AI-powered coding assistant. One prompt in, ready-to-run code out.</td>
             <td><a href="video/coderbotdemo.mp4" target="_blank">Demo</a></td>
         </tr>
         <tr>
