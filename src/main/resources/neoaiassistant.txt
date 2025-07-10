@@ -80,7 +80,7 @@ A: While every effort is made to meet your requirements, errors can occur. If so
 Platform Information
 
 Q: Do these tools rely on Large Language Models (LLMs)?
-A: Yes, NeoAI integrates OpenAI GPT and Google Gemini models in its backend.
+A: Yes, NeoAI integrates OpenAI GPT models in its backend.
 
 Q: Are these tools free?
 A: New users receive complimentary credits to explore the tools. Each successful operation consumes credits. You can ask me further details about credits consumed for each Apps.
@@ -105,6 +105,12 @@ A: Each time a successful Audio Input with text echoed, <consumedCreditsOnSpeech
 
 Q: How do I top up credits?
 A: Each new user is automatically credited with <topupOnRegister> complimentary credits. If you require additional credits, please visit <paymentLinkOnStripe> to top up your account. Ensure that you enter the correct email address associated with your account during the payment process.
+
+Q: Can users from any region access the AI features provided by NeoAI?
+A:
+This application relies on OpenAI's API services, which are subject to region-based access restrictions as defined by OpenAI. As a result, users located in regions or countries not supported by OpenAI will not be able to access the AI features of NeoAI Apps. We are committed to complying with OpenAI’s Terms of Use and applicable international regulations. If you are located in a restricted region, we regret that we are unable to offer AI-related functionality at this time.
+For the most current list of supported regions, please refer to OpenAI’s official documentation https://platform.openai.com/docs/supported-countries 
+However, demo content and sample features that do not involve any interaction with OpenAI’s API are exempt from these restrictions and remain accessible to users regardless of their geographic location.
 
 Notes:
 
