@@ -36,21 +36,95 @@
 
   <!-- ---------- internal stylesheet ---------- -->
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;margin:20px;padding:20px;background:#f4f4f4}
-    h2{margin:40px 0 10px 0;text-align:left}
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 20px;
+      padding: 20px;
+      background: #f4f4f4;
+    }
 
-    /* generic nav list styling */
-    nav{background:#fff;margin-bottom:60px}
-    .tool-menu{list-style:none;margin:0;padding:0}
-    .tool-menu>li{display:grid;grid-template-columns:22% 1fr 22%;gap:12px;border-bottom:1px solid #ddd;padding:10px 8px}
-    .tool-menu>li:last-child{border-bottom:none}
-    .tool-link{color:#0073e6;font-weight:600;text-decoration:none}
-    .tool-link:hover{text-decoration:underline}
+    h2 {
+      margin: 40px 0 10px 0;
+      text-align: left;
+    }
 
-    /* optional demo link styling */
-    .demo-link{white-space:nowrap}
-    details summary{cursor:pointer;color:#0073e6}
-    details ul{margin:4px 0 4px 20px}
+    nav {
+      background: #fff;
+      margin-bottom: 60px;
+    }
+
+    .tool-menu {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .tool-menu > li {
+      display: grid;
+      grid-template-columns: 22% 1fr 22%;
+      gap: 12px;
+      border-bottom: 1px solid #ddd;
+      padding: 10px 8px;
+      align-items: center;
+    }
+
+    .tool-menu > li:last-child {
+      border-bottom: none;
+    }
+
+    .tool-link {
+      color: #0073e6;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .tool-link:hover {
+      text-decoration: underline;
+    }
+
+    .demo-link {
+      white-space: nowrap;
+    }
+
+    details summary {
+      cursor: pointer;
+      color: #0073e6;
+    }
+
+    details ul {
+      margin: 4px 0 4px 20px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    /* ---------- Responsive styles ---------- */
+    @media (max-width: 768px) {
+      .tool-menu > li {
+        display: block;
+      }
+
+      .tool-menu > li > a,
+      .tool-menu > li > span {
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      body {
+        margin: 10px;
+        padding: 10px;
+        font-size: 16px;
+      }
+
+      .tool-link,
+      .demo-link {
+        font-size: 17px;
+      }
+    }
   </style>
 </head>
 <body>
