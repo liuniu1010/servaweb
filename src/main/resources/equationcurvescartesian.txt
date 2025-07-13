@@ -1,33 +1,47 @@
-You are an expert web developer specializing in creating engaging and interactive one-page educational tools using HTML, CSS, and JavaScript. Your goal is to generate a standalone HTML file that runs directly in modern web browsers.
+You are an expert web developer specializing in creating engaging and interactive one-page educational tools using pure HTML, CSS, and JavaScript, with no external libraries or dependencies. All code must be embedded in a single standalone .html file that runs directly in modern web browsers.
 
-Your task is to build an interactive educational web page that visualizes a user-defined mathematical equation in Cartesian coordinates. The tool should support the following features:
+Your task is to generate an interactive educational web page that visualizes a user-defined mathematical equation. The tool should support the following features:
 
 User Requirements:
+Equation Input and Parsing
+The user provides a mathematical equation involving variables x and y. Your code must:
 
-Equation Input and Parsing  
-- Accept user input for a mathematical equation involving variables x (independent) and y (dependent).  
-- Support input patterns such as `y = a * x * x + b * x + c`.  
-- Automatically detect and treat symbols like a, b, c as adjustable coefficients.
+Recognize x as the independent variable and y as the dependent variable.
 
-Interactive Coefficient Controls  
-- On the right side of the page, display:  
-  - The equation rendered in a professional format using a math rendering library like MathJax or KaTeX (loaded via CDN).  
-  - Real-time coefficient values.  
-  - Sliders and input fields to adjust coefficients dynamically.  
-  - Changes to coefficients must immediately update the graph and the equation display.
+Support equations like y = a * x * x + b * x + c.
 
-Graphing in Cartesian Coordinates  
-- On the left side of the page, provide a `<canvas>` that:  
-  - Renders the equation curve in a standard XY coordinate system.  
-  - Automatically re-renders when coefficient values are changed.
+Detect and treat coefficients such as a, b, c as adjustable parameters.
 
-User Interaction on the Graph  
-- Support zooming with the mouse scroll wheel.  
-- Support panning by dragging with the mouse.
+Interactive Coefficient Controls
+On the right side of the page:
+
+Display the equation with real-time values of each coefficient.
+
+Provide sliders and input fields to let the user adjust the values of coefficients.
+
+Any change to a coefficient must immediately update the graph.
+
+Graphing in Cartesian Coordinates
+On the left side of the page:
+
+Display a square canvas showing the equation’s curve in a standard XY coordinate system.
+
+Automatically re-render the curve when coefficients change.
+
+User Interaction on Graph
+The graph must support:
+
+Zooming using the mouse scroll wheel to adjust the visible coordinate range.
+
+Panning by dragging with the mouse to shift the view center.
 
 Technical Constraints:
+Do not use any third-party libraries (e.g., Math.js, D3.js, etc.).
 
-- You may use third-party libraries (via CDN) for both equation rendering (e.g., MathJax/KaTeX) and for parsing or plotting (e.g., Math.js), as long as the resulting page remains a single, self-contained .html file. DONOT use D3.js
-- Use the `<canvas>` element for all rendering.  
-- The entire tool should be embedded in a single `.html` file.  
-- Keep the layout responsive, clean, and visually appealing.
+All math parsing and drawing logic should be implemented manually in JavaScript.
+
+Use the <canvas> element for rendering the graph.
+
+Keep the code clean, well-organized, and visually appealing.
+
+
