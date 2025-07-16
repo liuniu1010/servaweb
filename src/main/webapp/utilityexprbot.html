@@ -524,16 +524,15 @@
         }
 
         function loginWithGoogle() {
-            var getOAuthGoogleClientIDUrl = "api/aiclientlogin/getoauthgoogleclientid";
+            var urlOfGoogleOAuthUrl = "api/aiclientlogin/getgoogleoauthurl";
             $.ajax({
-                url: getOAuthGoogleClientIDUrl,
+                url: urlOfGoogleOAuthUrl,
                 type: "POST",
                 data: JSON.stringify({}),
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
-                    var clientId = data.message;
-                    navigateToGoogleLogin(clientId);
+                    window.location.href = data.message;
                 },
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {
@@ -837,23 +836,6 @@
             const regex = new RegExp(escapedSeparators.join('|'), 'g');
 
             return input.split(regex);
-        }
-
-        function navigateToGoogleLogin(clientId) {
-            const redirectUri = "https://neoai.bot/oauth2callback";
-            const scope = "https://www.googleapis.com/auth/userinfo.email";
-            const responseType = "code";
-            const state = "neoai";
-
-            var oauthUrl = "https://accounts.google.com/o/oauth2/v2/auth";
-            oauthUrl += "?client_id=" + encodeURIComponent(clientId);
-            oauthUrl += "&redirect_uri=" + encodeURIComponent(redirectUri);
-            oauthUrl += "&response_type=" + responseType;
-            oauthUrl += "&scope=" + encodeURIComponent(scope);
-            oauthUrl += "&access_type=offline";
-            oauthUrl += "&state=" + encodeURIComponent(state);
-
-            window.location.href = oauthUrl;
         }
 
         document.getElementById('fileInputEdit').addEventListener('change', function () {

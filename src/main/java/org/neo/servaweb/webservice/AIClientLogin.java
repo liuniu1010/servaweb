@@ -1,5 +1,9 @@
 package org.neo.servaweb.webservice;
 
+import java.util.Map;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -95,17 +99,18 @@ public class AIClientLogin {
     }
 
     @POST
-    @Path("/getoauthgoogleclientid")
+    @Path("/getgoogleoauthurl")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse getOAuthGoogleClientID(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
+    public WSModel.AIChatResponse getGoogleOAuthUrl(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
         String sourceIP = getSourceIP(request);
 
-        logger.info("IP: " + sourceIP + " try to get OAuthGoogleClientID");
+        logger.info("IP: " + sourceIP + " try to getGoogleOAuthUrl");
 
         try {
-            String OAuthGoogleClientID = CommonUtil.getConfigValue("OAuthGoogleClientID");
-            WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, OAuthGoogleClientID);
+            checkAccessibilityOnGetUrlForOAuthLogin(sourceIP);
+            String googleOAuthUrl = innerGetGoogleOAuthUrl();
+            WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, googleOAuthUrl);
             return chatResponse;
         }
         catch(Exception ex) {
@@ -113,6 +118,29 @@ public class AIClientLogin {
             standardHandleException(ex, response);
         }
         return null;
+    }
+
+    private String innerGetGoogleOAuthUrl() throws Exception {
+        String[] configNames = new String[]{"OAuthGoogleClientID"
+                                           ,"OAuthGoogleRedirectUri"};
+        Map<String, String> configMap = CommonUtil.getConfigValues(configNames);
+
+        String OAuthGoogleClientID = configMap.get("OAuthGoogleClientID");
+        String OAuthGoogleRedirectUri = configMap.get("OAuthGoogleRedirectUri");
+        String scope = "https://www.googleapis.com/auth/userinfo.email";
+        String responseType = "code";
+        String state = "neoai";   // think about change it to a random string
+        String accessType = "offline";
+
+        String oauthUrl = "https://accounts.google.com/o/oauth2/v2/auth";
+        oauthUrl += "?client_id=" + URLEncoder.encode(OAuthGoogleClientID, StandardCharsets.UTF_8.toString());
+        oauthUrl += "&redirect_uri=" + URLEncoder.encode(OAuthGoogleRedirectUri, StandardCharsets.UTF_8.toString());
+        oauthUrl += "&response_type=" + responseType;
+        oauthUrl += "&scope=" + URLEncoder.encode(scope, StandardCharsets.UTF_8.toString());
+        oauthUrl += "&access_type=" + accessType;
+        oauthUrl += "&state=" + URLEncoder.encode(state, StandardCharsets.UTF_8.toString());
+
+        return oauthUrl;
     }
 
     private String getSourceIP(HttpServletRequest request) {
@@ -176,6 +204,25 @@ public class AIClientLogin {
         }); 
     }
 
+    private void checkAccessibilityOnGetUrlForOAuthLogin(String sourceIP) {
+        DBServiceIFC dbService = ServiceFactory.getDBService();
+        dbService.executeQueryTask(new DBQueryTaskIFC() {
+            @Override
+            public Object query(DBConnectionIFC dbConnection) {
+                try {
+                    innerCheckAccessibilityOnGetUrlForOAuthLogin(dbConnection, sourceIP);
+                }
+                catch(NeoAIException nex) {
+                    throw nex;
+                }
+                catch(Exception ex) {
+                    throw new NeoAIException(ex.getMessage(), ex);
+                }
+                return null;
+            }
+        }); 
+    }
+
     private void innerCheckAccessibilityOnAction(DBConnectionIFC dbConnection, String username, String sourceIP) {
         AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
         if(accessAgent.verifyAdminByUsername(dbConnection, username)) {
@@ -185,6 +232,21 @@ public class AIClientLogin {
             return;
         }
         if(accessAgent.verifyUsername(dbConnection, username)) {
+            return;
+        }
+        if(accessAgent.verifyIP(dbConnection, sourceIP)) {
+            return;
+        }
+        if(accessAgent.verifyRegion(dbConnection, sourceIP)) {
+            return;
+        }
+
+        // by default, pass
+    }
+
+    private void innerCheckAccessibilityOnGetUrlForOAuthLogin(DBConnectionIFC dbConnection, String sourceIP) {
+        AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
+        if(accessAgent.verifyMaintenance(dbConnection)) {
             return;
         }
         if(accessAgent.verifyIP(dbConnection, sourceIP)) {
