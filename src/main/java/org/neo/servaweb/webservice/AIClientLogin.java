@@ -15,6 +15,7 @@ import org.neo.servaframe.interfaces.DBServiceIFC;
 import org.neo.servaframe.ServiceFactory;
 
 import org.neo.servaaibase.NeoAIException;
+import org.neo.servaaibase.util.CommonUtil;
 
 import org.neo.servaaiagent.ifc.AccountAgentIFC;
 import org.neo.servaaiagent.ifc.AccessAgentIFC;
@@ -91,6 +92,27 @@ public class AIClientLogin {
             logger.error(ex.getMessage(), ex);
         }
         return null; 
+    }
+
+    @POST
+    @Path("/getoauthgoogleclientid")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public WSModel.AIChatResponse getOAuthGoogleClientID(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
+        String sourceIP = getSourceIP(request);
+
+        logger.info("IP: " + sourceIP + " try to get OAuthGoogleClientID");
+
+        try {
+            String OAuthGoogleClientID = CommonUtil.getConfigValue("OAuthGoogleClientID");
+            WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, OAuthGoogleClientID);
+            return chatResponse;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null;
     }
 
     private String getSourceIP(HttpServletRequest request) {

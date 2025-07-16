@@ -72,6 +72,11 @@ insert into configs(id, version, configname, configvalue, comments) values(uuid(
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'blockExprTest', '1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'paymentLinkOnStripe', '<paymentLinkOnStripe>', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'paymentSigningSecretOnStripe', '<paymentSigningSecretOnStripe>', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'OAuthGoogleClientID', '<OAuthGoogleClientID>', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'OAuthGoogleClientSecret', '<OAuthGoogleClientSecret>', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'OAuthGoogleRedirectUri', '<OAuthGoogleRedirectUri>', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'OAuthGoogleTokenEndpoint', '<OAuthGoogleTokenEndpoint>', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'OAuthGoogleUserInfoEndpoint', '<OAuthGoogleUserInfoEndpoint>', '');
 
 create table chatrecord(
 id               char(36)        not null primary key,

@@ -272,6 +272,9 @@
         <input id="password" type="password" placeholder="Password">
         <button id="sendPasswordBtn" onclick="sendPassword()">Send Password</button>
         <button id="loginBtn" onclick="login()">Login</button>
+        <button id="googleLoginBtn" style="background-color: #db4437;" onclick="loginWithGoogle()">
+            Login with Google Account
+        </button>
     </div>
 
     <script>
@@ -508,6 +511,29 @@
                 success: function (data) {
                     const a = document.getElementById("purchaseLink");
                     a.href = data.message;
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
+                    }
+                }
+            });
+        }
+
+        function loginWithGoogle() {
+            var getOAuthGoogleClientIDUrl = "api/aiclientlogin/getoauthgoogleclientid";
+            $.ajax({
+                url: getOAuthGoogleClientIDUrl,
+                type: "POST",
+                data: JSON.stringify({}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    var clientId = data.message;
+                    navigateToGoogleLogin(clientId);
                 },
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {
@@ -811,6 +837,23 @@
             const regex = new RegExp(escapedSeparators.join('|'), 'g');
 
             return input.split(regex);
+        }
+
+        function navigateToGoogleLogin(clientId) {
+            const redirectUri = "https://neoai.bot/oauth2callback";
+            const scope = "https://www.googleapis.com/auth/userinfo.email";
+            const responseType = "code";
+            const state = "neoai";
+
+            var oauthUrl = "https://accounts.google.com/o/oauth2/v2/auth";
+            oauthUrl += "?client_id=" + encodeURIComponent(clientId);
+            oauthUrl += "&redirect_uri=" + encodeURIComponent(redirectUri);
+            oauthUrl += "&response_type=" + responseType;
+            oauthUrl += "&scope=" + encodeURIComponent(scope);
+            oauthUrl += "&access_type=offline";
+            oauthUrl += "&state=" + encodeURIComponent(state);
+
+            window.location.href = oauthUrl;
         }
 
         document.getElementById('fileInputEdit').addEventListener('change', function () {
