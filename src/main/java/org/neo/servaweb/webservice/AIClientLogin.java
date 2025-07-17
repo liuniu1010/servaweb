@@ -9,6 +9,7 @@ import java.util.Map;
 import java.net.URLEncoder;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 import javax.ws.rs.POST;
@@ -19,6 +20,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -117,10 +119,11 @@ public class AIClientLogin {
     public WSModel.AIChatResponse getGoogleOAuthUrl(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
         String sourceIP = getSourceIP(request);
         logger.info("IP: " + sourceIP + " try to getGoogleOAuthUrl");
+        String originalPage = params.getUserInput();
 
         try {
             checkAccessibilityOnOAuthLogin(sourceIP);
-            String googleOAuthUrl = innerGetGoogleOAuthUrl();
+            String googleOAuthUrl = innerGetGoogleOAuthUrl(originalPage);
             WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, googleOAuthUrl);
             return chatResponse;
         }
@@ -133,7 +136,8 @@ public class AIClientLogin {
 
     @GET
     @Path("/oauthlogin")
-    public WSModel.AIChatResponse OAuthLogin(@Context HttpServletRequest request, @Context HttpServletResponse response, @QueryParam("code") String code, @QueryParam("state") String state) {
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response OAuthLogin(@Context HttpServletRequest request, @Context HttpServletResponse response, @QueryParam("code") String code, @QueryParam("state") String state) {
         String sourceIP = getSourceIP(request);
         logger.info("IP: " + sourceIP + " try to login with OAuth");
 
@@ -151,8 +155,12 @@ public class AIClientLogin {
 
             AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
             String loginSession = accountAgent.loginWithOAuth(userEmail, sourceIP);
-            WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, loginSession);
-            return chatResponse;
+
+            String originalPage = state;
+            String redirectUri = state + "?loginSession=" + loginSession;
+            return Response.status(Response.Status.FOUND)
+                   .location(URI.create(redirectUri))
+                   .build();
         } 
         catch(Exception ex) {
             logger.error(ex.getMessage());
@@ -212,7 +220,7 @@ public class AIClientLogin {
         return buffer.toByteArray();
     }
 
-    private String innerGetGoogleOAuthUrl() throws Exception {
+    private String innerGetGoogleOAuthUrl(String originalPage) throws Exception {
         String[] configNames = new String[]{"OAuthGoogleClientID"
                                            ,"OAuthGoogleRedirectUri"};
         Map<String, String> configMap = CommonUtil.getConfigValues(configNames);
@@ -221,8 +229,9 @@ public class AIClientLogin {
         String OAuthGoogleRedirectUri = configMap.get("OAuthGoogleRedirectUri");
         String scope = "https://www.googleapis.com/auth/userinfo.email";
         String responseType = "code";
-        String state = "neoai";   // think about change it to a random string
+        String state = originalPage;
         String accessType = "offline";
+        String prompt = "select_account";
 
         String oauthUrl = "https://accounts.google.com/o/oauth2/v2/auth";
         oauthUrl += "?client_id=" + URLEncoder.encode(OAuthGoogleClientID, StandardCharsets.UTF_8.toString());
@@ -231,6 +240,7 @@ public class AIClientLogin {
         oauthUrl += "&scope=" + URLEncoder.encode(scope, StandardCharsets.UTF_8.toString());
         oauthUrl += "&access_type=" + accessType;
         oauthUrl += "&state=" + URLEncoder.encode(state, StandardCharsets.UTF_8.toString());
+        oauthUrl += "&prompt=" + prompt;
 
         return oauthUrl;
     }

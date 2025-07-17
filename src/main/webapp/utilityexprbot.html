@@ -279,6 +279,9 @@
 
     <script>
         window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const loginSession = urlParams.get("loginSession");
+            saveLoginSession(loginSession);
             streamrefresh();
         }
 
@@ -525,10 +528,11 @@
 
         function loginWithGoogle() {
             var urlOfGoogleOAuthUrl = "api/aiclientlogin/getgoogleoauthurl";
+            var originalPage = window.location.pathname;
             $.ajax({
                 url: urlOfGoogleOAuthUrl,
                 type: "POST",
-                data: JSON.stringify({}),
+                data: JSON.stringify({userInput: originalPage}),
                 cache: false,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
