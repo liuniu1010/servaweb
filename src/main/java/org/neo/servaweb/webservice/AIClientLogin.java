@@ -1,17 +1,29 @@
 package org.neo.servaweb.webservice;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import java.util.Map;
+
 import java.net.URLEncoder;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import javax.ws.rs.POST;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import org.neo.servaframe.interfaces.DBConnectionIFC;
 import org.neo.servaframe.interfaces.DBQueryTaskIFC;
@@ -104,11 +116,10 @@ public class AIClientLogin {
     @Produces(MediaType.APPLICATION_JSON)
     public WSModel.AIChatResponse getGoogleOAuthUrl(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
         String sourceIP = getSourceIP(request);
-
         logger.info("IP: " + sourceIP + " try to getGoogleOAuthUrl");
 
         try {
-            checkAccessibilityOnGetUrlForOAuthLogin(sourceIP);
+            checkAccessibilityOnOAuthLogin(sourceIP);
             String googleOAuthUrl = innerGetGoogleOAuthUrl();
             WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, googleOAuthUrl);
             return chatResponse;
@@ -118,6 +129,87 @@ public class AIClientLogin {
             standardHandleException(ex, response);
         }
         return null;
+    }
+
+    @GET
+    @Path("/oauthlogin")
+    public WSModel.AIChatResponse OAuthLogin(@Context HttpServletRequest request, @Context HttpServletResponse response, @QueryParam("code") String code, @QueryParam("state") String state) {
+        String sourceIP = getSourceIP(request);
+        logger.info("IP: " + sourceIP + " try to login with OAuth");
+
+        try {
+            checkAccessibilityOnOAuthLogin(sourceIP);
+
+            if (code == null || code.isEmpty()) {
+                throw new NeoAIException("Missing 'code' parameter");
+            }
+
+            String tokenJson = exchangeCodeForToken(code);
+            JsonObject tokenObj = JsonParser.parseString(tokenJson).getAsJsonObject();
+            String accessToken = tokenObj.get("access_token").getAsString();
+            String userEmail = fetchUserEmail(accessToken);
+
+            AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+            String loginSession = accountAgent.loginWithOAuth(userEmail, sourceIP);
+            WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, loginSession);
+            return chatResponse;
+        } 
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null;
+    }
+
+    private String exchangeCodeForToken(String code) throws Exception {
+        String TOKEN_ENDPOINT = CommonUtil.getConfigValue("OAuthGoogleTokenEndpoint");
+        String CLIENT_ID = CommonUtil.getConfigValue("OAuthGoogleClientID");
+        String CLIENT_SECRET = CommonUtil.getConfigValue("OAuthGoogleClientSecret");
+        String REDIRECT_URI = CommonUtil.getConfigValue("OAuthGoogleRedirectUri");
+
+        URL url = new URL(TOKEN_ENDPOINT);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+        String body = "code=" + URLEncoder.encode(code, "UTF-8")
+                + "&client_id=" + URLEncoder.encode(CLIENT_ID, "UTF-8")
+                + "&client_secret=" + URLEncoder.encode(CLIENT_SECRET, "UTF-8")
+                + "&redirect_uri=" + URLEncoder.encode(REDIRECT_URI, "UTF-8")
+                + "&grant_type=authorization_code";
+
+        try (OutputStream os = conn.getOutputStream()) {
+            os.write(body.getBytes(StandardCharsets.UTF_8));
+        }
+
+        try (InputStream is = conn.getInputStream()) {
+            return new String(readAllBytesCompat(is), StandardCharsets.UTF_8);
+        }
+    }
+
+    private String fetchUserEmail(String accessToken) throws Exception {
+        String USERINFO_ENDPOINT = CommonUtil.getConfigValue("OAuthGoogleUserInfoEndpoint");
+        URL url = new URL(USERINFO_ENDPOINT);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+
+        try (InputStream is = conn.getInputStream()) {
+            String json = new String(readAllBytesCompat(is), StandardCharsets.UTF_8);
+            JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
+            return obj.get("email").getAsString();
+        }
+    }
+
+    private byte[] readAllBytesCompat(InputStream inputStream) throws Exception {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] data = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, bytesRead);
+        }
+        return buffer.toByteArray();
     }
 
     private String innerGetGoogleOAuthUrl() throws Exception {
@@ -204,13 +296,13 @@ public class AIClientLogin {
         }); 
     }
 
-    private void checkAccessibilityOnGetUrlForOAuthLogin(String sourceIP) {
+    private void checkAccessibilityOnOAuthLogin(String sourceIP) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeQueryTask(new DBQueryTaskIFC() {
             @Override
             public Object query(DBConnectionIFC dbConnection) {
                 try {
-                    innerCheckAccessibilityOnGetUrlForOAuthLogin(dbConnection, sourceIP);
+                    innerCheckAccessibilityOnOAuthLogin(dbConnection, sourceIP);
                 }
                 catch(NeoAIException nex) {
                     throw nex;
@@ -244,7 +336,7 @@ public class AIClientLogin {
         // by default, pass
     }
 
-    private void innerCheckAccessibilityOnGetUrlForOAuthLogin(DBConnectionIFC dbConnection, String sourceIP) {
+    private void innerCheckAccessibilityOnOAuthLogin(DBConnectionIFC dbConnection, String sourceIP) {
         AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
         if(accessAgent.verifyMaintenance(dbConnection)) {
             return;
