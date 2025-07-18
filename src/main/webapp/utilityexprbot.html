@@ -281,7 +281,11 @@
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const loginSession = urlParams.get("loginSession");
-            saveLoginSession(loginSession);
+            if(loginSession) {
+                saveLoginSession(loginSession);
+                window.history.replaceState({}, document.title, window.location.pathname);
+                location.reload();
+            }
             streamrefresh();
         }
 
@@ -660,6 +664,7 @@
             } 
             catch(e) {
             }
+            console.trace();
             alert(message + "\nFor more information, please contact niuliu285@gmail.com");
         }
 

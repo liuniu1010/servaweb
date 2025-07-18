@@ -152,6 +152,7 @@ public class AIClientLogin {
             JsonObject tokenObj = JsonParser.parseString(tokenJson).getAsJsonObject();
             String accessToken = tokenObj.get("access_token").getAsString();
             String userEmail = fetchUserEmail(accessToken);
+            logger.info("userEmail = " + userEmail);
 
             AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
             String loginSession = accountAgent.loginWithOAuth(userEmail, sourceIP);
