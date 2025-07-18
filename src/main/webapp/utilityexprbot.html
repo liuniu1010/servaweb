@@ -275,6 +275,9 @@
         <button id="googleLoginBtn" style="background-color: #db4437;" onclick="loginWithGoogle()">
             Login with Google Account
         </button>
+        <button id="microsoftLoginBtn" style="background-color: #2F2F2F; color: white;" onclick="loginWithMicrosoft()">
+            Login with Microsoft Account
+        </button>
     </div>
 
     <script>
@@ -531,10 +534,33 @@
         }
 
         function loginWithGoogle() {
-            var urlOfGoogleOAuthUrl = "api/aiclientlogin/getgoogleoauthurl";
+            var urlOfGoogleOAuthUrl = "api/aiclientlogin/getoauthgoogleurl";
             var originalPage = window.location.pathname;
             $.ajax({
                 url: urlOfGoogleOAuthUrl,
+                type: "POST",
+                data: JSON.stringify({userInput: originalPage}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    window.location.href = data.message;
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
+                    }
+                }
+            });
+        }
+
+        function loginWithMicrosoft() {
+            var urlOfMicrosoftOAuthUrl = "api/aiclientlogin/getoauthmicrosofturl";
+            var originalPage = window.location.pathname;
+            $.ajax({
+                url: urlOfMicrosoftOAuthUrl,
                 type: "POST",
                 data: JSON.stringify({userInput: originalPage}),
                 cache: false,

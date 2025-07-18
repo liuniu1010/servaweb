@@ -113,18 +113,40 @@ public class AIClientLogin {
     }
 
     @POST
-    @Path("/getgoogleoauthurl")
+    @Path("/getoauthgoogleurl")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public WSModel.AIChatResponse getGoogleOAuthUrl(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
+    public WSModel.AIChatResponse getOAuthGoogleUrl(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
         String sourceIP = getSourceIP(request);
-        logger.info("IP: " + sourceIP + " try to getGoogleOAuthUrl");
+        logger.info("IP: " + sourceIP + " try to getOAuthGoogleUrl");
         String originalPage = params.getUserInput();
 
         try {
-            checkAccessibilityOnOAuthLogin(sourceIP);
-            String googleOAuthUrl = innerGetGoogleOAuthUrl(originalPage);
-            WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, googleOAuthUrl);
+            checkAccessibilityOnOAuthLoginGetUrl(sourceIP);
+            String OAuthGoogleUrl = innerGetOAuthGoogleUrl(originalPage);
+            WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, OAuthGoogleUrl);
+            return chatResponse;
+        }
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null;
+    }
+
+    @POST
+    @Path("/getoauthmicrosofturl")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public WSModel.AIChatResponse getOAuthMicrosoftUrl(@Context HttpServletRequest request, @Context HttpServletResponse response, WSModel.AIChatParams params) {
+        String sourceIP = getSourceIP(request);
+        logger.info("IP: " + sourceIP + " try to getOAuthMicrosoftUrl");
+        String originalPage = params.getUserInput();
+
+        try {
+            checkAccessibilityOnOAuthLoginGetUrl(sourceIP);
+            String OAuthMicrosoftUrl = innerGetOAuthMicrosoftUrl(originalPage);
+            WSModel.AIChatResponse chatResponse = new WSModel.AIChatResponse(true, OAuthMicrosoftUrl);
             return chatResponse;
         }
         catch(Exception ex) {
@@ -135,24 +157,24 @@ public class AIClientLogin {
     }
 
     @GET
-    @Path("/oauthlogin")
+    @Path("/oauthgoogle")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response OAuthLogin(@Context HttpServletRequest request, @Context HttpServletResponse response, @QueryParam("code") String code, @QueryParam("state") String state) {
+    public Response OAuthGoogle(@Context HttpServletRequest request, @Context HttpServletResponse response, @QueryParam("code") String code, @QueryParam("state") String state) {
         String sourceIP = getSourceIP(request);
-        logger.info("IP: " + sourceIP + " try to login with OAuth");
+        logger.info("IP: " + sourceIP + " try to login with OAuth Google");
 
         try {
-            checkAccessibilityOnOAuthLogin(sourceIP);
-
             if (code == null || code.isEmpty()) {
                 throw new NeoAIException("Missing 'code' parameter");
             }
 
-            String tokenJson = exchangeCodeForToken(code);
+            String tokenJson = exchangeGoogleCodeForToken(code);
             JsonObject tokenObj = JsonParser.parseString(tokenJson).getAsJsonObject();
             String accessToken = tokenObj.get("access_token").getAsString();
-            String userEmail = fetchUserEmail(accessToken);
+            String userEmail = fetchGoogleUserEmail(accessToken);
             logger.info("userEmail = " + userEmail);
+            
+            checkAccessibilityOnAction(userEmail, sourceIP);
 
             AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
             String loginSession = accountAgent.loginWithOAuth(userEmail, sourceIP);
@@ -170,7 +192,43 @@ public class AIClientLogin {
         return null;
     }
 
-    private String exchangeCodeForToken(String code) throws Exception {
+    @GET
+    @Path("/oauthmicrosoft")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response OAuthMicrosoft(@Context HttpServletRequest request, @Context HttpServletResponse response, @QueryParam("code") String code, @QueryParam("state") String state) {
+        String sourceIP = getSourceIP(request);
+        logger.info("IP: " + sourceIP + " try to login with OAuth Microsoft");
+
+        try {
+            if (code == null || code.isEmpty()) {
+                throw new NeoAIException("Missing 'code' parameter");
+            }
+
+            String tokenJson = exchangeMicrosoftCodeForToken(code);
+            JsonObject tokenObj = JsonParser.parseString(tokenJson).getAsJsonObject();
+            String accessToken = tokenObj.get("access_token").getAsString();
+            String userEmail = fetchMicrosoftUserEmail(accessToken);
+            logger.info("userEmail = " + userEmail);
+            
+            checkAccessibilityOnAction(userEmail, sourceIP);
+
+            AccountAgentIFC accountAgent = AccountAgentImpl.getInstance();
+            String loginSession = accountAgent.loginWithOAuth(userEmail, sourceIP);
+
+            String originalPage = state;
+            String redirectUri = state + "?loginSession=" + loginSession;
+            return Response.status(Response.Status.FOUND)
+                   .location(URI.create(redirectUri))
+                   .build();
+        } 
+        catch(Exception ex) {
+            logger.error(ex.getMessage());
+            standardHandleException(ex, response);
+        }
+        return null;
+    }
+
+    private String exchangeGoogleCodeForToken(String code) throws Exception {
         String TOKEN_ENDPOINT = CommonUtil.getConfigValue("OAuthGoogleTokenEndpoint");
         String CLIENT_ID = CommonUtil.getConfigValue("OAuthGoogleClientID");
         String CLIENT_SECRET = CommonUtil.getConfigValue("OAuthGoogleClientSecret");
@@ -197,7 +255,36 @@ public class AIClientLogin {
         }
     }
 
-    private String fetchUserEmail(String accessToken) throws Exception {
+    private String exchangeMicrosoftCodeForToken(String code) throws Exception {
+        String TOKEN_ENDPOINT = CommonUtil.getConfigValue("OAuthMicrosoftTokenEndpoint");
+        String CLIENT_ID = CommonUtil.getConfigValue("OAuthMicrosoftClientID");
+        String CLIENT_SECRET = CommonUtil.getConfigValue("OAuthMicrosoftClientSecret");
+        String REDIRECT_URI = CommonUtil.getConfigValue("OAuthMicrosoftRedirectUri");
+        String SCOPE = "openid email";
+
+        URL url = new URL(TOKEN_ENDPOINT);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+
+        String body = "code=" + URLEncoder.encode(code, "UTF-8")
+                + "&client_id=" + URLEncoder.encode(CLIENT_ID, "UTF-8")
+                + "&client_secret=" + URLEncoder.encode(CLIENT_SECRET, "UTF-8")
+                + "&redirect_uri=" + URLEncoder.encode(REDIRECT_URI, "UTF-8")
+                + "&grant_type=authorization_code"
+                + "&scope=" + URLEncoder.encode(SCOPE, "UTF-8");
+
+        try (OutputStream os = conn.getOutputStream()) {
+            os.write(body.getBytes(StandardCharsets.UTF_8));
+        }
+
+        try (InputStream is = conn.getInputStream()) {
+            return new String(readAllBytesCompat(is), StandardCharsets.UTF_8);
+        }
+    }
+
+    private String fetchGoogleUserEmail(String accessToken) throws Exception {
         String USERINFO_ENDPOINT = CommonUtil.getConfigValue("OAuthGoogleUserInfoEndpoint");
         URL url = new URL(USERINFO_ENDPOINT);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -211,6 +298,20 @@ public class AIClientLogin {
         }
     }
 
+    private String fetchMicrosoftUserEmail(String accessToken) throws Exception {
+        String USERINFO_ENDPOINT = CommonUtil.getConfigValue("OAuthMicrosoftUserInfoEndpoint");
+        URL url = new URL(USERINFO_ENDPOINT);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+
+        try (InputStream is = conn.getInputStream()) {
+            String json = new String(readAllBytesCompat(is), StandardCharsets.UTF_8);
+            JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
+            return obj.get("userPrincipalName").getAsString();
+        }
+    }
+
     private byte[] readAllBytesCompat(InputStream inputStream) throws Exception {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         byte[] data = new byte[4096];
@@ -221,29 +322,56 @@ public class AIClientLogin {
         return buffer.toByteArray();
     }
 
-    private String innerGetGoogleOAuthUrl(String originalPage) throws Exception {
-        String[] configNames = new String[]{"OAuthGoogleClientID"
+    private String innerGetOAuthGoogleUrl(String originalPage) throws Exception {
+        String[] configNames = new String[]{"OAuthGoogleUrl"
+                                           ,"OAuthGoogleClientID"
                                            ,"OAuthGoogleRedirectUri"};
         Map<String, String> configMap = CommonUtil.getConfigValues(configNames);
 
         String OAuthGoogleClientID = configMap.get("OAuthGoogleClientID");
         String OAuthGoogleRedirectUri = configMap.get("OAuthGoogleRedirectUri");
-        String scope = "https://www.googleapis.com/auth/userinfo.email";
+        String scope = "openid email";
         String responseType = "code";
         String state = originalPage;
         String accessType = "offline";
         String prompt = "select_account";
 
-        String oauthUrl = "https://accounts.google.com/o/oauth2/v2/auth";
-        oauthUrl += "?client_id=" + URLEncoder.encode(OAuthGoogleClientID, StandardCharsets.UTF_8.toString());
-        oauthUrl += "&redirect_uri=" + URLEncoder.encode(OAuthGoogleRedirectUri, StandardCharsets.UTF_8.toString());
-        oauthUrl += "&response_type=" + responseType;
-        oauthUrl += "&scope=" + URLEncoder.encode(scope, StandardCharsets.UTF_8.toString());
-        oauthUrl += "&access_type=" + accessType;
-        oauthUrl += "&state=" + URLEncoder.encode(state, StandardCharsets.UTF_8.toString());
-        oauthUrl += "&prompt=" + prompt;
+        String OAuthGoogleUrl = configMap.get("OAuthGoogleUrl");
+        OAuthGoogleUrl += "?client_id=" + URLEncoder.encode(OAuthGoogleClientID, StandardCharsets.UTF_8.toString());
+        OAuthGoogleUrl += "&redirect_uri=" + URLEncoder.encode(OAuthGoogleRedirectUri, StandardCharsets.UTF_8.toString());
+        OAuthGoogleUrl += "&response_type=" + responseType;
+        OAuthGoogleUrl += "&scope=" + URLEncoder.encode(scope, StandardCharsets.UTF_8.toString());
+        OAuthGoogleUrl += "&access_type=" + accessType;
+        OAuthGoogleUrl += "&state=" + URLEncoder.encode(state, StandardCharsets.UTF_8.toString());
+        OAuthGoogleUrl += "&prompt=" + prompt;
 
-        return oauthUrl;
+        return OAuthGoogleUrl;
+    }
+
+    private String innerGetOAuthMicrosoftUrl(String originalPage) throws Exception {
+        String[] configNames = new String[]{"OAuthMicrosoftUrl"
+                                           ,"OAuthMicrosoftClientID"
+                                           ,"OAuthMicrosoftRedirectUri"};
+        Map<String, String> configMap = CommonUtil.getConfigValues(configNames);
+
+        String OAuthMicrosoftClientID = configMap.get("OAuthMicrosoftClientID");
+        String OAuthMicrosoftRedirectUri = configMap.get("OAuthMicrosoftRedirectUri");
+        String scope = "openid email profile";
+        String responseMode = "query";
+        String responseType = "code";
+        String state = originalPage;
+        String prompt = "select_account";
+
+        String OAuthMicrosoftUrl = configMap.get("OAuthMicrosoftUrl");
+        OAuthMicrosoftUrl += "?client_id=" + URLEncoder.encode(OAuthMicrosoftClientID, StandardCharsets.UTF_8.toString());
+        OAuthMicrosoftUrl += "&redirect_uri=" + URLEncoder.encode(OAuthMicrosoftRedirectUri, StandardCharsets.UTF_8.toString());
+        OAuthMicrosoftUrl += "&response_mode=" + responseMode;
+        OAuthMicrosoftUrl += "&response_type=" + responseType;
+        OAuthMicrosoftUrl += "&scope=" + URLEncoder.encode(scope, StandardCharsets.UTF_8.toString());
+        OAuthMicrosoftUrl += "&state=" + URLEncoder.encode(state, StandardCharsets.UTF_8.toString());
+        OAuthMicrosoftUrl += "&prompt=" + prompt;
+
+        return OAuthMicrosoftUrl;
     }
 
     private String getSourceIP(HttpServletRequest request) {
@@ -307,13 +435,13 @@ public class AIClientLogin {
         }); 
     }
 
-    private void checkAccessibilityOnOAuthLogin(String sourceIP) {
+    private void checkAccessibilityOnOAuthLoginGetUrl(String sourceIP) {
         DBServiceIFC dbService = ServiceFactory.getDBService();
         dbService.executeQueryTask(new DBQueryTaskIFC() {
             @Override
             public Object query(DBConnectionIFC dbConnection) {
                 try {
-                    innerCheckAccessibilityOnOAuthLogin(dbConnection, sourceIP);
+                    innerCheckAccessibilityOnOAuthLoginGetUrl(dbConnection, sourceIP);
                 }
                 catch(NeoAIException nex) {
                     throw nex;
@@ -347,15 +475,9 @@ public class AIClientLogin {
         // by default, pass
     }
 
-    private void innerCheckAccessibilityOnOAuthLogin(DBConnectionIFC dbConnection, String sourceIP) {
+    private void innerCheckAccessibilityOnOAuthLoginGetUrl(DBConnectionIFC dbConnection, String sourceIP) {
         AccessAgentIFC accessAgent = AccessAgentImpl.getInstance();
         if(accessAgent.verifyMaintenance(dbConnection)) {
-            return;
-        }
-        if(accessAgent.verifyIP(dbConnection, sourceIP)) {
-            return;
-        }
-        if(accessAgent.verifyRegion(dbConnection, sourceIP)) {
             return;
         }
 
