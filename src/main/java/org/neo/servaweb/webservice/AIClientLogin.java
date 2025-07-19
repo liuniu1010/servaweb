@@ -222,7 +222,7 @@ public class AIClientLogin {
                    .build();
         } 
         catch(Exception ex) {
-            logger.error(ex.getMessage());
+            logger.error(ex.getMessage(), ex);
             standardHandleException(ex, response);
         }
         return null;
@@ -308,7 +308,15 @@ public class AIClientLogin {
         try (InputStream is = conn.getInputStream()) {
             String json = new String(readAllBytesCompat(is), StandardCharsets.UTF_8);
             JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
-            return obj.get("userPrincipalName").getAsString();
+            if(obj.has("email")) {
+                return obj.get("email").getAsString();
+            } 
+            else if(obj.has("userPrincipalName")) {
+                return obj.get("userPrincipalName").getAsString();
+            } 
+            else {
+                throw new IllegalStateException("No email field found in user info JSON");
+            }
         }
     }
 
