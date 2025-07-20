@@ -288,10 +288,23 @@
         <input id="password" type="password" placeholder="Password">
         <button id="sendPasswordBtn" onclick="sendPassword()">Send Password</button>
         <button id="loginBtn" onclick="login()">Login</button>
+        <button id="googleLoginBtn" style="background-color: #db4437;" onclick="loginWithGoogle()">
+            Login with Google
+        </button>
+        <button id="microsoftLoginBtn" style="background-color: #2F2F2F; color: white;" onclick="loginWithMicrosoft()">
+            Login with Microsoft
+        </button>
     </div>
 
     <script>
         window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const loginSession = urlParams.get("loginSession");
+            if(loginSession) {
+                saveLoginSession(loginSession);
+                window.history.replaceState({}, document.title, window.location.pathname);
+                location.reload();
+            }
             streamrefresh();
         }
 
@@ -524,6 +537,52 @@
                 success: function (data) {
                     const a = document.getElementById("purchaseLink");
                     a.href = data.message;
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
+                    }
+                }
+            });
+        }
+
+        function loginWithGoogle() {
+            var urlOfGoogleOAuthUrl = "api/aiclientlogin/getoauthgoogleurl";
+            var originalPage = window.location.pathname;
+            $.ajax({
+                url: urlOfGoogleOAuthUrl,
+                type: "POST",
+                data: JSON.stringify({userInput: originalPage}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    window.location.href = data.message;
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 401) {
+                        document.getElementById("loginDialog").style.display = "block";
+                    }
+                    else {
+                        alertError(xhr, status, error);
+                    }
+                }
+            });
+        }
+
+        function loginWithMicrosoft() {
+            var urlOfMicrosoftOAuthUrl = "api/aiclientlogin/getoauthmicrosofturl";
+            var originalPage = window.location.pathname;
+            $.ajax({
+                url: urlOfMicrosoftOAuthUrl,
+                type: "POST",
+                data: JSON.stringify({userInput: originalPage}),
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    window.location.href = data.message;
                 },
                 error: function(xhr, status, error) {
                     if (xhr.status === 401) {

@@ -50,7 +50,7 @@ A: All education tools are derivative products developed based on GameBot, the u
 Account and Access
 
 Q: How do I register?
-A: No registration is required. Simply use your email on the login screen to receive a dynamic password and gain access.
+A: There is no special registration process required. Simply enter your email address on the login screen to receive a dynamic password and gain access. You can also log in directly using your Google or Microsoft account. Upon your first successful login, your email address will be automatically registered.
 
 Q: What if I forget my password?
 A: Click “Send Password” on the login page to receive a new dynamic password by email.
