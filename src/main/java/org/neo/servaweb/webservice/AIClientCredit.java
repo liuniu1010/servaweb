@@ -44,7 +44,7 @@ public class AIClientCredit {
             return chatResponse;
         }
         catch(Exception ex) {
-            logger.error(ex.getMessage());
+            logger.error(ex.getMessage(), ex);
             standardHandleException(ex, response);
         }
         return null; 
@@ -70,7 +70,7 @@ public class AIClientCredit {
             return chatResponse;
         }
         catch(Exception ex) {
-            logger.error(ex.getMessage());
+            logger.error(ex.getMessage(), ex);
             standardHandleException(ex, response);
         }
         return null; 
