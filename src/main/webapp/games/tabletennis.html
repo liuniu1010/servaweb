@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Table Tennis — Paddle & Ball</title>
+  <style>
+    :root{
+      --bg:#0f1724; --panel:#0b1220; --accent:#22c1c3; --muted:#9aa8b2; --glass: rgba(255,255,255,0.04);
+      --shadow: 0 6px 18px rgba(2,6,23,0.6);
+      --glass2: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:linear-gradient(180deg,#071026 0%, #081427 50%, #071122 100%); color:#e6f0f2}
+    .wrap{max-width:1100px;margin:20px auto;padding:18px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); box-shadow:var(--shadow); display:grid;grid-template-columns:1fr 340px;gap:18px}
+    header{display:flex;align-items:center;gap:12px}
+    h1{font-size:18px;margin:0}
+    .canvas-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), var(--glass2)); border-radius:10px;padding:12px;display:flex;flex-direction:column;align-items:center}
+    .stage{width:100%;flex:1;display:flex;align-items:center;justify-content:center}
+    canvas{width:100%;height:520px;border-radius:8px;background:linear-gradient(180deg,#133047, #0d2230); box-shadow:inset 0 2px 10px rgba(0,0,0,0.6)}
+    .controls{display:flex;flex-direction:column;gap:10px;padding:8px}
+    .panel{background:var(--panel);padding:12px;border-radius:10px;box-shadow:var(--shadow);}
+    .row{display:flex;gap:8px;align-items:center}
+    button{appearance:none;border:0;padding:8px 12px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));color:var(--accent);cursor:pointer;box-shadow:0 4px 12px rgba(2,6,23,0.5)}
+    button.secondary{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.03)}
+    .muted{color:var(--muted);font-size:13px}
+    .score{display:flex;gap:8px;align-items:center;font-weight:600}
+    .big{font-size:48px;font-weight:700;color:var(--accent)}
+    .info{font-size:13px;color:var(--muted)}
+    .footer{margin-top:12px;text-align:center;color:var(--muted);font-size:13px}
+    .controls .toggle{display:flex;align-items:center;gap:8px}
+    .instructions{max-height:200px;overflow:auto;padding:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);border-radius:6px;border:1px solid rgba(255,255,255,0.02)}
+    .difficulty{display:flex;gap:6px}
+    .difficulty button{padding:6px 8px;font-size:13px}
+    @media (max-width:900px){.wrap{grid-template-columns:1fr; padding:12px}.stage{padding:6px} canvas{height:420px}}
+    /* subtle animations */
+    button:active{transform:translateY(1px)}
+    .glow{box-shadow:0 8px 30px rgba(34,193,195,0.15), inset 0 1px 0 rgba(255,255,255,0.02)}
+  </style>
+</head>
+<body>
+  <!--
+    Table Tennis (2D) — Controls:
+    - Move paddle: Left/Right Arrow or A/D, or Mouse/Touch horizontally
+    - Start / Pause / Reset / Mute
+    - Difficulty changes AI behavior and ball speed
+    - Scoring: first to 11 wins (toggle in code)
+  -->
+  <div class="wrap" role="application" aria-label="Table tennis game">
+    <div>
+      <header class="row">
+        <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#3aa0ff);display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 6px 18px rgba(34,193,195,0.12)">TT</div>
+        <div>
+          <h1>Table Tennis — Paddle & Ball</h1>
+          <div class="muted">Move your paddle left & right to return the ball. Beat the opponent!</div>
+        </div>
+      </header>
+      <div class="canvas-card panel" style="margin-top:12px">
+        <div class="stage">
+          <canvas id="gameCanvas" width="900" height="520" aria-label="Table tennis canvas" role="img"></canvas>
+        </div>
+        <div class="row" style="margin-top:10px;justify-content:space-between;width:100%">
+          <div class="score">
+            <div class="muted">You</div>
+            <div id="playerScore" class="big" aria-live="polite">0</div>
+          </div>
+          <div class="muted">|</div>
+          <div class="score">
+            <div class="big" id="aiScore" aria-live="polite">0</div>
+            <div class="muted">Opponent</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer">Tip: Click or touch left/right of the canvas to move quickly. Use keyboard for fine control.</div>
+    </div>
+
+    <aside class="controls panel" aria-label="Game controls">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div>
+          <div class="muted">Status</div>
+          <div id="status" style="font-weight:700">Ready</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button id="startBtn" class="glow" aria-label="Start game">Start</button>
+          <button id="pauseBtn" class="secondary" aria-label="Pause game">Pause</button>
+        </div>
+      </div>
+
+      <div style="height:8px"></div>
+
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div class="muted">Difficulty</div>
+          <div class="difficulty" role="tablist" aria-label="Difficulty selector">
+            <button data-diff="easy">Easy</button>
+            <button data-diff="normal" class="glow">Normal</button>
+            <button data-diff="hard">Hard</button>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="muted">Sound</div>
+          <button id="muteBtn" aria-pressed="false">Mute</button>
+        </div>
+      </div>
+
+      <div style="height:10px"></div>
+
+      <div>
+        <div class="muted">Controls</div>
+        <div class="instructions" tabindex="0">
+          <ul style="margin:6px 0;padding-left:18px;color:var(--muted)">
+            <li>Move paddle: Left/Right arrows or A / D</li>
+            <li>Mouse: move or click/tap left-right to reposition</li>
+            <li>Hit location and paddle movement affect angle and speed</li>
+            <li>First to 11 points wins</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="height:8px"></div>
+
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div class="muted">Game</div>
+          <div class="muted">Best of: first to 11</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button id="resetBtn" class="secondary" aria-label="Reset game">Reset</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+  // Game implementation (Canvas 2D)
+  // Organized: constants, state, init, input, update/render, UI wiring
+
+  (function(){
+    // Constants
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+    const PLAYER = {scoreEl: document.getElementById('playerScore')};
+    const AI = {scoreEl: document.getElementById('aiScore')};
+    const statusEl = document.getElementById('status');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const diffButtons = Array.from(document.querySelectorAll('[data-diff]'));
+
+    // Game sizes (logical coordinates)
+    let W = 900, H = 520;
+
+    // Table margins
+    const table = {x:40, y:40, w: W-80, h: H-80};
+
+    // Paddle prototype
+    function Paddle(opts){
+      this.x = opts.x || W/2; this.y = opts.y || H-60; this.w = opts.w || 140; this.h = opts.h || 12; this.speed = opts.speed || 8; this.vx = 0; this.color = opts.color || '#e6f0f2';
+    }
+    Paddle.prototype.moveTo = function(x){
+      this.vx = x - this.x; this.x = x;
+    }
+    Paddle.prototype.update = function(){
+      // keep inside table
+      const half = this.w/2;
+      if(this.x - half < table.x) { this.x = table.x + half; }
+      if(this.x + half > table.x + table.w) { this.x = table.x + table.w - half; }
+    }
+
+    // Ball
+    function Ball(){
+      this.reset();
+      this.radius = 8;
+      this.color = '#ffd9a8';
+    }
+    Ball.prototype.reset = function(){
+      this.x = W/2; this.y = H/2; this.speed = 5; this.spin = 0;
+      // random direction toward player or AI to kick off
+      const angle = (Math.random()*Math.PI/3) + Math.PI/6; // 30-90 deg
+      const dir = Math.random() > 0.5 ? 1 : -1; // 1 means downward toward player
+      this.vx = this.speed * Math.cos(angle) * (Math.random()>0.5?-1:1);
+      this.vy = this.speed * Math.sin(angle) * dir;
+    }
+    Ball.prototype.update = function(dt){
+      // apply spin subtly to vx
+      this.vx += this.spin * 0.02;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+    }
+
+    // State
+    const state = {
+      running:false, paused:false, lastTime:0,
+      playerScore:0, aiScore:0, maxScore:11,
+      difficulty:'normal', mute:false
+    };
+
+    let player = new Paddle({x:W/2, y: H-36, w:150});
+    let ai = new Paddle({x:W/2, y: 36, w:150});
+    let ball = new Ball();
+
+    // AI params per difficulty
+    const DIFF = {
+      easy: {react:0.06, maxSpeed:4.5, ballSpeed:4.4, predictError:60},
+      normal: {react:0.09, maxSpeed:6.5, ballSpeed:5.5, predictError:30},
+      hard: {react:0.12, maxSpeed:9, ballSpeed:6.3, predictError:8}
+    }
+
+    // Input
+    const input = {left:false,right:false,mouseX:null,touching:false};
+
+    function resizeCanvas(){
+      // adapt logical W,H to container size but keep aspect ratio
+      const rect = canvas.getBoundingClientRect();
+      DPR = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(rect.width * DPR);
+      canvas.height = Math.floor(rect.height * DPR);
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+      // Update logical W,H from canvas CSS size
+      W = Math.floor(rect.width);
+      H = Math.floor(rect.height);
+      // update table
+      table.x = 40; table.y = 40; table.w = Math.max(240, W - 80); table.h = Math.max(200, H - 80);
+      // reposition paddles and ball proportionally if needed
+      player.y = table.y + table.h - 20;
+      ai.y = table.y + 20;
+      player.w = Math.min(220, Math.max(80, Math.floor(table.w * 0.18)));
+      ai.w = player.w;
+      ball.radius = Math.max(6, Math.min(10, Math.floor(player.w * 0.05)));
+    }
+
+    window.addEventListener('resize', () => { resizeCanvas(); draw(); });
+    resizeCanvas();
+
+    // Input handlers
+    window.addEventListener('keydown', (e)=>{
+      if(e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A'){ input.left = true; e.preventDefault(); }
+      if(e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D'){ input.right = true; e.preventDefault(); }
+      if(e.key === ' '){ togglePause(); e.preventDefault(); }
+    });
+    window.addEventListener('keyup', (e)=>{
+      if(e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A'){ input.left = false; }
+      if(e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D'){ input.right = false; }
+    });
+
+    // Mouse & touch
+    canvas.addEventListener('mousemove', (e)=>{
+      const r = canvas.getBoundingClientRect();
+      const x = (e.clientX - r.left);
+      input.mouseX = x;
+    });
+    canvas.addEventListener('mouseleave', ()=>{ input.mouseX = null; });
+    canvas.addEventListener('mousedown', (e)=>{
+      // quick move paddle toward click
+      const r = canvas.getBoundingClientRect();
+      const x = (e.clientX - r.left);
+      player.x += (x - player.x) * 0.8; // snap toward clicked position
+    });
+
+    canvas.addEventListener('touchstart', (e)=>{
+      input.touching = true;
+      const r = canvas.getBoundingClientRect();
+      const x = (e.touches[0].clientX - r.left);
+      input.mouseX = x;
+    }, {passive:true});
+    canvas.addEventListener('touchmove', (e)=>{
+      const r = canvas.getBoundingClientRect();
+      const x = (e.touches[0].clientX - r.left);
+      input.mouseX = x;
+    }, {passive:true});
+    canvas.addEventListener('touchend', ()=>{ input.touching=false; input.mouseX=null; });
+
+    // Collision helpers
+    function rectCircleCollision(px, py, pw, ph, cx, cy, r){
+      // nearest point
+      const nx = Math.max(px - pw/2, Math.min(cx, px + pw/2));
+      const ny = Math.max(py - ph/2, Math.min(cy, py + ph/2));
+      const dx = cx - nx, dy = cy - ny;
+      return (dx*dx + dy*dy) <= r*r;
+    }
+
+    // Sound (WebAudio simple)
+    let audioCtx = null;
+    function ensureAudio(){ if(!audioCtx){ try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ audioCtx = null; } } }
+    function playBeep(freq=520, time=0.05, type='sine', gain=0.06){ if(state.mute) return; ensureAudio(); if(!audioCtx) return; const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = type; o.frequency.value = freq; g.gain.value = gain; o.connect(g); g.connect(audioCtx.destination); o.start(); const now = audioCtx.currentTime; g.gain.setValueAtTime(g.gain.value, now); g.gain.exponentialRampToValueAtTime(0.0001, now + time); o.stop(now + time + 0.02); }
+
+    // UI wiring
+    startBtn.addEventListener('click', ()=>{ startGame(); });
+    pauseBtn.addEventListener('click', ()=>{ togglePause(true); });
+    resetBtn.addEventListener('click', ()=>{ resetMatch(); });
+    muteBtn.addEventListener('click', ()=>{ state.mute = !state.mute; muteBtn.textContent = state.mute ? 'Unmute' : 'Mute'; muteBtn.setAttribute('aria-pressed', String(state.mute)); });
+
+    diffButtons.forEach(btn => btn.addEventListener('click', ()=>{
+      diffButtons.forEach(b=>b.classList.remove('glow'));
+      btn.classList.add('glow');
+      state.difficulty = btn.getAttribute('data-diff');
+      statusEl.textContent = 'Difficulty: '+state.difficulty;
+      // adjust ball speed slightly
+      ball.speed = DIFF[state.difficulty].ballSpeed;
+    }));
+
+    // Start/pause/reset logic
+    function startGame(){ if(state.running && !state.paused) return; state.running = true; state.paused = false; state.lastTime = performance.now(); statusEl.textContent = 'Playing'; playBeep(660,0.04); loop(state.lastTime); }
+    function togglePause(forcePause){ if(!state.running) return; state.paused = typeof forcePause === 'boolean' ? forcePause : !state.paused; statusEl.textContent = state.paused ? 'Paused' : 'Playing'; if(!state.paused) { state.lastTime = performance.now(); loop(state.lastTime); } }
+    function resetMatch(){ state.running = false; state.paused = false; state.playerScore = 0; state.aiScore = 0; PLAYER.scoreEl.textContent = '0'; AI.scoreEl.textContent = '0'; ball.reset(); player.x = W/2; ai.x = W/2; statusEl.textContent = 'Ready'; draw(); }
+
+    // Scoring
+    function scorePoint(winner){ if(winner === 'player'){ state.playerScore++; PLAYER.scoreEl.textContent = String(state.playerScore); statusEl.textContent = 'You scored!'; } else { state.aiScore++; AI.scoreEl.textContent = String(state.aiScore); statusEl.textContent = 'Opponent scored'; }
+      playBeep(760,0.06);
+      ball.reset(); player.x = W/2; ai.x = W/2; 
+      // check win
+      if(state.playerScore >= state.maxScore || state.aiScore >= state.maxScore){ state.running = false; state.paused = false; const msg = state.playerScore > state.aiScore ? 'You win!' : 'You lose'; statusEl.textContent = msg; playBeep(state.playerScore > state.aiScore ? 880 : 200, 0.18); }
+    }
+
+    // Main loop
+    function loop(now){ if(!state.running || state.paused) return; const dt = Math.min(40, now - state.lastTime) / 16; // normalize to ~60fps steps
+      update(dt); render(); state.lastTime = now; requestAnimationFrame(loop);
+    }
+
+    // Update game
+    function update(dt){
+      // Player movement: combine keyboard and mouse
+      let targetX = player.x;
+      if(input.mouseX !== null){ targetX = input.mouseX; }
+      if(input.left) targetX -= player.speed * 8 * dt;
+      if(input.right) targetX += player.speed * 8 * dt;
+      // smooth move
+      const lerp = 0.25 + 0.02*dt;
+      player.x += (targetX - player.x) * lerp;
+      player.update();
+
+      // AI behavior — simple prediction
+      const diff = DIFF[state.difficulty] || DIFF.normal;
+      // predict where ball will cross AI.y by simple linear extrapolate
+      let predictX = ball.x;
+      if(ball.vy < 0){ // ball moving toward AI
+        // time to reach AI.y
+        const dy = ai.y - ball.y;
+        const t = dy / (ball.vy || -0.0001);
+        predictX = ball.x + ball.vx * t;
+      }
+      // add some error based on difficulty
+      predictX += (Math.random()*2 -1) * diff.predictError;
+      // move toward predicted location with reaction and maxSpeed
+      const dx = predictX - ai.x;
+      ai.vx = dx * diff.react * dt * 8;
+      // cap speed
+      const max = diff.maxSpeed * dt * 8;
+      if(ai.vx > max) ai.vx = max; if(ai.vx < -max) ai.vx = -max;
+      ai.x += ai.vx;
+      ai.update();
+
+      // update ball
+      ball.update(dt);
+
+      // Wall collisions (left/right)
+      if(ball.x - ball.radius < table.x){ ball.x = table.x + ball.radius; ball.vx *= -1; playBeep(420,0.03); }
+      if(ball.x + ball.radius > table.x + table.w){ ball.x = table.x + table.w - ball.radius; ball.vx *= -1; playBeep(420,0.03); }
+
+      // Paddle collisions
+      // Player paddle (bottom)
+      if(ball.vy > 0){
+        // check collision with player (paddle.x is center)
+        if(ball.y + ball.radius >= player.y - player.h/2 && ball.y - ball.radius <= player.y + player.h/2){
+          const collided = (ball.x >= player.x - player.w/2 - ball.radius && ball.x <= player.x + player.w/2 + ball.radius);
+          if(collided){
+            // reflect up
+            ball.y = player.y - player.h/2 - ball.radius;
+            ball.vy *= -1.03; // slightly speed up
+            // angle adjust based on hit offset and paddle velocity
+            const offset = (ball.x - player.x) / (player.w/2);
+            ball.vx += offset * 3 + player.vx * 0.15;
+            // spin from lateral movement
+            ball.spin = player.vx * 0.08;
+            // cap speed
+            const s = Math.hypot(ball.vx, ball.vy);
+            const maxBall = 12 + (DIFF[state.difficulty].ballSpeed || 5);
+            if(s > maxBall){ ball.vx *= maxBall/s; ball.vy *= maxBall/s; }
+            playBeep(800,0.03);
+          }
+        }
+      }
+      // AI paddle (top)
+      if(ball.vy < 0){
+        if(ball.y - ball.radius <= ai.y + ai.h/2 && ball.y + ball.radius >= ai.y - ai.h/2){
+          const collided = (ball.x >= ai.x - ai.w/2 - ball.radius && ball.x <= ai.x + ai.w/2 + ball.radius);
+          if(collided){
+            ball.y = ai.y + ai.h/2 + ball.radius;
+            ball.vy *= -1.02;
+            const offset = (ball.x - ai.x) / (ai.w/2);
+            ball.vx += offset * 2 + ai.vx * 0.1;
+            ball.spin = ai.vx * 0.06;
+            playBeep(600,0.03);
+          }
+        }
+      }
+
+      // Score when ball passes beyond top or bottom
+      if(ball.y - ball.radius < table.y - 10){ // passed top
+        scorePoint('player');
+      } else if(ball.y + ball.radius > table.y + table.h + 10){ // passed bottom
+        scorePoint('ai');
+      }
+
+      // tiny damping on spin
+      ball.spin *= 0.995;
+    }
+
+    // Render
+    function render(){
+      // clear
+      ctx.clearRect(0,0,W,H);
+      // draw table
+      drawTable();
+      // draw net
+      drawNet();
+      // draw paddles
+      drawPaddle(ai);
+      drawPaddle(player);
+      // draw ball
+      drawBall(ball);
+    }
+
+    function drawTable(){
+      // outer margin
+      ctx.save();
+      ctx.fillStyle = '#0b2030';
+      ctx.fillRect(0,0,W,H);
+      // table area
+      const grd = ctx.createLinearGradient(0, table.y, 0, table.y + table.h);
+      grd.addColorStop(0,'#114e63'); grd.addColorStop(1,'#0f3a4b');
+      ctx.fillStyle = grd;
+      roundRect(ctx, table.x, table.y, table.w, table.h, 8); ctx.fill();
+      // inner lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1; ctx.strokeRect(table.x, table.y, table.w, table.h);
+      // center line
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.moveTo(table.x + table.w/2, table.y); ctx.lineTo(table.x + table.w/2, table.y + table.h); ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawNet(){
+      ctx.save(); ctx.globalAlpha = 0.7;
+      const x = table.x; const w = table.w; const notchH = 6; const gap = 6; const nx = x + w/2; ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      for(let y = table.y; y < table.y + table.h; y += notchH + gap){ ctx.fillRect(nx - 2, y, 4, notchH); }
+      ctx.restore();
+    }
+
+    function drawPaddle(p){
+      ctx.save();
+      // shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(p.x - p.w/2 + 6, p.y - p.h/2 + 6, p.w, p.h, p.h);
+      // main
+      const g = ctx.createLinearGradient(p.x - p.w/2, p.y - p.h/2, p.x + p.w/2, p.y + p.h/2);
+      g.addColorStop(0,'#e6f0f2'); g.addColorStop(1,'#c0dfe6');
+      ctx.fillStyle = g;
+      roundRect(ctx, p.x - p.w/2, p.y - p.h/2, p.w, p.h, 6); ctx.fill();
+      // highlight
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1; roundRect(ctx, p.x - p.w/2, p.y - p.h/2, p.w, p.h, 6); ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawBall(b){
+      ctx.save();
+      // trail (simple)
+      ctx.beginPath(); ctx.fillStyle = 'rgba(255,220,160,0.04)'; ctx.ellipse(b.x - b.vx*2.5, b.y - b.vy*2.5, b.radius*1.6, b.radius*0.9, 0, 0, Math.PI*2); ctx.fill();
+      // core
+      const g = ctx.createRadialGradient(b.x - 2, b.y - 2, b.radius*0.2, b.x, b.y, b.radius*1.8);
+      g.addColorStop(0,'#fff2d8'); g.addColorStop(0.6,'#ffd9a8'); g.addColorStop(1,'#ffb76b');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.fill();
+      // rim
+      ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
+
+    function roundRect(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+    // initial draw
+    draw();
+
+    function draw(){ render(); }
+
+    // start with some initial configuration
+    resetMatch();
+
+    // ensure accessibility: focusable controls
+    startBtn.tabIndex = 0; pauseBtn.tabIndex = 0; resetBtn.tabIndex = 0; muteBtn.tabIndex = 0;
+
+    // On first user gesture, resume audio if needed
+    document.addEventListener('click', function one(){ try{ if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }catch(e){} document.removeEventListener('click', one); }, {passive:true});
+
+  })();
+  </script>
+</body>
+</html>
