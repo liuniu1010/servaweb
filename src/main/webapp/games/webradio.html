@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WebRadio — Single‑File Web Radio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23000' d='M8 22h48a4 4 0 014 4v24a4 4 0 01-4 4H8a4 4 0 01-4-4V26a4 4 0 014-4zm5 6a3 3 0 100 6 3 3 0 000-6zm0 10a3 3 0 100 6 3 3 0 000-6zM36 30h16a2 2 0 012 2v12a2 2 0 01-2 2H36a2 2 0 01-2-2V32a2 2 0 012-2zM10 14l34-10 1.1 3.7L13 18z'/%3E%3C/svg%3E" />
+<style>
+:root {
+  --bg: #0b0f14;
+  --card: #121823;
+  --muted: #8391a5;
+  --text: #eef3fb;
+  --accent: #52d6ff;
+  --accent-2: #a0ffb5;
+  --danger: #ff6b6b;
+  --radius: 16px;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background: radial-gradient(1200px 700px at 70% -10%, #11223355, transparent), var(--bg); color: var(--text); font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
+h1,h2,h3 { margin: 0 0 .5rem; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.container { max-width: 1100px; margin: 28px auto; padding: 0 16px; }
+.header { display:flex; align-items:center; justify-content:space-between; gap: 12px; }
+.brand { display:flex; align-items:center; gap:10px; }
+.brand .logo {
+  width:36px; height:36px; border-radius:50%; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  display:grid; place-items:center; color:#001018; font-weight: 800;
+  box-shadow: 0 10px 30px rgba(82,214,255,.35);
+}
+.brand h1 { font-size: 20px; letter-spacing: .3px; }
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.35);
+  backdrop-filter: blur(6px);
+}
+.grid { display:grid; grid-template-columns: 1.3fr .7fr; gap: 16px; margin-top: 16px; }
+@media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+
+.controls { display:grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+.searchbar { display:flex; gap: 8px; flex-wrap: wrap; }
+.searchbar input[type="text"] {
+  flex: 1 1 340px;
+  padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12);
+  background: #0e1521; color: var(--text); outline: none;
+}
+.searchbar select, .searchbar input[type="number"] {
+  padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12);
+  background: #0e1521; color: var(--text); outline: none; min-width: 110px;
+}
+.btn {
+  background: linear-gradient(135deg, var(--accent), #60ffa6);
+  border: none; color: #032; font-weight: 700;
+  padding: 10px 14px; border-radius: 12px; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(82,214,255,.3);
+}
+.btn.secondary { background: #1a2434; color: var(--text); border: 1px solid rgba(255,255,255,.08); box-shadow: none; }
+.btn.danger { background: var(--danger); color: #210; box-shadow: 0 6px 18px rgba(255,107,107,.25); }
+.small { font-size: 12px; color: var(--muted); }
+.now { display:flex; gap:12px; align-items:center; flex-wrap: wrap; }
+#nowTitle { font-weight: 700; letter-spacing: .2px; }
+.badge {
+  display:inline-block; padding: 2px 8px; border-radius: 999px; background: #192132; color: var(--muted); border: 1px solid rgba(255,255,255,.08);
+  margin-left: 6px; font-size: 12px;
+}
+.row { display:flex; align-items:center; gap: 10px; flex-wrap: wrap; }
+.player { display:flex; align-items:center; gap: 12px; flex-wrap: wrap; }
+.player audio { width: 100%; height: 40px; background:#0e1521; border-radius: 12px; outline:none; }
+.vol { display:flex; align-items:center; gap: 8px; }
+.vol input[type="range"] { width: 160px; }
+
+.list { max-height: 420px; overflow:auto; margin-top: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,.08); }
+.item {
+  display:grid; grid-template-columns: 1fr auto; gap: 8px; padding: 10px 12px; background: #0e1521;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.item:nth-child(even) { background: #0f1826; }
+.item:hover { background: #122037; }
+.item .info { display:flex; gap: 8px; align-items:center; flex-wrap: wrap; }
+.item .name { font-weight:600; }
+.item .muted { color: var(--muted); font-size: 12px; }
+.item .actions { display:flex; gap: 8px; align-items:center; }
+.star { cursor:pointer; font-size: 18px; color: #ffd36a; }
+.star[aria-pressed="false"] { color: #666; }
+.pill { padding: 6px 10px; border-radius: 999px; background:#142033; border:1px solid rgba(255,255,255,.1); color:var(--muted); }
+footer { margin: 24px 0 40px; color: var(--muted); }
+hr { border: none; border-top: 1px solid rgba(255,255,255,.1); margin: 12px 0; }
+kbd { background: #111a2a; border: 1px solid rgba(255,255,255,.12); border-bottom-width:2px; padding: 0 6px; border-radius: 6px; }
+.note { background: #0e1521; border-left: 4px solid var(--accent); padding: 10px 12px; border-radius: 8px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="logo">📻</div>
+        <div>
+          <h1>WebRadio</h1>
+          <div class="small">Global Radio Search + Local Favorites | Single‑file</div>
+        </div>
+      </div>
+      <button id="panicStop" class="btn danger" title="Stop playback and clear the player">Stop & Mute</button>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <div class="controls">
+          <div class="searchbar">
+            <input id="q" type="text" placeholder="Search stations (name / tags / country / language), e.g., BBC, Jazz, News…" />
+            <select id="limit" title="Result count">
+              <option value="20">20</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+            </select>
+            <button id="searchBtn" class="btn">Search</button>
+            <button id="presetsBtn" class="btn secondary">My Favorites / Presets</button>
+          </div>
+        </div>
+
+        <div class="now" style="margin-top:10px">
+          <div id="nowTitle">Not Playing</div>
+          <div id="nowBadges"></div>
+        </div>
+
+        <div class="player" style="margin-top:8px">
+          <audio id="audio" controls preload="none" crossorigin="anonymous"></audio>
+          <div class="vol">
+            <span class="small">Volume</span>
+            <input id="vol" type="range" min="0" max="1" step="0.01" value="1" />
+            <button id="stopBtn" class="btn secondary">Pause</button>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:8px">
+          <span class="small">Tip: Android and desktop browsers generally work best. iOS has stricter rules for third‑party streams and background playback—tap <b>Play</b> manually if needed.</span>
+        </div>
+
+        <div id="list" class="list" aria-live="polite" aria-busy="false"></div>
+      </section>
+
+      <aside class="card">
+        <h2>Add a Custom Stream</h2>
+        <div class="small">If you have a direct link (MP3/AAC/HLS m3u8), paste and test it here.</div>
+        <div class="row" style="margin-top:8px">
+          <input id="customName" type="text" placeholder="Station name" style="flex:1; padding:10px 12px; border-radius: 12px; border:1px solid rgba(255,255,255,.12); background:#0e1521; color:var(--text)" />
+        </div>
+        <div class="row" style="margin-top:8px">
+          <input id="customUrl" type="text" placeholder="Stream URL (e.g., https://example.com/stream.m3u8 or .mp3 / .aac)" style="flex:1; padding:10px 12px; border-radius: 12px; border:1px solid rgba(255,255,255,.12); background:#0e1521; color:var(--text)" />
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button id="playCustom" class="btn">Play Test</button>
+          <button id="saveCustom" class="btn secondary">Save to Favorites</button>
+        </div>
+
+        <hr />
+
+        <h2>About & Limitations</h2>
+        <div class="note small">
+          1) Some stations (notably BBC and certain commercial stations) may impose region, Referer, or CORS restrictions.<br/>
+          2) Host your site over <b>HTTPS</b> and prefer HTTPS streams to avoid mixed‑content blocking.<br/>
+          3) If CORS/HLS is blocked, consider MP3/AAC direct streams, or proxy via your server with proper CORS headers.<br/>
+          4) Search uses the <code>Radio Browser</code> directory — a community‑maintained global database.<br/>
+        </div>
+        <div class="note small" style="margin-top:12px">
+          <b>Legal Disclaimer:</b> This player does not host or redistribute any audio. All streams are requested
+          directly from the broadcasters’ official servers by the user’s browser and remain subject to each
+          broadcaster’s licensing and geo‑restriction policies. If you are a rights holder and wish a stream
+          to be removed from the presets, please contact the site owner.
+        </div>
+
+
+        <div style="margin-top:12px" class="small">
+          Shortcuts: <kbd>Space</kbd> Play/Pause, <kbd>↑/↓</kbd> Volume, <kbd>S</kbd> Stop.
+        </div>
+      </aside>
+    </div>
+
+    <footer class="container">
+      <div class="small">© 2025 WebRadio Demo | Streams belong to their respective stations | For learning and personal listening only</div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15"></script>
+  <script>
+  const APP = {
+    version: "1.1.0",
+    apiServers: [],
+    favoritesKey: "webradio-favorites-v1",
+    favorites: [],
+    currentHls: null,
+  };
+
+  const PRESETS = [
+    { name: "WNYC 93.9 FM (NYC Public Radio)", country: "US", url: "https://fm939.wnyc.org/wnycfm", codec: "mp3", homepage: "https://www.wnyc.org/" },
+    { name: "KEXP 160k AAC (Seattle)", country: "US", url: "https://kexp.streamguys1.com/kexp160.aac", codec: "aac", homepage: "https://www.kexp.org/" },
+    { name: "Jazz24 (Seattle)", country: "US", url: "https://live.amperwave.net/direct/ppm-jazz24aac256-ibc1", codec: "aac", homepage: "https://www.jazz24.org/" },
+    { name: "SomaFM Deep Space One", country: "US", url: "https://ice5.somafm.com/deepspaceone-128-mp3", codec: "mp3", homepage: "https://somafm.com/" },
+    { name: "RNZ National (New Zealand)", country: "NZ", url: "https://radionz-ice.streamguys.com/national.mp3", codec: "mp3", homepage: "https://www.rnz.co.nz/" },
+    { name: "ABC NewsRadio (HLS)", country: "AU", url: "https://mediaserviceslive.akamaized.net/hls/live/2038311/newsradio/index.m3u8", codec: "hls", homepage: "https://www.abc.net.au/newsradio/" },
+    { name: "France Inter (HLS)", country: "FR", url: "https://stream.radiofrance.fr/franceinter/franceinter_hifi.m3u8", codec: "hls", homepage: "https://www.radiofrance.fr/franceinter" },
+    { name: "Radio Swiss Jazz", country: "CH", url: "https://stream.srg-ssr.ch/m/rsj/aacp_96", codec: "aac", homepage: "https://www.radioswissjazz.ch/en" }
+  ];
+
+  const $ = (sel) => document.querySelector(sel);
+  const listEl = $("#list");
+  const audio = $("#audio");
+  const nowTitle = $("#nowTitle");
+  const nowBadges = $("#nowBadges");
+  const vol = $("#vol");
+
+  function loadFavorites() {
+    try {
+      const raw = localStorage.getItem(APP.favoritesKey);
+      APP.favorites = raw ? JSON.parse(raw) : PRESETS;
+    } catch(e) {
+      console.warn("Failed to load favorites:", e);
+      APP.favorites = PRESETS;
+    }
+  }
+  function saveFavorites() {
+    try {
+      localStorage.setItem(APP.favoritesKey, JSON.stringify(APP.favorites));
+    } catch(e) { console.warn("Failed to save favorites:", e); }
+  }
+
+  async function pickApiBase() {
+    const fallback = "https://de1.api.radio-browser.info";
+    try {
+      if (APP.apiServers.length) return APP.apiServers[0];
+      const res = await fetch("https://all.api.radio-browser.info/json/servers", { cache: "no-store" });
+      if (!res.ok) throw new Error("servers fetch failed");
+      const servers = await res.json();
+      const httpsServers = servers.map(s => `https://${s.name}`).filter(u => u.startsWith("https://"));
+      APP.apiServers = httpsServers.length ? httpsServers : [fallback];
+      APP.apiServers.sort(() => Math.random() - 0.5);
+      return APP.apiServers[0];
+    } catch (e) {
+      console.warn("Pick API base failed, use fallback:", e);
+      APP.apiServers = [fallback];
+      return fallback;
+    }
+  }
+
+  let aborter = null;
+  async function searchStations(q, limit = 50) {
+    const base = await pickApiBase();
+    if (aborter) aborter.abort();
+    aborter = new AbortController();
+    const url = new URL(base + "/json/stations/search");
+    if (q) url.searchParams.set("name", q);
+    url.searchParams.set("hidebroken", "true");
+    url.searchParams.set("order", "clickcount");
+    url.searchParams.set("reverse", "true");
+    url.searchParams.set("limit", String(limit));
+
+    listEl.innerHTML = "";
+    listEl.setAttribute("aria-busy", "true");
+    try {
+      const res = await fetch(url.toString(), { signal: aborter.signal });
+      if (!res.ok) throw new Error("search failed");
+      const data = await res.json();
+      renderList(data.map(rowToStation));
+    } catch(e) {
+      renderError("Search failed. The directory might be unavailable or your network blocked it. Try again or use 'My Favorites / Presets'.\nError: " + e.message);
+    } finally {
+      listEl.setAttribute("aria-busy", "false");
+    }
+  }
+
+  function rowToStation(r) {
+    return {
+      name: r.name || "Unknown Station",
+      country: r.countrycode || r.country || "",
+      codec: r.codec || "",
+      bitrate: r.bitrate || 0,
+      tags: r.tags || "",
+      homepage: r.homepage || "",
+      url: r.url_resolved || r.url || "",
+      favicon: r.favicon || "",
+      language: r.language || ""
+    };
+  }
+
+  function renderError(msg) {
+    listEl.innerHTML = `<div class="item"><div class="info"><div class="name" style="color:var(--danger)">⚠️ ${escapeHtml(msg)}</div></div></div>`;
+  }
+
+  function renderList(stations) {
+    if (!Array.isArray(stations) || stations.length === 0) {
+      listEl.innerHTML = `<div class="item"><div class="info"><div class="name">No results</div><div class="muted">Try shorter keywords such as 'Jazz' or 'BBC'.</div></div></div>`;
+      return;
+    }
+    const frag = document.createDocumentFragment();
+    stations.forEach((s) => {
+      const item = document.createElement("div");
+      item.className = "item";
+      const meta = [
+        s.country ? `🌍 ${s.country}` : "",
+        s.codec ? `🎧 ${s.codec}` : "",
+        s.bitrate ? `🔊 ${s.bitrate} kbps` : "",
+        s.language ? `🗣 ${s.language}` : "",
+      ].filter(Boolean).join(" · ");
+      item.innerHTML = `
+        <div class="info">
+          ${s.favicon ? `<img src="${s.favicon}" alt="" width="18" height="18" style="border-radius:4px">` : ""}
+          <div class="name">${escapeHtml(s.name)}</div>
+          ${meta ? `<div class="muted">(${escapeHtml(meta)})</div>` : ""}
+        </div>
+        <div class="actions">
+          <button class="btn" data-play="${escapeAttr(s.url)}" data-name="${escapeAttr(s.name)}">Play</button>
+          <button class="btn secondary" data-save="${escapeAttr(s.url)}" data-name="${escapeAttr(s.name)}" data-country="${escapeAttr(s.country||"")}" data-codec="${escapeAttr(s.codec||"")}" data-homepage="${escapeAttr(s.homepage||"")}">Favorite</button>
+          ${s.homepage ? `<a class="pill" href="${escapeAttr(s.homepage)}" target="_blank" rel="noopener">Homepage</a>` : ""}
+        </div>
+      `;
+      frag.appendChild(item);
+    });
+    listEl.innerHTML = "";
+    listEl.appendChild(frag);
+  }
+
+  function renderPresets() {
+    const items = APP.favorites;
+    const stations = items.map(it => ({
+      name: it.name, country: it.country || "", codec: it.codec || "", bitrate: it.bitrate || 0, tags: "", homepage: it.homepage || "", url: it.url, favicon: ""
+    }));
+    renderList(stations);
+  }
+
+  function isHls(url) { return /\.m3u8($|\?)/i.test(url) || (url.includes("hls/") && url.endsWith("index.m3u8")); }
+  function playStream(url, name = "Unknown Station") {
+    stopStream(true);
+    const useHls = isHls(url) && !(audio.canPlayType("application/vnd.apple.mpegurl"));
+    if (useHls && window.Hls && window.Hls.isSupported()) {
+      const hls = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 30 });
+      hls.loadSource(url);
+      hls.attachMedia(audio);
+      APP.currentHls = hls;
+    } else {
+      audio.src = url;
+    }
+    audio.play().catch(err => {
+      console.warn("Autoplay blocked or error:", err);
+    });
+    nowTitle.textContent = name;
+    nowBadges.innerHTML = `<span class="badge">Source: ${escapeHtml(url)}</span>`;
+  }
+
+  function stopStream(silence = false) {
+    if (APP.currentHls) { try { APP.currentHls.destroy(); } catch(e) {} APP.currentHls = null; }
+    if (silence) { audio.pause(); audio.removeAttribute("src"); audio.load(); }
+  }
+
+  $("#searchBtn").addEventListener("click", () => {
+    const q = $("#q").value.trim();
+    const limit = Number($("#limit").value) || 50;
+    searchStations(q, limit);
+  });
+  $("#presetsBtn").addEventListener("click", renderPresets);
+  $("#playCustom").addEventListener("click", () => {
+    const name = $("#customName").value.trim() || "Custom Station";
+    const url = $("#customUrl").value.trim();
+    if (!/^https?:\/\//i.test(url)) return alert("Please enter a stream URL starting with http/https.");
+    playStream(url, name);
+  });
+  $("#saveCustom").addEventListener("click", () => {
+    const name = $("#customName").value.trim();
+    const url = $("#customUrl").value.trim();
+    if (!name || !url) return alert("Please fill in both name and URL.");
+    APP.favorites.unshift({ name, url, country: "", codec: "", homepage: "" });
+    saveFavorites();
+    alert('Saved to Favorites: "' + name + '"');
+  });
+  $("#stopBtn").addEventListener("click", () => stopStream(true));
+  $("#panicStop").addEventListener("click", () => stopStream(true));
+
+  listEl.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    if (btn.dataset.play) playStream(btn.dataset.play, btn.dataset.name || "Unknown Station");
+    if (btn.dataset.save) {
+      APP.favorites.unshift({
+        name: btn.dataset.name || "Favorite Station",
+        url: btn.dataset.save,
+        country: btn.dataset.country || "",
+        codec: btn.dataset.codec || "",
+        homepage: btn.dataset.homepage || ""
+      });
+      saveFavorites();
+      btn.textContent = "Saved ✓";
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+    if (e.code === "Space") { e.preventDefault(); if (audio.paused) audio.play(); else audio.pause(); }
+    if (e.code === "ArrowUp") { e.preventDefault(); audio.volume = Math.min(1, audio.volume + 0.05); vol.value = audio.volume.toFixed(2); }
+    if (e.code === "ArrowDown") { e.preventDefault(); audio.volume = Math.max(0, audio.volume - 0.05); vol.value = audio.volume.toFixed(2); }
+    if (e.key.toLowerCase() === "s") { e.preventDefault(); stopStream(true); }
+  });
+
+  vol.addEventListener("input", () => { audio.volume = Number(vol.value); });
+
+  loadFavorites();
+  renderPresets();
+
+  function escapeHtml(s) { return (s||"").replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function escapeAttr(s) { return escapeHtml(s).replace(/"/g, "&quot;"); }
+  </script>
+</body>
+</html>
