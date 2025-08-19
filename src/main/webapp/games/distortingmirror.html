@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Distorting Mirror</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%; overflow: hidden;
+    background: #111;
+    display: flex; justify-content: center; align-items: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #eee;
+    user-select: none;
+  }
+  #container {
+    position: relative;
+    width: 90vw;
+    max-width: 720px;
+    aspect-ratio: 4 / 3;
+    background: #222;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 0 30px #0ff, inset 0 0 50px #0ff66;
+  }
+  video, canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 16px;
+  }
+  #videoElement {
+    display: none;
+  }
+  #message {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    background: rgba(0,0,0,0.4);
+    padding: 8px;
+    font-size: 1rem;
+  }
+  #controls {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    background: rgba(0,0,0,0.4);
+    padding: 10px 16px;
+    border-radius: 20px;
+    align-items: center;
+  }
+  label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+    color: #0ff;
+  }
+  input[type="range"] {
+    width: 120px;
+  }
+  small {
+    color: #0aa;
+    margin-top: 2px;
+  }
+  button {
+    background: #0ff;
+    border: none;
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #024;
+    font-size: 1rem;
+    box-shadow: 0 0 6px #0ff;
+    transition: background 0.3s ease;
+  }
+  button:hover {
+    background: #0cc;
+  }
+</style>
+</head>
+<body>
+<div id="container">
+  <video id="videoElement" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+  <div id="controls">
+    <label>Distortion Size<br><input id="distortionSize" type="range" min="0" max="200" value="100" /></label>
+    <label>Distortion Strength<br><input id="distortionStrength" type="range" min="0" max="100" value="40" /></label>
+    <label><input id="distortionMode" type="checkbox" /> Mirror Mode</label>
+    <button id="toggleEffect">Stop Distortion</button>
+  </div>
+  <div id="message">Allow camera access to see the distorting mirror effect.</div>
+</div>
+<script>
+(() => {
+  const video = document.getElementById('videoElement');
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const distortionSizeInput = document.getElementById('distortionSize');
+  const distortionStrengthInput = document.getElementById('distortionStrength');
+  const distortionModeCheckbox = document.getElementById('distortionMode');
+  const message = document.getElementById('message');
+  const toggleBtn = document.getElementById('toggleEffect');
+
+  let width, height;
+  let animationId = null;
+  let effectActive = true;
+  let lastFrameImageData = null;
+
+  // Setup video stream
+  async function startCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      video.srcObject = stream;
+      video.onloadedmetadata = () => {
+        width = video.videoWidth;
+        height = video.videoHeight;
+        canvas.width = width;
+        canvas.height = height;
+        message.style.display = 'none';
+        drawLoop();
+      };
+    } catch (e) {
+      message.textContent = 'Camera access denied or not available. Please allow camera to use the distorting mirror.';
+    }
+  }
+
+  // Distortion effect: radial wave distortions around center
+  function distortImage() {
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const data = imgData.data;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const distortionSize = +distortionSizeInput.value;
+    const distortionStrength = +distortionStrengthInput.value / 100;
+    const mirrorMode = distortionModeCheckbox.checked;
+
+    // Temporary canvas to hold original pixels
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.putImageData(imgData, 0, 0);
+    const tempData = tempCtx.getImageData(0, 0, width, height);
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const dx = x - centerX;
+        const dy = y - centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < distortionSize) {
+          // Calculate distortion offset based on distance and a wave function
+          const wave = Math.sin((dist / distortionSize) * Math.PI * 6 - Date.now() / 300) * distortionStrength * 15;
+          const angle = Math.atan2(dy, dx);
+          if (mirrorMode) {
+            // Mirror x coordinate along vertical center line with distortion wave
+            let mx = width - x + wave * 0.7;
+            let my = y + wave * 0.3;
+            if (mx < 0) mx = 0;
+            if (mx >= width) mx = width - 1;
+            if (my < 0) my = 0;
+            if (my >= height) my = height - 1;
+            const srcPos = (Math.floor(my) * width + Math.floor(mx)) * 4;
+            const dstPos = (y * width + x) * 4;
+            data[dstPos] = tempData.data[srcPos];
+            data[dstPos+1] = tempData.data[srcPos+1];
+            data[dstPos+2] = tempData.data[srcPos+2];
+            data[dstPos+3] = 255;
+          } else {
+            let newDist = dist + wave;
+            let newX = Math.floor(centerX + newDist * Math.cos(angle));
+            let newY = Math.floor(centerY + newDist * Math.sin(angle));
+            if (newX < 0) newX = 0;
+            if (newX >= width) newX = width - 1;
+            if (newY < 0) newY = 0;
+            if (newY >= height) newY = height - 1;
+            const srcPos = (newY * width + newX) * 4;
+            const dstPos = (y * width + x) * 4;
+            data[dstPos] = tempData.data[srcPos];
+            data[dstPos+1] = tempData.data[srcPos+1];
+            data[dstPos+2] = tempData.data[srcPos+2];
+            data[dstPos+3] = 255;
+          }
+        }
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+
+    // Save last frame image data
+    lastFrameImageData = ctx.getImageData(0, 0, width, height);
+  }
+
+  function drawLoop() {
+    if (effectActive) {
+      ctx.drawImage(video, 0, 0, width, height);
+      distortImage();
+    } else if (lastFrameImageData) {
+      // When effect stopped, keep last distorted frame static
+      ctx.putImageData(lastFrameImageData, 0, 0);
+    } else {
+      // Fallback: just draw video if no last frame
+      ctx.drawImage(video, 0, 0, width, height);
+    }
+    animationId = requestAnimationFrame(drawLoop);
+  }
+
+  toggleBtn.addEventListener('click', () => {
+    effectActive = !effectActive;
+    toggleBtn.textContent = effectActive ? 'Stop Distortion' : 'Start Distortion';
+  });
+
+  startCamera();
+})();
+</script>
+</body>
+</html>
