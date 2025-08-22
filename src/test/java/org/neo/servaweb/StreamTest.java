@@ -6,54 +6,37 @@ import java.sql.SQLException;
 import okhttp3.*;
 import java.io.*;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-import org.neo.servaframe.util.*;
-import org.neo.servaframe.interfaces.*;
-import org.neo.servaframe.model.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 /**
- * Unit test 
+ * Unit test (JUnit Jupiter 5.13.4)
  */
-public class StreamTest 
-    extends TestCase {
-    /**
-     * Create the test case
-     *
-     * @param testName name of the test case
-     */
-    public StreamTest( String testName ) {
-        super( testName );
-    }
+public class StreamTest {
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @BeforeEach
+    void setUp() throws Exception {
         // Code to set up resources or initialize variables before each test method
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         // Code to clean up resources after each test method
-        super.tearDown();
     }
 
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite() {
-        return new TestSuite( StreamTest.class );
+    @Test
+    void test1() {
+        // no-op test preserved
     }
 
-    public void test1() {
-    }
-
-    public void _testStream() throws Exception {
+    @Test
+    @Disabled("Was underscored in JUnit3 style; keep disabled unless explicitly enabled")
+    void _testStream() throws Exception {
         OkHttpClient client = new OkHttpClient();
         String API_KEY = "<openAiApiKey>";
-        // Constructing the JSON payload with the prompt and enabling streaming
+        // Construct the JSON payload with the prompt and enable streaming
         String jsonPayload = "{" +
             "\"model\": \"gpt-4\"," +
             "\"messages\": [{" +
@@ -81,10 +64,10 @@ public class StreamTest
                     throw new IOException("Unexpected code " + response);
                 }
 
-                // Assuming the response body is not null
                 try (ResponseBody responseBody = response.body()) {
-                    // Handle the stream. For example, read line by line:
-                    assert responseBody != null;
+                    if (responseBody == null) {
+                        throw new IOException("Response body was null");
+                    }
                     BufferedReader reader = new BufferedReader(responseBody.charStream());
                     String line;
                     while ((line = reader.readLine()) != null) {

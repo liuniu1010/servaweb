@@ -25,7 +25,7 @@ import org.neo.servaaiagent.impl.AccessAgentImpl;
 import org.neo.servaaiagent.model.AgentModel;
 
 abstract public class AbsAIChat {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AbsAIChat.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(AbsAIChat.class);
     abstract protected ChatForUIIFC getChatForUIInstance();
     abstract protected String getHook();
 

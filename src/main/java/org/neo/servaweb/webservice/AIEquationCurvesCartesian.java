@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 
 @Path("/aiequationcurvescartesian")
 public class AIEquationCurvesCartesian extends AIUtilityBot {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AIEquationCurvesCartesian.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(AIEquationCurvesCartesian.class);
     final static String HOOK = "aiequationcurvescartesian";
 
     @Override

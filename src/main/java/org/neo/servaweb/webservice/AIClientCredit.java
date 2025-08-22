@@ -24,7 +24,7 @@ import org.neo.servaaiagent.impl.AccessAgentImpl;
 
 @Path("/aiclientcredit")
 public class AIClientCredit {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AIClientCredit.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(AIClientCredit.class);
 
     @POST
     @Path("/getcreditcount")

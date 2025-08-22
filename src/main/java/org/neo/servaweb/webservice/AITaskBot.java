@@ -40,7 +40,7 @@ import org.neo.servaweb.util.StreamCache;
 
 @Path("/aitaskbot")
 public class AITaskBot extends AbsAIChat {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AITaskBot.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(AITaskBot.class);
     final static String START_MARK = "-----start-----";
     final static String END_MARK = "-----end-----";
     final static String HOOK = "aitaskbot";

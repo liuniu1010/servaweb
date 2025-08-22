@@ -25,7 +25,7 @@ import org.neo.servaaiagent.impl.SpeechToTextInMemoryForUIImpl;
 
 @Path("/aispeechtotext")
 public class AISpeechToText extends AbsAIChat {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AISpeechToText.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(AISpeechToText.class);
     final static String HOOK = "aispeechtotext";
     private String audiosFolder = "audios";
 

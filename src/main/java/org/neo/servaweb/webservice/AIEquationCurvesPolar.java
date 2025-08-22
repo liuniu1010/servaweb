@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 
 @Path("/aiequationcurvespolar")
 public class AIEquationCurvesPolar extends AIUtilityBot {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AIEquationCurvesPolar.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(AIEquationCurvesPolar.class);
     final static String HOOK = "aiequationcurvespolar";
 
     @Override

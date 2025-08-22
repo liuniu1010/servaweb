@@ -23,7 +23,7 @@ import org.neo.servaaiagent.impl.AccessAgentImpl;
 
 @Path("/aiadminlogin")
 public class AIAdminLogin {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AIAdminLogin.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(AIAdminLogin.class);
 
     @POST
     @Path("/sendpassword")

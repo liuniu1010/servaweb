@@ -45,7 +45,7 @@ import org.neo.servaweb.util.StreamCache;
 
 @Path("/aicoderbot")
 public class AICoderBot extends AbsAIChat {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AICoderBot.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(AICoderBot.class);
     final static String START_MARK = "-----start-----";
     final static String END_MARK = "-----end-----";
     final static String HOOK = "aicoderbot";

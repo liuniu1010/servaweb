@@ -46,7 +46,7 @@ import org.neo.servaweb.util.StreamCache;
 
 @Path("/aiutilitybot")
 public class AIUtilityBot extends AbsAIChat {
-    final static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(AIUtilityBot.class);
+    final static org.apache.logging.log4j.Logger logger = org.apache.logging.log4j.LogManager.getLogger(AIUtilityBot.class);
     final static String HOOK = "aiutilitybot";
     private String audiosFolder = "audios";
 
