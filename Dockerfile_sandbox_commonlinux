@@ -9,9 +9,9 @@ RUN apt-get update && \
     apt-get install -y python3 python3-pip python3-venv && \
     ln -s /usr/bin/python3 /usr/bin/python && \
     apt-get install -y wget unzip && \
-    wget https://services.gradle.org/distributions/gradle-7.5-bin.zip -P /tmp && \
-    unzip -d /opt/gradle /tmp/gradle-7.5-bin.zip && \
-    ln -s /opt/gradle/gradle-7.5/bin/gradle /usr/bin/gradle && \
+    wget https://services.gradle.org/distributions/gradle-8.6-bin.zip -P /tmp && \
+    unzip -d /opt/gradle /tmp/gradle-8.6-bin.zip && \
+    ln -sf /opt/gradle/gradle-8.6/bin/gradle /usr/bin/gradle && \
     apt-get install -y curl && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
