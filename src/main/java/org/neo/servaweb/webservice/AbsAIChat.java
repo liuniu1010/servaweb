@@ -1,8 +1,8 @@
 package org.neo.servaweb.webservice;
 
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletContext;
+import jakarta.ws.rs.core.Context;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.List;
 import java.util.ArrayList;

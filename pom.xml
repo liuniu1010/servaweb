@@ -16,9 +16,11 @@
         <log4j2.version>2.25.1</log4j2.version>
         <junit.jupiter.version>5.13.4</junit.jupiter.version>
         <mysqlconnector.version>9.4.0</mysqlconnector.version>
-        <servlet.version>4.0.1</servlet.version>
-        <jersey.version>2.34</jersey.version>
-        <rs-api.version>2.1.1</rs-api.version>
+
+        <servlet.version>6.0.0</servlet.version>
+        <jersey.version>3.1.7</jersey.version>
+        <rs-api.version>3.1.0</rs-api.version>
+
         <gson.version>2.13.1</gson.version>
         <servaframe.version>0.1-SNAPSHOT</servaframe.version>
         <servaaibase.version>0.1-SNAPSHOT</servaaibase.version>
@@ -41,17 +43,20 @@
             <artifactId>mysql-connector-j</artifactId>
             <version>${mysqlconnector.version}</version>
         </dependency>
+
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
             <version>${servlet.version}</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
             <version>${rs-api.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-server</artifactId>
@@ -77,6 +82,7 @@
             <artifactId>jersey-media-sse</artifactId>
             <version>${jersey.version}</version>
         </dependency>
+
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
@@ -121,3 +127,4 @@
         </plugins>
     </build>
 </project>
+
