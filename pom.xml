@@ -15,7 +15,7 @@
         <maven.surefire.plugin.version>3.5.3</maven.surefire.plugin.version>
         <log4j2.version>2.25.1</log4j2.version>
         <junit.jupiter.version>5.13.4</junit.jupiter.version>
-        <mysqlconnector.version>9.4.0</mysqlconnector.version>
+        <mysql.connectorj.version>9.4.0</mysql.connectorj.version>
 
         <servlet.version>6.0.0</servlet.version>
         <jersey.version>3.1.7</jersey.version>
@@ -41,7 +41,7 @@
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
-            <version>${mysqlconnector.version}</version>
+            <version>${mysql.connectorj.version}</version>
         </dependency>
 
         <dependency>
