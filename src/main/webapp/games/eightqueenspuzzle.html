@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>8 Queens Puzzle Solutions - Interactive Viewer</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+  h1 {
+    margin-top: 1rem;
+    font-weight: 700;
+    text-shadow: 1px 1px 4px #000000aa;
+  }
+  #board {
+    margin-top: 1rem;
+    border: 4px solid #444;
+    box-shadow: 0 0 20px #fff6;
+    display: grid;
+    grid-template-columns: repeat(8, 40px);
+    grid-template-rows: repeat(8, 40px);
+    border-radius: 8px;
+    background-color: #222;
+  }
+  .cell {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+    font-weight: bold;
+    user-select: none;
+    transition: background-color 0.3s;
+  }
+  .black {
+    background-color: #61892f;
+  }
+  .white {
+    background-color: #aebd38;
+  }
+  #controls {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+  }
+  button {
+    background: #556ea2;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    color: #ececec;
+    box-shadow: 0 3px 8px #0007;
+    transition: background-color 0.3s;
+  }
+  button:hover {
+    background: #435c85;
+  }
+  #status {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px #0008;
+  }
+  footer {
+    margin-top: auto;
+    padding: 1rem;
+    font-size: 0.9rem;
+    color: #ccc;
+  }
+</style>
+</head>
+<body>
+<h1>8 Queens Puzzle - All Solutions Viewer</h1>
+<div id="board"></div>
+<div id="controls">
+   <button id="prev">Previous</button>
+   <button id="next">Next</button>
+</div>
+<div id="status"></div>
+<footer>Created by GameBot &bull; 92 Solutions Total</footer>
+
+<script>
+// Solve 8 Queens puzzle and store all solutions
+// Representation: Array of 8 integers where index is row, value is column of queen
+
+function solveEightQueens() {
+  const solutions = [];
+
+  function isSafe(queens, row, col) {
+    for(let r = 0; r < row; r++) {
+      const c = queens[r];
+      if(c === col || Math.abs(c - col) === Math.abs(r - row)) return false;
+    }
+    return true;
+  }
+
+  function placeQueens(queens = [], row = 0) {
+    if(row === 8) {
+      solutions.push([...queens]);
+      return;
+    }
+    for(let col = 0; col < 8; col++) {
+      if(isSafe(queens, row, col)) {
+        queens[row] = col;
+        placeQueens(queens, row + 1);
+      }
+    }
+  }
+
+  placeQueens();
+  return solutions;
+}
+
+const solutions = solveEightQueens();
+
+// DOM Elements
+const boardEl = document.getElementById('board');
+const statusEl = document.getElementById('status');
+const prevBtn = document.getElementById('prev');
+const nextBtn = document.getElementById('next');
+
+// Create the board cells
+for(let i=0; i<64; i++) {
+  const cell = document.createElement('div');
+  cell.classList.add('cell');
+  // Checkerboard pattern
+  const row = Math.floor(i / 8);
+  const col = i % 8;
+  if((row + col) % 2 === 0) cell.classList.add('white');
+  else cell.classList.add('black');
+  boardEl.appendChild(cell);
+}
+
+function renderSolution(solution) {
+  const cells = boardEl.children;
+  for(let i=0; i<64; i++) {
+    cells[i].textContent = '';
+  }
+  // Place queens
+  for(let row = 0; row < 8; row++) {
+    const col = solution[row];
+    const cellIndex = row * 8 + col;
+    cells[cellIndex].textContent = '♛';
+    cells[cellIndex].style.color = (row + col) % 2 === 0 ? '#2B2A2A' : '#f0f0f0';
+  }
+}
+
+let currentSolutionIndex = 0;
+function showSolution(index) {
+  if(index < 0) index = solutions.length - 1;
+  else if(index >= solutions.length) index = 0;
+  currentSolutionIndex = index;
+  renderSolution(solutions[index]);
+  statusEl.textContent = `Solution ${index + 1} of ${solutions.length}`;
+}
+
+prevBtn.onclick = () => {
+  showSolution(currentSolutionIndex - 1);
+}
+nextBtn.onclick = () => {
+  showSolution(currentSolutionIndex + 1);
+}
+
+showSolution(0);
+</script>
+</body>
+</html>
