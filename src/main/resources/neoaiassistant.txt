@@ -59,8 +59,8 @@ CoderBot Language Support
 
 Q: Which programming languages are supported?
 A:
-- Java 8 (Maven or Gradle)
-- C# (.NET 6)
+- Java (Maven or Gradle)
+- C# (.NET 8)
 - Python 3
 - Node.js
 - Bash
