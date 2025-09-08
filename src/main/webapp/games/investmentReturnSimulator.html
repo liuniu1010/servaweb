@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Investment Return Simulator</title>
+<style>
+  /* NOTE: UI, layout, and colors are intentionally unchanged per request. */
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #dbe9ff; /* Brighter and softer light blue background */
+    margin: 0;
+    padding: 20px;
+    color: #3a3a4e; /* Adjusted to fit brighter background */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  h1 {
+    color: #004e8a; /* Darker blue for heading for contrast */
+    margin-bottom: 5px;
+    text-shadow: 0 0 3px #8ec9ff;
+  }
+  #container {
+    max-width: 900px;
+    width: 100%;
+    background: #f0f6ff; /* Much softer container background, off white with blue tint */
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(130,160,230,0.7); /* Softer shadow with blue tint */
+    padding: 20px;
+    color: #334466;
+    position: relative;
+  }
+  #controls {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 18px;
+  }
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 180px;
+  }
+  label {
+    font-size: 14px;
+    margin-bottom: 6px;
+    color: #5884d8;
+  }
+  input[type=number] {
+    padding: 8px 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+    background: #d9e6ff;
+    color: #304770;
+    transition: box-shadow 0.3s;
+  }
+  input[type=number]:focus {
+    box-shadow: 0 0 10px #6ba5ff;
+  }
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 6px;
+    background: #aac5ff;
+    outline: none;
+    margin-top: 4px;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #4a79eb;
+    cursor: pointer;
+    box-shadow: 0 0 6px #4a79eb;
+    border: 2px solid #3460bb;
+    transition: background-color 0.3s;
+  }
+  input[type=range]:hover::-webkit-slider-thumb {
+    background: #6587eb;
+  }
+  button {
+    padding: 12px 26px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 10px;
+    border: none;
+    background: #567de8;
+    color: #f0f6ff;
+    cursor: pointer;
+    box-shadow: 0 5px 15px #2e51bf;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    align-self: flex-start;
+  }
+  button:hover {
+    background: #7896f6;
+    box-shadow: 0 8px 18px #3b67d7;
+  }
+  canvas {
+    display: block;
+    margin-top: 10px;
+    background: #e6f0ff; /* Light and soft background for canvas */
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(80, 100, 170, 0.7);
+    position: relative;
+  }
+  #info {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #556699;
+  }
+  #tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: rgba(53, 102, 204, 0.9);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    white-space: nowrap;
+    user-select: none;
+    transform: translate(-50%, -110%);
+    display: none;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+  <h1>Investment Return Simulator</h1>
+  <div id="container">
+    <div id="controls">
+      <div class="control-group">
+        <label for="meanReturnInput">Mean Annual Return (Er) %:</label>
+        <input type="number" id="meanReturnInput" step="0.1" value="7.0" min="-50" max="50" />
+        <input type="range" id="meanReturnRange" step="0.1" min="-50" max="50" value="7.0" />
+      </div>
+      <div class="control-group">
+        <!-- CHANGED: label now takes σ (%) instead of variance %² -->
+        <label for="varianceInput">Volatility (σ) %:</label>
+        <input type="number" id="varianceInput" step="0.1" value="10.0" min="0" max="100" />
+        <input type="range" id="varianceRange" step="0.1" min="0" max="100" value="10.0" />
+      </div>
+      <div class="control-group">
+        <label for="yearsInput">Simulation Years:</label>
+        <input type="number" id="yearsInput" step="1" value="30" min="5" max="30" />
+        <input type="range" id="yearsRange" step="1" min="5" max="30" value="30" />
+      </div>
+      <button id="startButton">Start Simulation</button>
+    </div>
+    <canvas id="chart" width="860" height="450" aria-label="Asset Value over Time" tabindex="0"></canvas>
+    <div id="tooltip" aria-live="polite"></div>
+    <!-- CHANGED: help text mentions Volatility -->
+    <div id="info">Adjust the Mean Return, Volatility, and Simulation Years; the simulation updates automatically. Click Start to resample with the current parameters.</div>
+  </div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+  const padding = { left: 60, right: 40, top: 30, bottom: 50 };
+
+  // Tooltip elements
+  const container = document.getElementById('container');
+  const tooltip = document.getElementById('tooltip');
+
+  // Inputs
+  const meanReturnInput = document.getElementById('meanReturnInput');
+  const meanReturnRange = document.getElementById('meanReturnRange');
+  const varianceInput = document.getElementById('varianceInput');   // keeps same id for layout
+  const varianceRange = document.getElementById('varianceRange');
+  const yearsInput = document.getElementById('yearsInput');
+  const yearsRange = document.getElementById('yearsRange');
+  const startButton = document.getElementById('startButton');
+
+  // State
+  let Er = parseFloat(meanReturnInput.value) / 100;   // mean simple return in decimal
+  // CHANGED: interpret input as σ (%) and square to get variance in decimal^2
+  let Vr = Math.pow(parseFloat(varianceInput.value) / 100, 2);
+  let years = parseInt(yearsInput.value, 10);
+
+  // Cache for drawing (avoid recomputing max in mousemove)
+  let currentCurve = [];
+  let currentMax = 1;
+
+  // =============================
+  // Random Normal (Box–Muller) with pair caching
+  // =============================
+  const Normal = (() => {
+    let spare = null;
+    return {
+      sample(mean = 0, variance = 1) {
+        if (spare !== null) {
+          const z1 = spare; spare = null;
+          return z1 * Math.sqrt(variance) + mean;
+        }
+        let u1 = 0, u2 = 0;
+        while (u1 === 0) u1 = Math.random();
+        while (u2 === 0) u2 = Math.random();
+        const mag = Math.sqrt(-2.0 * Math.log(u1));
+        const z0 = mag * Math.cos(2.0 * Math.PI * u2);
+        const z1 = mag * Math.sin(2.0 * Math.PI * u2);
+        spare = z1;
+        return z0 * Math.sqrt(variance) + mean;
+      },
+      reset() { spare = null; }
+    };
+  })();
+
+  // =============================
+  // Simulation engine (unchanged math, uses Vr = σ^2)
+  // =============================
+  // We still model annual log-returns g ~ Normal(mu_log, sigma^2), where:
+  //   sigma = sqrt(Vr), mu_log ≈ ln(1 + Er) - 0.5 * sigma^2
+  // Then compound wealth by multiplying exp(g) each year.
+
+  function generateAssetCurveGeometric(erSimple, vrSimple, years) {
+    const sigma = Math.sqrt(Math.max(0, vrSimple)); // standard deviation (decimal)
+    const variance = sigma * sigma;
+    const muLog = Math.log(1 + erSimple) - 0.5 * variance; // drift mapping from simple mean
+
+    const values = [1];
+    let maxV = 1;
+    for (let t = 1; t <= years; t++) {
+      const g = Normal.sample(muLog, variance); // one-year log-return
+      const v = values[t - 1] * Math.exp(g);
+      values.push(v);
+      if (v > maxV) maxV = v;
+    }
+    currentMax = maxV;
+    return values;
+  }
+
+  // =============================
+  // Drawing
+  // =============================
+  function drawAxes(maxAssetValue) {
+    ctx.strokeStyle = '#666699';
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#334466';
+    ctx.font = '14px Verdana, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+
+    // Clear background
+    ctx.fillStyle = '#e6f0ff';
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = '#334466';
+
+    // Y axis grid and labels
+    const yTicks = 8;
+    for (let i = 0; i <= yTicks; i++) {
+      const yValue = maxAssetValue * i / yTicks;
+      const yPos = padding.top + (height - padding.top - padding.bottom) * (1 - i / yTicks);
+      ctx.strokeStyle = '#aac5ff';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padding.left, yPos);
+      ctx.lineTo(width - padding.right, yPos);
+      ctx.stroke();
+
+      ctx.fillStyle = '#5577cc';
+      ctx.fillText(yValue.toFixed(2), padding.left - 8, yPos);
+    }
+
+    // X axis grid and labels (5-year step)
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const xTicks = years;
+    for (let i = 0; i <= xTicks; i += 5) {
+      const xPos = padding.left + (width - padding.left - padding.right) * i / xTicks;
+      ctx.strokeStyle = '#aac5ff';
+      ctx.beginPath();
+      ctx.moveTo(xPos, padding.top);
+      ctx.lineTo(xPos, height - padding.bottom);
+      ctx.stroke();
+
+      ctx.fillStyle = '#5577cc';
+      ctx.fillText(i.toString(), xPos, height - padding.bottom + 8);
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#3355bb';
+    ctx.font = '16px Verdana, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Years', padding.left + (width - padding.left - padding.right) / 2, height - 15);
+
+    ctx.save();
+    ctx.translate(18, padding.top + (height - padding.top - padding.bottom) / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Asset Value', 0, 0);
+    ctx.restore();
+  }
+
+  function drawCurve(values) {
+    const maxValue = Math.max(...values);
+    drawAxes(maxValue * 1.1);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#3566cc';
+    ctx.fillStyle = 'rgba(53, 102, 204, 0.35)';
+    ctx.beginPath();
+    for (let i = 0; i < values.length; i++) {
+      const x = padding.left + ((width - padding.left - padding.right) * i / years);
+      const y = padding.top + ((height - padding.top - padding.bottom) * (1 - values[i] / (maxValue * 1.1)));
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Fill under curve gradient
+    ctx.lineTo(padding.left + (width - padding.left - padding.right), height - padding.bottom);
+    ctx.lineTo(padding.left, height - padding.bottom);
+    ctx.closePath();
+
+    const gradient = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
+    gradient.addColorStop(0, 'rgba(53, 102, 204, 0.35)');
+    gradient.addColorStop(1, 'rgba(53, 102, 204, 0.05)');
+
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Cache for tooltip computations
+    currentMax = maxValue;
+  }
+
+  // =============================
+  // UI wiring
+  // =============================
+  function syncInputs(input1, input2) {
+    input1.addEventListener('input', () => {
+      input2.value = input1.value;
+      updateParametersAndSimulate();
+    });
+    input2.addEventListener('input', () => {
+      input1.value = input2.value;
+      updateParametersAndSimulate();
+    });
+  }
+
+  function updateParametersAndSimulate(redrawOnly = false) {
+    Er = parseFloat(meanReturnInput.value) / 100;
+    // CHANGED: interpret UI input as σ (%) and square to get variance
+    Vr = Math.pow(parseFloat(varianceInput.value) / 100, 2);
+    years = parseInt(yearsInput.value, 10);
+
+    if (isNaN(Er)) Er = 0;                 // defensive
+    if (isNaN(Vr) || Vr < 0) Vr = 0;       // variance must be non-negative
+    if (isNaN(years)) years = 30;
+
+    // Clamp years to UI limits
+    if (years < 5) { years = 5; yearsInput.value = 5; yearsRange.value = 5; }
+    if (years > 30) { years = 30; yearsInput.value = 30; yearsRange.value = 30; }
+
+    if (!redrawOnly) {
+      // Use geometric compounding via log-returns to avoid -100% truncation bias
+      currentCurve = generateAssetCurveGeometric(Er, Vr, years);
+    }
+    drawCurve(currentCurve);
+  }
+
+  // Initial setup
+  syncInputs(meanReturnInput, meanReturnRange);
+  syncInputs(varianceInput, varianceRange);
+  syncInputs(yearsInput, yearsRange);
+
+  currentCurve = generateAssetCurveGeometric(Er, Vr, years);
+  drawCurve(currentCurve);
+
+  // Resample on button
+  startButton.addEventListener('click', () => {
+    Normal.reset();
+    currentCurve = generateAssetCurveGeometric(Er, Vr, years);
+    drawCurve(currentCurve);
+  });
+
+  // =============================
+  // Tooltip (position relative to container; account for canvas offset)
+  // =============================
+  canvas.addEventListener('mousemove', (e) => {
+    const canvasRect = canvas.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    const mouseX = e.clientX - canvasRect.left; // within canvas (CSS px)
+    const mouseY = e.clientY - canvasRect.top;
+
+    const graphLeft = padding.left;
+    const graphRight = width - padding.right;
+    if (mouseX < graphLeft || mouseX > graphRight) {
+      tooltip.style.display = 'none';
+      return;
+    }
+
+    const relativeX = mouseX - graphLeft;
+    const graphWidth = graphRight - graphLeft;
+
+    // Nearest year index
+    let yearIndex = Math.round((relativeX / graphWidth) * years);
+    yearIndex = Math.max(0, Math.min(years, yearIndex));
+
+    const assetValue = currentCurve[yearIndex];
+
+    // Compute y position based on cached max (with 10% headroom)
+    const maxV = currentMax || Math.max(...currentCurve);
+    const yPosCanvas = padding.top + (height - padding.top - padding.bottom) * (1 - assetValue / (maxV * 1.1));
+
+    // Convert canvas-relative pos to container-relative pos for tooltip absolute positioning
+    const xPage = (canvasRect.left - containerRect.left) + graphLeft + (graphWidth * yearIndex / years);
+    const yPage = (canvasRect.top - containerRect.top) + yPosCanvas;
+
+    tooltip.style.left = `${xPage}px`;
+    tooltip.style.top = `${yPage}px`;
+    tooltip.style.display = 'block';
+    tooltip.textContent = `Year: ${yearIndex}, Value: ${assetValue.toFixed(3)}`;
+
+    // Redraw curve and highlight point
+    drawCurve(currentCurve);
+    const xCanvas = graphLeft + (graphWidth * yearIndex / years);
+    ctx.beginPath();
+    ctx.arc(xCanvas, yPosCanvas, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(255, 100, 100, 0.8)';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#ff6666';
+    ctx.stroke();
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    tooltip.style.display = 'none';
+    drawCurve(currentCurve);
+  });
+})();
+</script>
+
+</body>
+</html>
+
