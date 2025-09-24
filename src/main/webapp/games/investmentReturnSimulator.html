@@ -157,7 +157,7 @@
     <canvas id="chart" width="860" height="450" aria-label="Asset Value over Time" tabindex="0"></canvas>
     <div id="tooltip" aria-live="polite"></div>
     <!-- CHANGED: help text mentions Volatility -->
-    <div id="info">Adjust the Mean Return, Volatility, and Simulation Years; the simulation updates automatically. Click Start to resample with the current parameters.</div>
+    <div id="info">Adjust the Mean Return, Volatility, and Simulation Years; the simulation updates automatically. Click Start to resample with the current parameters.<br><small>Gray curve: Benchmark at 5% annual return (no volatility) for comparison.</small></div>
   </div>
 
 <script>
@@ -191,8 +191,11 @@
   let currentCurve = [];
   let currentMax = 1;
 
+  // Benchmark curve data
+  let benchmarkCurve = [];
+
   // =============================
-  // Random Normal (Box–Muller) with pair caching
+  // Random Normal (Box6uller) with pair caching
   // =============================
   const Normal = (() => {
     let spare = null;
@@ -236,6 +239,16 @@
       if (v > maxV) maxV = v;
     }
     currentMax = maxV;
+    return values;
+  }
+
+  // Generate benchmark curve (fixed 5% return, no volatility)
+  function generateBenchmarkCurve(years) {
+    const values = [1];
+    const r = 0.05; // 5% fixed annual return
+    for (let t = 1; t <= years; t++) {
+      values.push(values[t - 1] * (1 + r));
+    }
     return values;
   }
 
@@ -301,8 +314,21 @@
   }
 
   function drawCurve(values) {
-    const maxValue = Math.max(...values);
+    const maxValue = Math.max(...values, ...benchmarkCurve);
     drawAxes(maxValue * 1.1);
+
+    // Draw benchmark curve first (gray)
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#888888';
+    ctx.beginPath();
+    for (let i = 0; i < benchmarkCurve.length; i++) {
+      const x = padding.left + ((width - padding.left - padding.right) * i / years);
+      const y = padding.top + ((height - padding.top - padding.bottom) * (1 - benchmarkCurve[i] / (maxValue * 1.1)));
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Draw main curve (blue)
     ctx.lineWidth = 3;
     ctx.strokeStyle = '#3566cc';
     ctx.fillStyle = 'rgba(53, 102, 204, 0.35)';
@@ -362,6 +388,9 @@
       // Use geometric compounding via log-returns to avoid -100% truncation bias
       currentCurve = generateAssetCurveGeometric(Er, Vr, years);
     }
+    // Generate benchmark curve
+    benchmarkCurve = generateBenchmarkCurve(years);
+
     drawCurve(currentCurve);
   }
 
@@ -371,6 +400,7 @@
   syncInputs(yearsInput, yearsRange);
 
   currentCurve = generateAssetCurveGeometric(Er, Vr, years);
+  benchmarkCurve = generateBenchmarkCurve(years);
   drawCurve(currentCurve);
 
   // Resample on button
@@ -405,29 +435,43 @@
     yearIndex = Math.max(0, Math.min(years, yearIndex));
 
     const assetValue = currentCurve[yearIndex];
+    const benchmarkValue = benchmarkCurve[yearIndex];
 
-    // Compute y position based on cached max (with 10% headroom)
-    const maxV = currentMax || Math.max(...currentCurve);
-    const yPosCanvas = padding.top + (height - padding.top - padding.bottom) * (1 - assetValue / (maxV * 1.1));
+    // Compute y position for both curves based on cached max (with 10% headroom)
+    const maxV = currentMax || Math.max(...currentCurve, ...benchmarkCurve);
+    const yPosAsset = padding.top + (height - padding.top - padding.bottom) * (1 - assetValue / (maxV * 1.1));
+    const yPosBenchmark = padding.top + (height - padding.top - padding.bottom) * (1 - benchmarkValue / (maxV * 1.1));
 
     // Convert canvas-relative pos to container-relative pos for tooltip absolute positioning
     const xPage = (canvasRect.left - containerRect.left) + graphLeft + (graphWidth * yearIndex / years);
-    const yPage = (canvasRect.top - containerRect.top) + yPosCanvas;
+    // Position tooltip vertically between the two points or just near main curve if very close
+    const yPage = (canvasRect.top - containerRect.top) + Math.min(yPosAsset, yPosBenchmark) - 10;
 
     tooltip.style.left = `${xPage}px`;
     tooltip.style.top = `${yPage}px`;
     tooltip.style.display = 'block';
-    tooltip.textContent = `Year: ${yearIndex}, Value: ${assetValue.toFixed(3)}`;
+    tooltip.innerHTML = `Year: ${yearIndex}, Value: ${assetValue.toFixed(3)}<br>Benchmark: ${benchmarkValue.toFixed(3)}`;
 
-    // Redraw curve and highlight point
+    // Redraw curve and highlight points
     drawCurve(currentCurve);
     const xCanvas = graphLeft + (graphWidth * yearIndex / years);
+
+    // Highlight main curve point
     ctx.beginPath();
-    ctx.arc(xCanvas, yPosCanvas, 6, 0, 2 * Math.PI);
+    ctx.arc(xCanvas, yPosAsset, 6, 0, 2 * Math.PI);
     ctx.fillStyle = 'rgba(255, 100, 100, 0.8)';
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#ff6666';
+    ctx.stroke();
+
+    // Highlight benchmark curve point
+    ctx.beginPath();
+    ctx.arc(xCanvas, yPosBenchmark, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(100, 100, 100, 0.8)';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#444444';
     ctx.stroke();
   });
 
@@ -440,4 +484,3 @@
 
 </body>
 </html>
-
