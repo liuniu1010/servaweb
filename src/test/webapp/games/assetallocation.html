@@ -65,14 +65,14 @@
         <h3>Line 1 	6 Stocks / Funds</h3>
         <div class="control-group"><label for="stockInit">Initial Amount ($)</label><input type="number" id="stockInit" value="100000" min="0" step="1000"></div>
         <div class="control-group"><label for="stockEr">Mean Annual Return (Er) %</label><input type="number" id="stockEr" value="7.0" min="-50" max="50" step="0.1"></div>
-        <div class="control-group"><label for="stockSigma">Volatility (C3) % <small>(log-return std dev)</small></label><input type="number" id="stockSigma" value="10.0" min="0" max="100" step="0.1"></div>
+        <div class="control-group"><label for="stockSigma">Std Dev of Log-Returns (σ) %</label><input type="number" id="stockSigma" value="10.0" min="0" max="100" step="0.1"></div>
       </div>
       <!-- Line 2: Real Estate (GBM) -->
       <div class="panel" id="panel-re">
         <h3>Line 2 	6 Real Estate</h3>
         <div class="control-group"><label for="reInit">Initial Amount ($)</label><input type="number" id="reInit" value="1000000" min="0" step="1000"></div>
         <div class="control-group"><label for="reEr">Mean Annual Return (Er) %</label><input type="number" id="reEr" value="5.0" min="-50" max="50" step="0.1"></div>
-        <div class="control-group"><label for="reSigma">Volatility (C3) % <small>(log-return std dev)</small></label><input type="number" id="reSigma" value="7.0" min="0" max="100" step="0.1"></div>
+        <div class="control-group"><label for="reSigma">Std Dev of Log-Returns (σ) %</label><input type="number" id="reSigma" value="7.0" min="0" max="100" step="0.1"></div>
       </div>
       <!-- Line 3: Cash Flow -->
       <div class="panel" id="panel-cf">
@@ -186,8 +186,8 @@
     const inflFactor = 1 + infl;
 
     // Bounds (defaults)
-    const LOWER = Math.max(0, Number(cfLowerBound)||120000);
-    const TARGET = Math.max(LOWER, Number(cfTargetBound)||150000);
+    const LOWER = Math.max(0, Number(cfLowerBound));
+    const TARGET = Math.max(LOWER, Number(cfTargetBound));
 
     const stock = [stock0];
     const cf = [cf0];
@@ -244,8 +244,8 @@
     const inflRaw   = parseFloat(inflationEl.value);
     const inflPct   = Number.isFinite(inflRaw) ? inflRaw : 2.0;
 
-    const cfLowerB  = parseFloat(cfLowerEl.value)||120000;
-    const cfTargetB = parseFloat(cfTargetEl.value)||150000;
+    const cfLowerB  = parseFloat(cfLowerEl.value);
+    const cfTargetB = parseFloat(cfTargetEl.value);
 
     // Simulate paths
     // Real Estate remains independent GBM
