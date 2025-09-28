@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Investment Return Simulator 6 Lines</title>
+<style>
+  /* NOTE: UI, layout, and colors intentionally remain close to your original. */
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #dbe9ff;
+    margin: 0; padding: 20px; color: #3a3a4e;
+    display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 32px;
+    height: 100vh;
+  }
+  #container {
+    display: flex; flex-direction: row; max-width: 980px; width: 100%; background: #f0f6ff; border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(130,160,230,0.7); padding: 20px; color: #334466; position: relative;
+  }
+  #chart-container {
+    flex: 1 1 auto;
+    display: flex; flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin-left: -20px;
+  }
+  #controls {
+    flex: 0 0 360px;
+    display: flex; flex-direction: column; flex-wrap: nowrap; gap: 18px;
+    margin-left: 32px;
+  }
+  .panel { background: #e9f2ff; border-radius: 10px; padding: 12px; box-shadow: 0 2px 8px rgba(80,100,170,0.25); }
+  .panel h3 { margin: 0 0 8px 0; color: #325fb5; font-size: 16px; }
+  .control-group { display: flex; flex-direction: column; margin-bottom: 10px; }
+  label { font-size: 13px; margin-bottom: 6px; color: #5884d8; }
+  input[type=number], input[type=range] {
+    border: none; outline: none; border-radius: 6px; font-size: 14px;
+  }
+  input[type=number] { padding: 8px 10px; background: #d9e6ff; color: #304770; }
+  input[type=number]:focus { box-shadow: 0 0 10px #6ba5ff; }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 6px; background: #aac5ff; outline: none; }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%;
+    background: #4a79eb; cursor: pointer; box-shadow: 0 0 6px #4a79eb; border: 2px solid #3460bb;
+  }
+  button { padding: 12px 26px; font-size: 16px; font-weight: 600; border-radius: 10px; border: none; background: #567de8; color: #f0f6ff; cursor: pointer; box-shadow: 0 5px 15px #2e51bf; align-self: flex-start; }
+  button:hover { background: #7896f6; box-shadow: 0 8px 18px #3b67d7; }
+  canvas { display: block; margin-top: 10px; background: #e6f0ff; border-radius: 12px; box-shadow: 0 8px 16px rgba(80,100,170,0.7); }
+  #info { margin-top: 8px; font-size: 13px; color: #556699; max-width: 980px; text-align: center; }
+  #tooltip { position: absolute; pointer-events: none; background: rgba(53,102,204,0.9); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); white-space: nowrap; user-select: none; transform: translate(-50%, -110%); display: none; z-index: 10; }
+  #warning { margin-top: 8px; font-size: 14px; color: #b00020; font-weight: 600; display:none; max-width: 980px; text-align: center; }
+  .row { display:flex; gap:8px; align-items:center; }
+</style>
+</head>
+<body>
+  <div id="container">
+    <div id="chart-container">
+      <canvas id="chart" width="1000" height="520" aria-label="Asset Value over Time" tabindex="0"></canvas>
+      <div id="tooltip" aria-live="polite"></div>
+      <div id="warning"></div>
+    </div>
+    <div id="controls">
+      <!-- Line 1: Stocks/Funds (GBM) -->
+      <div class="panel" id="panel-stock">
+        <h3>Line 1 	6 Stocks / Funds</h3>
+        <div class="control-group"><label for="stockInit">Initial Amount ($)</label><input type="number" id="stockInit" value="100000" min="0" step="1000"></div>
+        <div class="control-group"><label for="stockEr">Mean Annual Return (Er) %</label><input type="number" id="stockEr" value="7.0" min="-50" max="50" step="0.1"></div>
+        <div class="control-group"><label for="stockSigma">Volatility (C3) % <small>(log-return std dev)</small></label><input type="number" id="stockSigma" value="10.0" min="0" max="100" step="0.1"></div>
+      </div>
+      <!-- Line 2: Real Estate (GBM) -->
+      <div class="panel" id="panel-re">
+        <h3>Line 2 	6 Real Estate</h3>
+        <div class="control-group"><label for="reInit">Initial Amount ($)</label><input type="number" id="reInit" value="1000000" min="0" step="1000"></div>
+        <div class="control-group"><label for="reEr">Mean Annual Return (Er) %</label><input type="number" id="reEr" value="5.0" min="-50" max="50" step="0.1"></div>
+        <div class="control-group"><label for="reSigma">Volatility (C3) % <small>(log-return std dev)</small></label><input type="number" id="reSigma" value="7.0" min="0" max="100" step="0.1"></div>
+      </div>
+      <!-- Line 3: Cash Flow -->
+      <div class="panel" id="panel-cf">
+        <h3>Line 3 	6 Cash Flow</h3>
+        <div class="control-group"><label for="cfInit">Initial Cash ($)</label><input type="number" id="cfInit" value="150000" min="0" step="1000"></div>
+        <div class="control-group"><label for="cfChange">Expected Annual Change ($)</label><input type="number" id="cfChange" value="0" step="1000"></div>
+        <div class="row">
+          <div class="control-group" style="flex:1 1 140px"><label for="inflation">Inflation %</label><input type="number" id="inflation" value="2.0" min="-10" max="100" step="0.1"></div>
+          <div class="control-group" style="flex:1 1 160px"><label for="cfLower">CF Lower Bound ($)</label><input type="number" id="cfLower" value="120000" min="0" step="1000"></div>
+          <div class="control-group" style="flex:1 1 160px"><label for="cfTarget">CF Target ($)</label><input type="number" id="cfTarget" value="150000" min="0" step="1000"></div>
+          <div class="control-group" style="flex:1 1 140px"><label for="yearsInput">Simulation Years</label><input type="number" id="yearsInput" value="30" min="5" max="30" step="1"></div>
+        </div>
+        <div class="row" style="gap:16px; margin-top:6px">
+          <button id="startButton">Start / Resample</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="info">
+    <small>
+      Lines: <b>Stocks/Funds</b>, <b>Real Estate</b>, <b>Cash Flow</b>, and <b>Total Assets</b> (sum of first three).
+      Stocks & Real Estate use the same log-return Normal model (prices are lognormal). Cash Flow grows by expected change adjusted for inflation and may transfer with Stocks per bounds.
+    </small>
+  </div>
+<script>
+(() => {
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width, height = canvas.height;
+  const padding = { left: 70, right: 40, top: 30, bottom: 55 };
+
+  const tooltip = document.getElementById('tooltip');
+  const warningEl = document.getElementById('warning');
+
+  // Inputs
+  const stockInitEl = document.getElementById('stockInit');
+  const stockErEl   = document.getElementById('stockEr');
+  const stockSigmaEl= document.getElementById('stockSigma');
+
+  const reInitEl    = document.getElementById('reInit');
+  const reErEl      = document.getElementById('reEr');
+  const reSigmaEl   = document.getElementById('reSigma');
+
+  const cfInitEl    = document.getElementById('cfInit');
+  const cfChangeEl  = document.getElementById('cfChange');
+  const inflationEl = document.getElementById('inflation');
+  const cfLowerEl   = document.getElementById('cfLower');
+  const cfTargetEl  = document.getElementById('cfTarget');
+  const yearsEl     = document.getElementById('yearsInput');
+  const startBtn    = document.getElementById('startButton');
+
+  // State curves
+  let years = parseInt(yearsEl.value, 10);
+  let curveStock = [], curveRE = [], curveCF = [], curveTotal = [];
+
+  // =============================
+  // Random Normal (Box-Muller) with pair caching
+  // =============================
+  const Normal = (() => { let spare = null; return {
+    sample(mean=0, variance=1) {
+      if (spare !== null) { const z1 = spare; spare = null; return z1 * Math.sqrt(variance) + mean; }
+      let u1 = 0, u2 = 0; while (u1 === 0) u1 = Math.random(); while (u2 === 0) u2 = Math.random();
+      const mag = Math.sqrt(-2.0 * Math.log(u1));
+      const z0 = mag * Math.cos(2.0 * Math.PI * u2);
+      const z1 = mag * Math.sin(2.0 * Math.PI * u2);
+      spare = z1; return z0 * Math.sqrt(variance) + mean;
+    }, reset(){ spare = null; }
+  };})();
+
+  // =============================
+  // Core math: GBM one-year step using log-return ~ Normal
+  // =============================
+  function simulateGBMPath(initial, erSimple, sigmaDecimal, years) {
+    // Guards
+    if (!Number.isFinite(initial) || initial < 0) initial = 0;
+    if (!Number.isFinite(erSimple)) erSimple = 0;
+    if (erSimple <= -0.9999) erSimple = -0.9999;
+    if (!Number.isFinite(sigmaDecimal) || sigmaDecimal < 0) sigmaDecimal = 0;
+
+    const variance = sigmaDecimal * sigmaDecimal;
+    const muLog = Math.log(1 + erSimple) - 0.5 * variance;
+
+    const vals = [initial];
+    for (let t = 1; t <= years; t++) {
+      const g = Normal.sample(muLog, variance); // annual log-return
+      const v = vals[t-1] * Math.exp(g);
+      vals.push(v);
+    }
+    return vals;
+  }
+
+  // Cash Flow path with transfers vs Stocks
+  // - CF_t = CF_{t-1} + change_t
+  // - change_t = change_{t-1} * (1 + inflation)
+  // - Transfers each year after updating CF_t:
+  //   * If CF_t <= LOWER: transfer up to TARGET - CF_t from Stocks
+  // Cash Flow + Stocks co-simulation so transfers carry forward into next years
+  // This replaces the old approach that applied transfers on top of a precomputed stock path.
+  function simulateStockAndCashWithTransfers(stockInit, erSimple, sigmaDecimal, years, cfInit, annualChange, inflationPct, cfLowerBound, cfTargetBound){
+    // Guards
+    let stock0 = Math.max(0, Number(stockInit)||0);
+    let er = Number.isFinite(erSimple) ? erSimple : 0;
+    if (er <= -0.9999) er = -0.9999;
+    let sigma = Number.isFinite(sigmaDecimal) && sigmaDecimal > 0 ? sigmaDecimal : 0;
+    const variance = sigma * sigma;
+    const muLog = Math.log(1 + er) - 0.5 * variance;
+
+    let cf0 = Math.max(0, Number(cfInit)||0);
+    let change = Number(annualChange)||0;
+    const infl = Number.isFinite(inflationPct) ? inflationPct/100 : 0.02;
+    const inflFactor = 1 + infl;
+
+    // Bounds (defaults)
+    const LOWER = Math.max(0, Number(cfLowerBound)||120000);
+    const TARGET = Math.max(LOWER, Number(cfTargetBound)||150000);
+
+    const stock = [stock0];
+    const cf = [cf0];
+    const warnings = [];
+
+    for (let t = 1; t <= years; t++) {
+      // 1) Grow Stocks by GBM from last year's post-transfer base
+      const g = Normal.sample(muLog, variance);
+      let stk = stock[t-1] * Math.exp(g);
+
+      // 2) Update Cash by planned change
+      let cash = cf[t-1] + change;
+
+      // 3) Transfer only if cash <= LOWER, up to TARGET (no transfer back from cash to stocks)
+      if (cash <= LOWER) {
+        const gap = Math.max(0, TARGET - cash);
+        const xfer = Math.min(gap, Math.max(0, stk));
+        stk -= xfer;
+        cash += xfer;
+      }
+
+      // 4) Apply inflation to both the balance and the projected change for next year
+      cash *= inflFactor;
+
+      stock.push(stk);
+      cf.push(cash);
+
+      // 5) Inflate change for next year (fixed here: inflation affects change update)
+      change *= inflFactor;
+
+      // 6) Warning if Stocks + Cash deplete at year t
+      if (stk + cash <= 0) {
+        warnings.push(`Warning: Stocks + Cash Flow depleted to $0 at year ${t}.`);
+      }
+    }
+    return { stock, cf, warnings };
+  }
+
+  function recompute() {
+    warningEl.style.display = 'none'; warningEl.textContent = '';
+
+    years = Math.max(5, Math.min(30, parseInt(yearsEl.value,10)||30));
+
+    const stockInit = parseFloat(stockInitEl.value)||0;
+    const stockEr   = (parseFloat(stockErEl.value)||0)/100;
+    const stockSig  = (parseFloat(stockSigmaEl.value)||0)/100;
+
+    const reInit    = parseFloat(reInitEl.value)||0;
+    const reEr      = (parseFloat(reErEl.value)||0)/100;
+    const reSig     = (parseFloat(reSigmaEl.value)||0)/100;
+
+    const cfInit    = parseFloat(cfInitEl.value)||0;
+    const cfChange  = parseFloat(cfChangeEl.value)||0;
+    const inflRaw   = parseFloat(inflationEl.value);
+    const inflPct   = Number.isFinite(inflRaw) ? inflRaw : 2.0;
+
+    const cfLowerB  = parseFloat(cfLowerEl.value)||120000;
+    const cfTargetB = parseFloat(cfTargetEl.value)||150000;
+
+    // Simulate paths
+    // Real Estate remains independent GBM
+    const reVals    = simulateGBMPath(reInit, reEr, reSig, years);
+
+    // Stocks + Cash are co-simulated so that transfers affect future years' stock base
+    const { stock, cf, warnings } = simulateStockAndCashWithTransfers(
+      stockInit, stockEr, stockSig, years, cfInit, cfChange, inflPct, cfLowerB, cfTargetB
+    );
+
+    curveStock = stock;
+    curveRE    = reVals;
+    curveCF    = cf;
+
+    // Total = sum of three
+    curveTotal = curveStock.map((v, i) => v + curveRE[i] + curveCF[i]);
+
+    if (warnings.length) {
+      warningEl.style.display = 'block';
+      warningEl.textContent = warnings[warnings.length-1];
+    }
+
+    drawAll();
+  }
+
+  // =============================
+  // Drawing helpers
+  // =============================
+  function drawAxes(maxV) {
+    ctx.fillStyle = '#e6f0ff'; ctx.fillRect(0,0,width,height);
+
+    // Grid
+    ctx.font = '14px Verdana, sans-serif';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+
+    const yTicks = 8;
+    for (let i = 0; i <= yTicks; i++) {
+      const yVal = maxV * i / yTicks;
+      const yPos = padding.top + (height - padding.top - padding.bottom) * (1 - i / yTicks);
+      ctx.strokeStyle = '#aac5ff'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(padding.left, yPos); ctx.lineTo(width - padding.right, yPos); ctx.stroke();
+      ctx.fillStyle = '#5577cc'; ctx.fillText(formatMoney(yVal), padding.left - 8, yPos);
+    }
+
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (let i = 0; i <= years; i += 5) {
+      const xPos = padding.left + (width - padding.left - padding.right) * i / years;
+      ctx.strokeStyle = '#aac5ff'; ctx.beginPath(); ctx.moveTo(xPos, padding.top); ctx.lineTo(xPos, height - padding.bottom); ctx.stroke();
+      ctx.fillStyle = '#5577cc'; ctx.fillText(i.toString(), xPos, height - padding.bottom + 8);
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#3355bb'; ctx.font = '16px Verdana, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Years', padding.left + (width - padding.left - padding.right) / 2, height - 18);
+    ctx.save(); ctx.translate(20, padding.top + (height - padding.top - padding.bottom) / 2); ctx.rotate(-Math.PI/2);
+    ctx.fillText('Value ($)', 0, 0); ctx.restore();
+  }
+
+  function drawLine(values, color, dash=false) {
+    const maxValue = Math.max(...curveStock, ...curveRE, ...curveCF, ...curveTotal, 1);
+    const yScale = (val) => padding.top + (height - padding.top - padding.bottom) * (1 - val / (maxValue * 1.1));
+    ctx.lineWidth = 3; ctx.strokeStyle = color; ctx.setLineDash(dash ? [6,6] : []);
+    ctx.beginPath();
+    for (let i=0;i<values.length;i++){
+      const x = padding.left + ((width - padding.left - padding.right) * i / years);
+      const y = yScale(values[i]);
+      if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  function drawLegend(){
+    const items = [
+      {label:'Stocks/Funds', color:'#3566cc'},
+      {label:'Real Estate',  color:'#888888'},
+      {label:'Cash Flow',    color:'#ff8a00'},
+      {label:'Total Assets', color:'#00897b'}
+    ];
+    const x0 = padding.left, y0 = 6, gap = 140;
+    ctx.font = '13px Verdana, sans-serif'; ctx.textBaseline='top';
+    items.forEach((it, idx)=>{
+      const x = x0 + idx*gap;
+      ctx.fillStyle = it.color; ctx.fillRect(x, y0+4, 22, 6);
+      ctx.fillStyle = '#334466'; ctx.fillText(it.label, x+28, y0);
+    });
+  }
+
+  function drawAll(){
+    const maxVal = Math.max(...curveStock, ...curveRE, ...curveCF, ...curveTotal, 1);
+    drawAxes(maxVal);
+    drawLegend();
+    drawLine(curveRE,    '#888888');    // Real Estate (gray)
+    drawLine(curveStock, '#3566cc');    // Stocks (blue)
+    drawLine(curveCF,    '#ff8a00');    // Cash Flow (orange)
+    drawLine(curveTotal, '#00897b', true); // Total (teal, dashed)
+  }
+
+  function formatMoney(v){
+    const s = Math.abs(v) >= 1000 ? (v/1000).toFixed(1)+ 'k' : v.toFixed(0);
+    return (v<0?'-':'') + (v<0?-1*v:v ? s : '0');
+  }
+
+  // Tooltip over all four lines (nearest year index)
+  canvas.addEventListener('mousemove', (e)=>{
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left; const mouseY = e.clientY - rect.top;
+    const graphLeft = padding.left, graphRight = width - padding.right;
+    if (mouseX < graphLeft || mouseX > graphRight) { tooltip.style.display='none'; return; }
+
+    let idx = Math.round(((mouseX - graphLeft) / (graphRight - graphLeft)) * years);
+    idx = Math.max(0, Math.min(years, idx));
+
+    const xCanvas = graphLeft + (graphRight - graphLeft) * idx / years;
+    const maxVal = Math.max(...curveStock, ...curveRE, ...curveCF, ...curveTotal, 1);
+    const scaleY = (v)=> padding.top + (height - padding.top - padding.bottom) * (1 - v/(maxVal*1.1));
+
+    // Position tooltip
+    tooltip.style.display='block';
+    tooltip.style.left = `${xCanvas}px`;
+    tooltip.style.top  = `${Math.min(scaleY(curveStock[idx]), scaleY(curveRE[idx]), scaleY(curveCF[idx]), scaleY(curveTotal[idx])) - 10}px`;
+    tooltip.innerHTML = `Year ${idx}<br>`+
+      `Stocks: $${(curveStock[idx]).toFixed(0)}<br>`+
+      `RealEstate: $${(curveRE[idx]).toFixed(0)}<br>`+
+      `Cash: $${(curveCF[idx]).toFixed(0)}<br>`+
+      `<b>Total: $${(curveTotal[idx]).toFixed(0)}</b>`;
+
+    // Redraw to ensure visibility
+    drawAll();
+    // Highlight points
+    [[curveStock,'#3566cc'],[curveRE,'#888888'],[curveCF,'#ff8a00'],[curveTotal,'#00897b']].forEach(([series,color])=>{
+      ctx.beginPath(); ctx.arc(xCanvas, scaleY(series[idx]), 5, 0, 2*Math.PI); ctx.fillStyle = color; ctx.fill();
+    });
+  });
+  canvas.addEventListener('mouseleave', ()=>{ tooltip.style.display='none'; drawAll(); });
+
+  // Recompute handlers
+  function onAnyChange(){ recompute(); }
+  [stockInitEl, stockErEl, stockSigmaEl, reInitEl, reErEl, reSigmaEl, cfInitEl, cfChangeEl, inflationEl, cfLowerEl, cfTargetEl, yearsEl].forEach(el=>{
+    el.addEventListener('input', onAnyChange);
+  });
+  startBtn.addEventListener('click', ()=>{ Normal.reset(); recompute(); });
+
+  // Initial render
+  recompute();
+})();
+</script>
+</body>
+</html>
