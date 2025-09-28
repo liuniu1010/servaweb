@@ -137,13 +137,13 @@
   <div id="container">
     <div id="controls">
       <div class="control-group">
-        <label for="meanReturnInput">Mean Annual Return (Er) %:</label>
+        <label for="meanReturnInput">Mean Annual Return (Er)%:</label>
         <input type="number" id="meanReturnInput" step="0.1" value="7.0" min="-50" max="50" />
         <input type="range" id="meanReturnRange" step="0.1" min="-50" max="50" value="7.0" />
       </div>
       <div class="control-group">
         <!-- CHANGED: label now takes σ (%) instead of variance %² -->
-        <label for="varianceInput">Volatility (σ) %:</label>
+        <label for="varianceInput">Std Dev of Log-Returns (σ)%:</label>
         <input type="number" id="varianceInput" step="0.1" value="10.0" min="0" max="100" />
         <input type="range" id="varianceRange" step="0.1" min="0" max="100" value="10.0" />
       </div>
