@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Investment Return Simulator 6 Lines</title>
+<title>Investment Return Simulator Lines</title>
 <style>
   /* NOTE: UI, layout, and colors intentionally remain close to your original. */
   body {
@@ -55,28 +55,28 @@
 <body>
   <div id="container">
     <div id="chart-container">
-      <canvas id="chart" width="1000" height="520" aria-label="Asset Value over Time" tabindex="0"></canvas>
+      <canvas id="chart" width="1000" height="700" aria-label="Asset Value over Time" tabindex="0"></canvas>
       <div id="tooltip" aria-live="polite"></div>
       <div id="warning"></div>
     </div>
     <div id="controls">
       <!-- Line 1: Stocks/Funds (GBM) -->
       <div class="panel" id="panel-stock">
-        <h3>Line 1 	6 Stocks / Funds</h3>
+        <h3>Line 1 	Stocks / Funds</h3>
         <div class="control-group"><label for="stockInit">Initial Amount ($)</label><input type="number" id="stockInit" value="100000" min="0" step="1000"></div>
         <div class="control-group"><label for="stockEr">Mean Annual Return (Er) %</label><input type="number" id="stockEr" value="7.0" min="-50" max="50" step="0.1"></div>
         <div class="control-group"><label for="stockSigma">Std Dev of Log-Returns (σ) %</label><input type="number" id="stockSigma" value="10.0" min="0" max="100" step="0.1"></div>
       </div>
       <!-- Line 2: Real Estate (GBM) -->
       <div class="panel" id="panel-re">
-        <h3>Line 2 	6 Real Estate</h3>
+        <h3>Line 2 	Real Estate</h3>
         <div class="control-group"><label for="reInit">Initial Amount ($)</label><input type="number" id="reInit" value="1000000" min="0" step="1000"></div>
         <div class="control-group"><label for="reEr">Mean Annual Return (Er) %</label><input type="number" id="reEr" value="5.0" min="-50" max="50" step="0.1"></div>
         <div class="control-group"><label for="reSigma">Std Dev of Log-Returns (σ) %</label><input type="number" id="reSigma" value="7.0" min="0" max="100" step="0.1"></div>
       </div>
       <!-- Line 3: Cash Flow -->
       <div class="panel" id="panel-cf">
-        <h3>Line 3 	6 Cash Flow</h3>
+        <h3>Line 3 	Cash Flow</h3>
         <div class="control-group"><label for="cfInit">Initial Cash ($)</label><input type="number" id="cfInit" value="150000" min="0" step="1000"></div>
         <div class="control-group"><label for="cfChange">Expected Annual Change ($)</label><input type="number" id="cfChange" value="0" step="1000"></div>
         <div class="row">
@@ -328,7 +328,7 @@
     ctx.font = '13px Verdana, sans-serif'; ctx.textBaseline='top';
     items.forEach((it, idx)=>{
       const x = x0 + idx*gap;
-      ctx.fillStyle = it.color; ctx.fillRect(x, y0+4, 22, 6);
+      ctx.fillStyle = it.color; ctx.fillRect(x, y0+14, 22, 6);
       ctx.fillStyle = '#334466'; ctx.fillText(it.label, x+28, y0);
     });
   }
