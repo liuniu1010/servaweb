@@ -1,5 +1,5 @@
 -- Create database with UTF-8 collation
-CREATE DATABASE testenv COLLATE Latin1_General_100_CS_AS_SC_UTF8;
+CREATE DATABASE testenv COLLATE Latin1_General_100_CI_AS_SC_UTF8;
 GO
 
 -- Switch to the database
