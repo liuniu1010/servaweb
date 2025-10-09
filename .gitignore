@@ -33,3 +33,7 @@ log/
 .DS_Store
 Thumbs.db
 
+# Environment configuration files (keep .example files)
+env.config.prod
+env.config.dev
+
