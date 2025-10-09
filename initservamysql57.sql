@@ -14,12 +14,12 @@ comments          varchar(100),
 unique key        uniqueno_element (configname)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'OpenAiApiKey', '<apiKey>');
+insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'OpenAiApiKey', '<OpenAiApiKey>');
 insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'DateFormat', 'dd/MM/yyyy');
 insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'TimeFormat', 'HH:mm:ss');
 insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'DateTimeFormat', 'dd/MM/yyyy HH:mm:ss');
-insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'GoogleApiKey', '<apiKey>');
-insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'X-RapidAPI-Proxy-Secret', '<secretKey>');
+insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'GoogleApiKey', '<GoogleApiKey>');
+insert into configs(id, version, configname, configvalue) values(uuid(), 1, 'X-RapidAPI-Proxy-Secret', '<X-RapidAPI-Proxy-Secret>');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'AIInstance', 'OpenAIImpl', 'option of GoogleAIImpl/OpenAIImpl');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'codeModel', 'gpt-4.1', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'adminModel', 'gpt-4.1', '');
@@ -39,8 +39,8 @@ insert into configs(id, version, configname, configvalue, comments) values(uuid(
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'taskSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'gameFactoryUrl', 'http://<gamefactoryip>:18080/api/v1/aigamefactory', '');
 
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'email.username', '<username>', '');
-insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'email.password', '<password>', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'email.username', '<email.username>', '');
+insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'email.password', '<email.password>', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'mail.smtp.auth', 'true', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'mail.smtp.starttls.enable', 'true', '');
 insert into configs(id, version, configname, configvalue, comments) values(uuid(), 1, 'mail.smtp.host', 'smtp.gmail.com', '');

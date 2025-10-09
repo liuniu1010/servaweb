@@ -29,12 +29,12 @@ CONSTRAINT uniqueno_element UNIQUE (configname)
 GO
 
 -- Insert config data
-INSERT INTO configs(id, version, configname, configvalue) VALUES(NEWID(), 1, 'OpenAiApiKey', '<apiKey>');
+INSERT INTO configs(id, version, configname, configvalue) VALUES(NEWID(), 1, 'OpenAiApiKey', '<OpenAiApiKey>');
 INSERT INTO configs(id, version, configname, configvalue) VALUES(NEWID(), 1, 'DateFormat', 'dd/MM/yyyy');
 INSERT INTO configs(id, version, configname, configvalue) VALUES(NEWID(), 1, 'TimeFormat', 'HH:mm:ss');
 INSERT INTO configs(id, version, configname, configvalue) VALUES(NEWID(), 1, 'DateTimeFormat', 'dd/MM/yyyy HH:mm:ss');
-INSERT INTO configs(id, version, configname, configvalue) VALUES(NEWID(), 1, 'GoogleApiKey', '<apiKey>');
-INSERT INTO configs(id, version, configname, configvalue) VALUES(NEWID(), 1, 'X-RapidAPI-Proxy-Secret', '<secretKey>');
+INSERT INTO configs(id, version, configname, configvalue) VALUES(NEWID(), 1, 'GoogleApiKey', '<GoogleApiKey>');
+INSERT INTO configs(id, version, configname, configvalue) VALUES(NEWID(), 1, 'X-RapidAPI-Proxy-Secret', '<X-RapidAPI-Proxy-Secret>');
 INSERT INTO configs(id, version, configname, configvalue, comments) VALUES(NEWID(), 1, 'AIInstance', 'OpenAIImpl', 'option of GoogleAIImpl/OpenAIImpl');
 INSERT INTO configs(id, version, configname, configvalue, comments) VALUES(NEWID(), 1, 'codeModel', 'gpt-4.1', '');
 INSERT INTO configs(id, version, configname, configvalue, comments) VALUES(NEWID(), 1, 'adminModel', 'gpt-4.1', '');
@@ -54,8 +54,8 @@ INSERT INTO configs(id, version, configname, configvalue, comments) VALUES(NEWID
 INSERT INTO configs(id, version, configname, configvalue, comments) VALUES(NEWID(), 1, 'taskSandBoxUrl', 'http://<sandboxip>:9090/api/aisandbox', '');
 INSERT INTO configs(id, version, configname, configvalue, comments) VALUES(NEWID(), 1, 'gameFactoryUrl', 'http://<gamefactoryip>:18080/api/v1/aigamefactory', '');
 
-INSERT INTO configs(id, version, configname, configvalue, comments) VALUES(NEWID(), 1, 'email.username', '<username>', '');
-INSERT INTO configs(id, version, configname, configvalue, comments) VALUES(NEWID(), 1, 'email.password', '<password>', '');
+INSERT INTO configs(id, version, configname, configvalue, comments) VALUES(NEWID(), 1, 'email.username', '<email.username>', '');
+INSERT INTO configs(id, version, configname, configvalue, comments) VALUES(NEWID(), 1, 'email.password', '<email.password>', '');
 INSERT INTO configs(id, version, configname, configvalue, comments) VALUES(NEWID(), 1, 'mail.smtp.auth', 'true', '');
 INSERT INTO configs(id, version, configname, configvalue, comments) VALUES(NEWID(), 1, 'mail.smtp.starttls.enable', 'true', '');
 INSERT INTO configs(id, version, configname, configvalue, comments) VALUES(NEWID(), 1, 'mail.smtp.host', 'smtp.gmail.com', '');
