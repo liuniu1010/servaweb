@@ -442,7 +442,7 @@ document.getElementById("ButtonSendAudio").addEventListener("click", function() 
 });
 
 document.getElementById("ButtonSend").addEventListener("click", function() {
-    streamsend();
+    streamsend('');
 });
 
 document.getElementById("logoutBtn").addEventListener("click", function() {

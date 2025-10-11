@@ -262,10 +262,6 @@ document.getElementById("ButtonNewChat").addEventListener("click", function() {
     newChat();
 });
 
-document.getElementById("ButtonNewChat").addEventListener("click", function() {
-    newChat();
-});
-
 document.getElementById("ButtonSendAudio").addEventListener("click", function() {
     sendAudio();
 });
