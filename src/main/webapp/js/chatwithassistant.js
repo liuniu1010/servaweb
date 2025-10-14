@@ -177,6 +177,13 @@ function sendChat() {
     document.getElementById("UserInput").value = "Please wait...";
 }
 
+function handleKeyPressForInput(event) {
+    if (event.keyCode === 13 && !event.shiftKey) {
+        event.preventDefault();
+        sendEcho();
+    }
+}
+
 // Event listeners
 document.getElementById("ButtonAccount").addEventListener("click", function() {
     var logoutMenu = document.getElementById("logoutMenu");
@@ -197,6 +204,10 @@ document.getElementById("ButtonSendAudio").addEventListener("click", function() 
 
 document.getElementById("ButtonSend").addEventListener("click", function() {
     sendEcho();
+});
+
+document.getElementById("UserInput").addEventListener("keydown", function(event) {
+    handleKeyPressForInput(event);
 });
 
 document.getElementById("logoutBtn").addEventListener("click", function() {

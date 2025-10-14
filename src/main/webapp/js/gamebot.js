@@ -425,6 +425,14 @@ document.getElementById('imgInput').addEventListener('change', function() {
     }
 });
 
+document.getElementById("undo").addEventListener("click", function() {
+    undo();
+});
+
+document.getElementById("downloadBtn").addEventListener("click", function() {
+    downloadIframeContent();
+});
+
 document.getElementById("ButtonSendAudio").addEventListener("click", function() {
     sendAudio();
 });
