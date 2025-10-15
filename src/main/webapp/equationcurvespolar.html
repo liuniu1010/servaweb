@@ -21,6 +21,7 @@
     <meta name="twitter:image"       content="https://neoai.bot/og-cover.png">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="css/common.css?v=${build.timestamp}">
     <style>
         html, body {
             height: 100%;
@@ -224,7 +225,7 @@
                     <img id="NewButtonImage" src="images/newstart.webp" alt="New" draggable="false">
                 </button>
 
-                <input type="file" id="fileInputEdit" accept=".html,.htm" style="display: none;">
+                <input type="file" id="fileInputEdit" accept=".html,.htm" class="file-input-hidden">
                 <button id="ButtonEdit" type="button" class="leftpanel-button">
                     <img id="EditButtonImage" src="images/fileedit.webp" alt="Edit" draggable="false">
                 </button>
@@ -237,22 +238,21 @@
             </div>
 
             <div class="right-window">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 16px;">
+                <div class="flex-space-between-center">
                     <div>
-                        <button id="undo" style="margin-right:5px; padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
+                        <button id="undo" class="action-button action-button-margin">
                             ↶ Undo
                         </button>
-                        <button id="downloadBtn" style="padding: 6px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #007bff; background-color: #007bff; color: white; cursor: pointer;">
+                        <button id="downloadBtn" class="action-button">
                             ⬇️ Download
                         </button>
                     </div>
 
-                    <div id="creditInfo" style="display: flex; align-items: center; gap: 10px;">
+                    <div id="creditInfo">
                         <span id="creditCount">Credits Left: ...</span>
                         <a id="purchaseLink"
                             href="#"
-                            target="_blank"
-                            style="text-decoration: none; color: #007bff;">
+                            target="_blank">
                             Purchase Credits
                         </a>
                     </div>
@@ -260,9 +260,9 @@
 
                 <div id="RichChatRecord" contenteditable="false" class="chatRecordArea">
                 </div>
-                <input type="file" id="imgInput" name="file" style="color: #000000;" accept=".png,.webp,.jpg" hidden>
+                <input type="file" id="imgInput" name="file" class="file-input-black" accept=".png,.webp,.jpg" hidden>
 
-                <div style="display: flex;">
+                <div class="flex-container">
                     <textarea id="UserInput" placeholder="Type your equation(with t/θ and r) or requirement here..."></textarea>
                     <button id="ButtonSendAudio" type="button" class="button-send">
                         <img id="recordButtonImage" src="images/micphone.png" alt="Record" draggable="false">
@@ -288,10 +288,10 @@
         <input id="password" type="password" placeholder="Password">
         <button id="sendPasswordBtn">Send Password</button>
         <button id="loginBtn">Login</button>
-        <button id="googleLoginBtn" style="background-color: #db4437;">
+        <button id="googleLoginBtn">
             Login with Google
         </button>
-        <button id="microsoftLoginBtn" style="background-color: #2F2F2F; color: white;">
+        <button id="microsoftLoginBtn">
             Login with Microsoft
         </button>
     </div>

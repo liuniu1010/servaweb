@@ -21,6 +21,7 @@
     <meta name="twitter:image"       content="https://neoai.bot/og-cover.png">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="css/common.css?v=${build.timestamp}">
     <style>
         html, body {
             height: 100%;
@@ -230,13 +231,12 @@
                 </div>
             </div>
             <div class="right-window">
-                <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px; font-size: 16px;">
-                    <div id="creditInfo" style="display: flex; align-items: center; gap: 10px;">
+                <div class="flex-end-center">
+                    <div id="creditInfo">
                         <span id="creditCount">Credits Left: ...</span>
                         <a id="purchaseLink"
                             href="#"
-                            target="_blank"
-                            style="text-decoration: none; color: #007bff;">
+                            target="_blank">
                             Purchase Credits
                         </a>
                     </div>
@@ -244,7 +244,7 @@
 
                 <div id="RichChatRecord" contenteditable="false" class="chatRecordArea">
                 </div>
-                <div style="display: flex;">
+                <div class="flex-container">
                     <textarea id="UserInput" placeholder="Type your requirement here..."></textarea>
                     <button id="ButtonSendAudio" type="button" class="button-send">
                         <img id="recordButtonImage" src="images/micphone.png" alt="Record" draggable="false">
@@ -272,10 +272,10 @@
         <input id="password" type="password" placeholder="Password">
         <button id="sendPasswordBtn">Send Password</button>
         <button id="loginBtn">Login</button>
-        <button id="googleLoginBtn" style="background-color: #db4437;">
+        <button id="googleLoginBtn">
             Login with Google
         </button>
-        <button id="microsoftLoginBtn" style="background-color: #2F2F2F; color: white;">
+        <button id="microsoftLoginBtn">
             Login with Microsoft
         </button>
     </div>

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="css/common.css?v=${build.timestamp}">
     <style>
         html, body {
             height: 100%;
@@ -216,7 +217,7 @@
             <div class="right-window">
                 <div id="RichChatRecord" contenteditable="false" class="chatRecordArea">
                 </div>
-                <div style="display: flex;">
+                <div class="flex-container">
                     <textarea id="UserInput" placeholder="Type your task requirement here..."></textarea>
                     <button id="ButtonSendAudio" type="button" class="button-send">
                         <img id="recordButtonImage" src="images/micphone.png" alt="Record" draggable="false">

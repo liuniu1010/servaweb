@@ -20,6 +20,7 @@
     <meta name="twitter:image"       content="https://neoai.bot/og-cover.png">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="css/common.css?v=${build.timestamp}">
     <style>
         html, body {
             height: 100%;
@@ -208,7 +209,7 @@
                         </div>
                     </tr>
                     <tr>
-                        <input type="file" id="fileInput" name="file" style="color: #ffffff;" accept=".mp3">
+                        <input type="file" id="fileInput" name="file" class="file-input-white" accept=".mp3">
                     </tr>
                     <tr>
                         <td>
@@ -240,10 +241,10 @@
         <input id="password" type="password" placeholder="Password">
         <button id="sendPasswordBtn">Send Password</button>
         <button id="loginBtn">Login</button>
-        <button id="googleLoginBtn" style="background-color: #db4437;">
+        <button id="googleLoginBtn">
             Login with Google
         </button>
-        <button id="microsoftLoginBtn" style="background-color: #2F2F2F; color: white;">
+        <button id="microsoftLoginBtn">
             Login with Microsoft
         </button>
     </div>
