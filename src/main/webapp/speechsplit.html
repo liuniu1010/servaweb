@@ -21,171 +21,19 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <link rel="stylesheet" href="css/common.css?v=${build.timestamp}">
+    <link rel="stylesheet" href="css/chat-layout.css?v=${build.timestamp}">
     <style>
-        html, body {
-            height: 100%;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        .background {
-            background-color: #300A24;
-            width: calc(100% - 20px);
-            height: calc(100% - 20px);
-            margin: 10px;
-            padding: 0;
-        }
-        .container {
-            display: flex;
-            height: calc(100%);
-            width: calc(100%);
-            border: 1px solid #ccc;
-        }
-        .left-panel {
-            width: 200px;
-            height: calc(100% - 40px);
-            padding: 20px;
-            border-right: 1px solid #ccc;
-            display: flex;
-            flex-direction: column;
-        }
-        .bottom-button {
-            margin-top: auto;
-        }
-        .right-window {
-            width: calc(100% - 200px);
-            height: 100%;
-            padding: 20px;
-        }
-        .leftpanel-button {
-            color: #ffffff;
-            background: none;
-            padding: 0;
-            cursor: pointer;
-            width: 200px;
-            height: 40px;
-            border: 1px solid #ccc;
-            font-family: sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-        }
+        /* speechsplit-specific overrides */
         .chatRecordArea {
-            border: none;
-            padding: 10px;
             min-height: calc(100vh - 160px);
             max-height: calc(100vh - 160px);
-            width: calc(100vw - 320px);
-            overflow-y: auto;
         }
         #UserInput {
-            height: 35px;
             width: calc(100vw - 380px);
         }
         .button-send {
             width: 56px;
             height: 56px;
-            border-radius: 50%;
-            overflow: hidden;
-            padding: 0;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
-            transition: background-color 0.3s;
-        }
-        .button-send img {
-            width: 100%;
-            height: 100%;
-        }
-        .login-dialog {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #fff;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            width: 300px;
-        }
-        .login-dialog h3 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .login-dialog label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .login-dialog input[type="text"], .login-dialog input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .login-dialog button {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: none;
-            border-radius: 4px;
-            background-color: #007bff;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .login-dialog button:hover {
-            background-color: #0056b3;
-        }
-        .logout-menu {
-            display: none;
-            position: fixed;
-            bottom: 100px;
-            left: 70px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            width: 200px;
-            display: flex;
-            align-items: center;
-        }
-        .logout-menu button {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            background: none;
-            text-align: left;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-        }
-        .logout-menu button:hover {
-            background-color: #f7f7f7;
-        }
-        .logout-menu hr {
-            margin: 0;
-            border: 0.5px solid #ddd;
-        }
-        .logout-menu img {
-            width: 24px;
-            height: 24px;
-            margin-right: 10px;
-        }
-        .left-panel .logout-button-container {
-            margin-top: auto;
-            margin-bottom: 20px;
         }
     </style>
 </head>

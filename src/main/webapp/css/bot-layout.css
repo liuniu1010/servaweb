@@ -1,0 +1,216 @@
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f7f7f7;
+}
+
+.background {
+    background-color: #ffffff;
+    width: calc(100% - 20px);
+    height: calc(100% - 20px);
+    margin: 10px;
+    padding: 0;
+}
+
+.container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.left-panel {
+    width: 60px;
+    height: 100%;
+    padding: 10px;
+    background-color: #343a40;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.leftpanel-button {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    overflow: hidden;
+    padding: 0;
+    border: none;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.leftpanel-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.leftpanel-button:hover {
+    background-color: #495057;
+}
+
+.right-window {
+    width: calc(100% - 60px);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chatRecordArea {
+    border: none;
+    padding: 10px;
+    flex: 1;
+    overflow-y: auto;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+#UserInput {
+    height: 56px;
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+.button-send {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    overflow: hidden;
+    padding: 0;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    transition: background-color 0.3s;
+}
+
+.button-send img {
+    width: 100%;
+    height: 100%;
+}
+
+.button-send:hover {
+    background-color: #0056b3;
+}
+
+.login-dialog {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    width: 300px;
+}
+
+.login-dialog h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.login-dialog label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.login-dialog input[type="text"], .login-dialog input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.login-dialog button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.login-dialog button:hover {
+    background-color: #0056b3;
+}
+
+.logout-menu {
+    display: none;
+    position: fixed;
+    bottom: 100px;
+    left: 70px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    width: 200px;
+    display: flex;
+    align-items: center;
+}
+
+.logout-menu button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.logout-menu button:hover {
+    background-color: #f7f7f7;
+}
+
+.logout-menu hr {
+    margin: 0;
+    border: 0.5px solid #ddd;
+}
+
+.logout-menu img {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+}
+
+.left-panel .logout-button-container {
+    margin-top: auto;
+    margin-bottom: 20px;
+}
