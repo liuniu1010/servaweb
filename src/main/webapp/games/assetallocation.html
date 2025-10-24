@@ -33,10 +33,11 @@
   .panel h3 { margin: 0 0 8px 0; color: #325fb5; font-size: 16px; }
   .control-group { display: flex; flex-direction: column; margin-bottom: 10px; }
   label { font-size: 13px; margin-bottom: 6px; color: #5884d8; }
-  input[type=number], input[type=range] {
+  input[type=number], input[type=range], input[type=text] {
     border: none; outline: none; border-radius: 6px; font-size: 14px;
   }
-  input[type=number] { padding: 8px 10px; background: #d9e6ff; color: #304770; }
+  input[type=number], input[type=text] { padding: 8px 10px; background: #d9e6ff; color: #304770; }
+  input[type=text]:focus { box-shadow: 0 0 10px #6ba5ff; }
   input[type=number]:focus { box-shadow: 0 0 10px #6ba5ff; }
   input[type=range] { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 6px; background: #aac5ff; outline: none; }
   input[type=range]::-webkit-slider-thumb {
@@ -63,26 +64,26 @@
       <!-- Line 1: Stocks/Funds (GBM) -->
       <div class="panel" id="panel-stock">
         <h3>Line 1 	Stocks / Funds</h3>
-        <div class="control-group"><label for="stockInit">Initial Amount ($)</label><input type="number" id="stockInit" value="100000" min="0" step="1000"></div>
+        <div class="control-group"><label for="stockInit">Initial Amount ($)</label><input type="text" id="stockInit" value="100000"></div>
         <div class="control-group"><label for="stockEr">Mean Annual Return (Er) %</label><input type="number" id="stockEr" value="7.0" min="-50" max="50" step="0.1"></div>
         <div class="control-group"><label for="stockSigma">Std Dev of Log-Returns (σ) %</label><input type="number" id="stockSigma" value="10.0" min="0" max="100" step="0.1"></div>
       </div>
       <!-- Line 2: Real Estate (GBM) -->
       <div class="panel" id="panel-re">
         <h3>Line 2 	Real Estate</h3>
-        <div class="control-group"><label for="reInit">Initial Amount ($)</label><input type="number" id="reInit" value="1000000" min="0" step="1000"></div>
+        <div class="control-group"><label for="reInit">Initial Amount ($)</label><input type="text" id="reInit" value="1000000"></div>
         <div class="control-group"><label for="reEr">Mean Annual Return (Er) %</label><input type="number" id="reEr" value="5.0" min="-50" max="50" step="0.1"></div>
         <div class="control-group"><label for="reSigma">Std Dev of Log-Returns (σ) %</label><input type="number" id="reSigma" value="7.0" min="0" max="100" step="0.1"></div>
       </div>
       <!-- Line 3: Cash Flow -->
       <div class="panel" id="panel-cf">
         <h3>Line 3 	Cash Flow</h3>
-        <div class="control-group"><label for="cfInit">Initial Cash ($)</label><input type="number" id="cfInit" value="150000" min="0" step="1000"></div>
-        <div class="control-group"><label for="cfChange">Expected Annual Change ($)</label><input type="number" id="cfChange" value="0" step="1000"></div>
+        <div class="control-group"><label for="cfInit">Initial Cash ($)</label><input type="text" id="cfInit" value="150000"></div>
+        <div class="control-group"><label for="cfChange">Expected Annual Change ($)</label><input type="text" id="cfChange" value="0"></div>
         <div class="row">
           <div class="control-group" style="flex:1 1 140px"><label for="inflation">Inflation %</label><input type="number" id="inflation" value="2.0" min="-10" max="100" step="0.1"></div>
-          <div class="control-group" style="flex:1 1 160px"><label for="cfLower">CF Lower Bound ($)</label><input type="number" id="cfLower" value="120000" min="0" step="1000"></div>
-          <div class="control-group" style="flex:1 1 160px"><label for="cfTarget">CF Target ($)</label><input type="number" id="cfTarget" value="150000" min="0" step="1000"></div>
+          <div class="control-group" style="flex:1 1 160px"><label for="cfLower">CF Lower Bound ($)</label><input type="text" id="cfLower" value="120000"></div>
+          <div class="control-group" style="flex:1 1 160px"><label for="cfTarget">CF Target ($)</label><input type="text" id="cfTarget" value="150000"></div>
           <div class="control-group" style="flex:1 1 140px"><label for="yearsInput">Simulation Years</label><input type="number" id="yearsInput" value="30" min="5" max="30" step="1"></div>
         </div>
         <div class="row" style="gap:16px; margin-top:6px">
@@ -231,21 +232,21 @@
 
     years = Math.max(5, Math.min(30, parseInt(yearsEl.value,10)||30));
 
-    const stockInit = parseFloat(stockInitEl.value)||0;
+    const stockInit = parseNumber(stockInitEl.value);
     const stockEr   = (parseFloat(stockErEl.value)||0)/100;
     const stockSig  = (parseFloat(stockSigmaEl.value)||0)/100;
 
-    const reInit    = parseFloat(reInitEl.value)||0;
+    const reInit    = parseNumber(reInitEl.value);
     const reEr      = (parseFloat(reErEl.value)||0)/100;
     const reSig     = (parseFloat(reSigmaEl.value)||0)/100;
 
-    const cfInit    = parseFloat(cfInitEl.value)||0;
-    const cfChange  = parseFloat(cfChangeEl.value)||0;
+    const cfInit    = parseNumber(cfInitEl.value);
+    const cfChange  = parseNumber(cfChangeEl.value);
     const inflRaw   = parseFloat(inflationEl.value);
     const inflPct   = Number.isFinite(inflRaw) ? inflRaw : 2.0;
 
-    const cfLowerB  = parseFloat(cfLowerEl.value);
-    const cfTargetB = parseFloat(cfTargetEl.value);
+    const cfLowerB  = parseNumber(cfLowerEl.value);
+    const cfTargetB = parseNumber(cfTargetEl.value);
 
     // Simulate paths
     // Real Estate remains independent GBM
@@ -287,7 +288,7 @@
       const yPos = padding.top + (height - padding.top - padding.bottom) * (1 - i / yTicks);
       ctx.strokeStyle = '#aac5ff'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(padding.left, yPos); ctx.lineTo(width - padding.right, yPos); ctx.stroke();
-      ctx.fillStyle = '#5577cc'; ctx.fillText(formatMoney(yVal), padding.left - 8, yPos);
+      ctx.fillStyle = '#5577cc'; ctx.fillText('$' + formatWithCommas(yVal), padding.left - 8, yPos);
     }
 
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
@@ -348,6 +349,16 @@
     return (v<0?'-':'') + (v<0?-1*v:v ? s : '0');
   }
 
+  // Format number with commas
+  function formatWithCommas(num) {
+    return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  // Parse number removing commas
+  function parseNumber(str) {
+    return parseFloat(String(str).replace(/,/g, '')) || 0;
+  }
+
   // Tooltip over all four lines (nearest year index)
   canvas.addEventListener('mousemove', (e)=>{
     const rect = canvas.getBoundingClientRect();
@@ -367,10 +378,10 @@
     tooltip.style.left = `${xCanvas}px`;
     tooltip.style.top  = `${Math.min(scaleY(curveStock[idx]), scaleY(curveRE[idx]), scaleY(curveCF[idx]), scaleY(curveTotal[idx])) - 10}px`;
     tooltip.innerHTML = `Year ${idx}<br>`+
-      `Stocks: $${(curveStock[idx]).toFixed(0)}<br>`+
-      `RealEstate: $${(curveRE[idx]).toFixed(0)}<br>`+
-      `Cash: $${(curveCF[idx]).toFixed(0)}<br>`+
-      `<b>Total: $${(curveTotal[idx]).toFixed(0)}</b>`;
+      `Stocks: $${formatWithCommas(curveStock[idx])}<br>`+
+      `RealEstate: $${formatWithCommas(curveRE[idx])}<br>`+
+      `Cash: $${formatWithCommas(curveCF[idx])}<br>`+
+      `<b>Total: $${formatWithCommas(curveTotal[idx])}</b>`;
 
     // Redraw to ensure visibility
     drawAll();
@@ -380,6 +391,27 @@
     });
   });
   canvas.addEventListener('mouseleave', ()=>{ tooltip.style.display='none'; drawAll(); });
+
+  // Format input fields with commas on blur
+  function formatInputField(el) {
+    const val = parseNumber(el.value);
+    if (val !== 0 || el.value !== '') {
+      el.value = formatWithCommas(val);
+    }
+  }
+
+  // Remove commas on focus for easier editing
+  function unformatInputField(el) {
+    el.value = parseNumber(el.value).toString();
+  }
+
+  // Add formatting to money input fields
+  [stockInitEl, reInitEl, cfInitEl, cfChangeEl, cfLowerEl, cfTargetEl].forEach(el => {
+    el.addEventListener('blur', () => formatInputField(el));
+    el.addEventListener('focus', () => unformatInputField(el));
+    // Format initial values
+    formatInputField(el);
+  });
 
   // Recompute handlers
   function onAnyChange(){ recompute(); }
