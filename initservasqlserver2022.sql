@@ -22,7 +22,7 @@ CREATE TABLE configs(
 id                CHAR(36)       NOT NULL PRIMARY KEY,
 version           INT            NOT NULL,
 configname        VARCHAR(50)    NOT NULL,
-configvalue       VARCHAR(100),
+configvalue       VARCHAR(200),
 comments          VARCHAR(100),
 CONSTRAINT uniqueno_element UNIQUE (configname)
 );

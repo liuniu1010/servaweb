@@ -9,7 +9,7 @@ create table configs(
 id                char(36)       not null primary key,
 version           int            not null,
 configname        varchar(50)    not null,
-configvalue       varchar(100),
+configvalue       varchar(200),
 comments          varchar(100),
 unique key        uniqueno_element (configname)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
